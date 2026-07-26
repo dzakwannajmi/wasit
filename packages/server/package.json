@@ -1,0 +1,12 @@
+{
+  "name": "@wasit/server",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@wasit/core": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

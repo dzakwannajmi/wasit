@@ -1,0 +1,18 @@
+{
+  "name": "@wasit/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "wasit": "dist/index.js"
+  },
+  "dependencies": {
+    "@stellar/mpp": "^0.7.1",
+    "@stellar/stellar-sdk": "^16.1.0",
+    "@wasit/core": "*",
+    "commander": "^15.0.0",
+    "mppx": "^0.8.14"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
