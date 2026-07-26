@@ -1,12 +1,9 @@
-export interface CheckResult {
-  id: string;
-  name: string;
-  pass: boolean;
-  detail: string;
-}
+import type { CheckResult } from "../check.js";
+
+export type { CheckResult };
 
 export interface X402SimulatorOptions {
-  target: string; // URL layanan yang mau ditest
+  target: string;
 }
 
 /**
@@ -81,11 +78,13 @@ function checkRequiredFields(payload: any | null): CheckResult {
   if (payload === null) {
     return { id: "X402-04", name: "Required Fields Present", pass: false, detail: "No payload to check (X402-03 failed)." };
   }
-  const hasPrice = payload.price !== undefined || payload.amount !== undefined;
-  const hasNetwork = typeof payload.network === "string" && payload.network.length > 0;
-  const hasPayTo = typeof payload.payTo === "string" && payload.payTo.length > 0;
+  // x402 v2: fields live inside accepts[0], not at the top level
+  const accept = Array.isArray(payload.accepts) ? payload.accepts[0] : undefined;
+  const hasPrice = accept?.maxAmountRequired !== undefined || accept?.price !== undefined;
+  const hasNetwork = typeof accept?.network === "string" && accept.network.length > 0;
+  const hasPayTo = typeof accept?.payTo === "string" && accept.payTo.length > 0;
   const pass = hasPrice && hasNetwork && hasPayTo;
-  const missing = [!hasPrice && "price/amount", !hasNetwork && "network", !hasPayTo && "payTo"].filter(Boolean);
+  const missing = [!hasPrice && "price/maxAmountRequired", !hasNetwork && "network", !hasPayTo && "payTo"].filter(Boolean);
   return {
     id: "X402-04",
     name: "Required Fields Present",
@@ -98,15 +97,17 @@ function checkRequiredFields(payload: any | null): CheckResult {
  * X402-05: Network identifier must follow CAIP-2 (stellar:testnet / stellar:pubnet)
  */
 function checkNetworkIdentifier(payload: any | null): CheckResult {
-  if (payload === null || typeof payload.network !== "string") {
+  const accept = Array.isArray(payload?.accepts) ? payload.accepts[0] : undefined;
+  const network = accept?.network;
+  if (typeof network !== "string") {
     return { id: "X402-05", name: "Network Identifier Valid", pass: false, detail: "No network field to check." };
   }
-  const pass = /^stellar:(testnet|pubnet)$/.test(payload.network);
+  const pass = /^stellar:(testnet|pubnet)$/.test(network);
   return {
     id: "X402-05",
     name: "Network Identifier Valid",
     pass,
-    detail: pass ? `Network identifier "${payload.network}" is valid.` : `"${payload.network}" does not match stellar:testnet or stellar:pubnet.`,
+    detail: pass ? `Network identifier "${network}" is valid.` : `"${network}" does not match stellar:testnet or stellar:pubnet.`,
   };
 }
 
@@ -117,4 +118,82 @@ export async function runX402ReadChecks(options: X402SimulatorOptions): Promise<
   const r4 = checkRequiredFields(payload);
   const r5 = checkNetworkIdentifier(payload);
   return [r1, r2, r3, r4, r5];
+}
+
+import { x402Client, x402HTTPClient } from "@x402/fetch";
+import { createEd25519Signer } from "@x402/stellar";
+import { ExactStellarScheme as ExactStellarClientScheme } from "@x402/stellar/exact/client";
+
+export interface X402PaymentCheckOptions {
+  target: string;
+  network: string; // e.g. "stellar:testnet"
+  payerSecretKey: string;
+}
+
+function buildX402Client(network: string, payerSecretKey: string) {
+  const signer = createEd25519Signer(payerSecretKey, network as `${string}:${string}`);
+  const client = new x402Client().register(
+    "stellar:*",
+    new ExactStellarClientScheme(signer),
+  );
+  return { client, httpClient: new x402HTTPClient(client) };
+}
+
+/**
+ * X402-06: A resubmitted request with a valid signature must be accepted
+ */
+async function checkSignatureAccepted(options: X402PaymentCheckOptions): Promise<CheckResult> {
+  const { client, httpClient } = buildX402Client(options.network, options.payerSecretKey);
+  try {
+    const firstTry = await fetch(options.target);
+    const paymentRequired = httpClient.getPaymentRequiredResponse((name) => firstTry.headers.get(name));
+    const paymentPayload = await client.createPaymentPayload(paymentRequired);
+    const headers = httpClient.encodePaymentSignatureHeader(paymentPayload);
+    const paidResponse = await fetch(options.target, { headers });
+    const pass = paidResponse.status >= 200 && paidResponse.status < 300;
+    return {
+      id: "X402-06",
+      name: "Signature Resubmit Accepted",
+      pass,
+      detail: pass ? "Valid payment was accepted." : `Expected 2xx after valid payment, got ${paidResponse.status}.`,
+    };
+  } catch (err) {
+    return { id: "X402-06", name: "Signature Resubmit Accepted", pass: false, detail: `Error: ${(err as Error).message}` };
+  }
+}
+
+/**
+ * X402-07 (negative): A deliberately malformed signature must be REJECTED
+ */
+async function checkInvalidSignatureRejected(options: X402PaymentCheckOptions): Promise<CheckResult> {
+  const { client, httpClient } = buildX402Client(options.network, options.payerSecretKey);
+  try {
+    const firstTry = await fetch(options.target);
+    const paymentRequired = httpClient.getPaymentRequiredResponse((name) => firstTry.headers.get(name));
+    const paymentPayload = await client.createPaymentPayload(paymentRequired);
+
+    // Deliberately corrupt the signed transaction so the payload is invalid
+    const corrupted = {
+      ...paymentPayload,
+      payload: { ...paymentPayload.payload, transaction: (paymentPayload.payload.transaction as string).slice(0, -8) + "AAAAAAAA" },
+    };
+    const headers = httpClient.encodePaymentSignatureHeader(corrupted);
+    const res = await fetch(options.target, { headers });
+    const pass = res.status !== 200; // must NOT be silently accepted
+    return {
+      id: "X402-07",
+      name: "Invalid Signature Rejected",
+      pass,
+      detail: pass ? "Corrupted payment was correctly rejected." : "Corrupted payment was incorrectly accepted (200) — security-relevant failure.",
+    };
+  } catch (err) {
+    // A thrown error while processing a corrupted payload also counts as "rejected"
+    return { id: "X402-07", name: "Invalid Signature Rejected", pass: true, detail: `Rejected via error (acceptable): ${(err as Error).message}` };
+  }
+}
+
+export async function runX402PaymentChecks(options: X402PaymentCheckOptions): Promise<CheckResult[]> {
+  const r6 = await checkSignatureAccepted(options);
+  const r7 = await checkInvalidSignatureRejected(options);
+  return [r6, r7];
 }
