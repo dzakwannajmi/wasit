@@ -24,16 +24,16 @@ in every test report.
 
 | ID | Check Name | Spec Reference | What It Checks | Pass Criteria |
 |---|---|---|---|---|
-| `MPP-01` | Charge Settlement On-Chain | MPP Charge Guide | The charge transaction actually settles on Stellar | RPC query confirms a successful transaction with the correct amount |
+| `MPP-01` | Charge Settlement On-Chain | MPP Charge Guide | The charge transaction actually settles on Stellar | Horizon lookup of the tx referenced in the `Payment-Receipt` response header confirms a successful transaction with the correct amount. Verified against `@stellar/mpp@0.7.1` — mode `"pull"` (default): `onProgress` only fires through `"signed"`, the settled tx reference comes from `Payment-Receipt`, not `onProgress`. |
 
-## MPP — Session Mode
+## MPP — Channel Mode
 
 | ID | Check Name | Spec Reference | What It Checks | Pass Criteria |
 |---|---|---|---|---|
-| `MPP-10` | Channel Deploy | MPP Session Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable |
-| `MPP-11` | Cumulative Commitment Ordering | MPP Session Guide §closing-the-channel | Each new commitment must exceed the previous one | Server rejects any commitment <= the last accepted one |
-| `MPP-12` | Replay Rejection *(negative)* | MPP Session Guide §closing-the-channel | A replayed commitment must be rejected | Server rejects, not accepts — testnet-only by default |
-| `MPP-13` | Close Settlement | MPP Session Guide §closing-the-channel | Closing with the highest commitment settles correctly | RPC verifies the final balance matches the last commitment |
+| `MPP-10` | Channel Deploy | MPP Channel Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable |
+| `MPP-11` | Cumulative Commitment Ordering | MPP Channel Guide §closing-the-channel | Each new commitment must exceed the previous one | Server rejects any commitment <= the last accepted one |
+| `MPP-12` | Replay Rejection *(negative)* | MPP Channel Guide §closing-the-channel | A replayed commitment must be rejected | Server rejects, not accepts — testnet-only by default |
+| `MPP-13` | Close Settlement | MPP Channel Guide §closing-the-channel | Closing with the highest commitment settles correctly | RPC verifies the final balance matches the last commitment |
 
 ---
 
