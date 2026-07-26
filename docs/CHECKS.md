@@ -31,11 +31,13 @@ in every test report.
 | ID | Check Name | Spec Reference | What It Checks | Pass Criteria |
 |---|---|---|---|---|
 | `MPP-10` | Channel Deploy | MPP Channel Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable |
-| `MPP-11` | Cumulative Commitment Ordering | MPP Channel Guide §closing-the-channel | Each new commitment must exceed the previous one | Server rejects any commitment <= the last accepted one |
-| `MPP-12` | Replay Rejection *(negative)* | MPP Channel Guide §closing-the-channel | A replayed commitment must be rejected | Server rejects, not accepts — testnet-only by default |
+| `MPP-11` | Cumulative Commitment Ordering | MPP Channel Guide §closing-the-channel; contract spec: `stellar-experimental/one-way-channel` | A stale commitment (amount <= what has already been withdrawn) must not produce any additional transfer | On-chain balance delta after `settle`/`close` with a stale commitment is exactly 0 — the contract is a silent no-op for stale commitments, it does NOT raise an error/rejection, so pass/fail is verified via balance delta, not via an expected error response |
+| `MPP-12` | Replay Rejection *(negative)* | MPP Channel Guide §closing-the-channel; contract spec: `stellar-experimental/one-way-channel` | Resubmitting an already-settled commitment must not double-pay the recipient | Balance delta after replaying a previously-settled commitment is exactly 0 (verified via `withdrawn`/`balance` getters), not a rejected/failed transaction — testnet-only by default |
 | `MPP-13` | Close Settlement | MPP Channel Guide §closing-the-channel | Closing with the highest commitment settles correctly | RPC verifies the final balance matches the last commitment |
 
 ---
+
+**Revision note (Week 2):** `MPP-11`/`MPP-12` pass criteria were revised from "server rejects" to "zero balance delta / silent no-op", after reading the `stellar-experimental/one-way-channel` contract spec directly — the contract does not raise an error for stale or replayed commitments, it simply transfers nothing beyond what has already been withdrawn. Checks are implemented to verify this via on-chain balance state, not an expected error response.
 
 **Status note:** this is an initial draft (Week 1). `MPP-*` checks will
 be expanded in Week 2. `X402-02` deliberately checks both header names
