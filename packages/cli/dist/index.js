@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import "dotenv/config";
 import { Command } from "commander";
-import { runMppChannelSuite, runX402PaymentChecks, runX402ReadChecks, } from "@wasit/core";
+import { checkStatus, runMppChannelSuite, runX402PaymentChecks, runX402ReadChecks, summarize, } from "@wasit/core";
 const program = new Command();
 program
     .name("wasit")
@@ -16,38 +16,24 @@ program
  */
 function report(results) {
     for (const result of results) {
-        const status = result.skipped
-            ? "SKIP"
-            : result.error
-                ? "ERROR"
-                : result.pass
-                    ? "PASS"
-                    : "FAIL";
         const flag = result.destructive ? "  [destructive]" : "";
-        console.log(`${status}  ${result.id}  ${result.name}${flag}`);
+        console.log(`${checkStatus(result)}  ${result.id}  ${result.name}${flag}`);
         console.log(`      ${result.detail}\n`);
     }
-    const skips = results.filter((r) => r.skipped);
-    const errors = results.filter((r) => !r.skipped && r.error !== undefined);
-    const failures = results.filter((r) => !r.pass && !r.skipped && r.error === undefined);
-    const passes = results.filter((r) => r.pass);
-    const summary = [`${passes.length} passed`];
-    if (failures.length > 0)
-        summary.push(`${failures.length} failed`);
-    if (errors.length > 0)
-        summary.push(`${errors.length} could not run`);
-    if (skips.length > 0)
-        summary.push(`${skips.length} skipped`);
-    console.log(`${summary.join(", ")}.`);
-    if (errors.length > 0 && failures.length === 0) {
+    const counts = summarize(results);
+    const line = [`${counts.passed} passed`];
+    if (counts.failed > 0)
+        line.push(`${counts.failed} failed`);
+    if (counts.errored > 0)
+        line.push(`${counts.errored} could not run`);
+    if (counts.skipped > 0)
+        line.push(`${counts.skipped} skipped`);
+    console.log(`${line.join(", ")}.`);
+    if (counts.errored > 0 && counts.failed === 0) {
         console.log("\nNo verdict: some checks never reached the target or the run is " +
             "misconfigured. This is not a statement about the target's conformance.");
     }
-    // 1 = the target is non-conformant. 2 = no verdict. A real finding outranks
-    // a missing one, so a run with both exits 1.
-    if (failures.length > 0)
-        return 1;
-    return errors.length > 0 ? 2 : 0;
+    return counts.exitCode;
 }
 program
     .command("test")

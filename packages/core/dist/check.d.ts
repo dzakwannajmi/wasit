@@ -32,6 +32,30 @@ export interface CheckResult {
      */
     error?: CheckError;
 }
+/** How a single result should be rendered and counted. */
+export type CheckStatus = "PASS" | "FAIL" | "ERROR" | "SKIP";
+/**
+ * Classifies one result.
+ *
+ * Order matters: a skipped check never ran, and an errored check produced no
+ * verdict, so both are decided before `pass` is consulted at all.
+ */
+export declare function checkStatus(result: CheckResult): CheckStatus;
+export interface RunSummary {
+    readonly passed: number;
+    readonly failed: number;
+    readonly errored: number;
+    readonly skipped: number;
+    /** 0 = everything conformed, 1 = conformance failure, 2 = no verdict. */
+    readonly exitCode: 0 | 1 | 2;
+}
+/**
+ * Reduces a run to its counts and outcome.
+ *
+ * Lives in core rather than in a front end so the CLI's exit code and the MCP
+ * server's reported outcome can never disagree about the same results.
+ */
+export declare function summarize(results: CheckResult[]): RunSummary;
 /** Builds the result for a destructive check that was not opted into. */
 export declare function skippedDestructive(id: string, name: string, reason: string): CheckResult;
 /**

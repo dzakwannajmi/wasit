@@ -32,13 +32,35 @@ Verified against `@stellar/mpp@0.7.1`, `mppx@0.8.14`, `@stellar/stellar-sdk@16.1
 
 | ID | Check Name | Destructive | Spec Reference | What It Checks | Pass Criteria |
 |---|---|---|---|---|---|
-| `MPP-10` | Channel Deploy | no | MPP Channel Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable via `getChannelState()`, matching the parameters it was opened with |
+| `MPP-10` | Channel Deploy | no | MPP Channel Guide | The channel contract deploys correctly, and is the same channel the target bills through | Contract address is valid and its state is queryable via `getChannelState()`, matching the parameters it was opened with (`token`, `from`, `to`, `refundWaitingPeriod`). The channel inspected is the one the target advertises in its 402 challenge, so MPP-10 and MPP-11/12/13/14 always report on the same contract. `--channel` (env `CHANNEL_CONTRACT`) **asserts** an expected address rather than selecting one: when it differs from the advertised channel the check fails and inspects nothing, because a run that reported on both would be reporting on two contracts at once. If the challenge cannot be read at all, an explicitly named channel is still inspected and the result is marked unverified against the target. |
 | `MPP-11` | Cumulative Commitment Ordering | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (`cumulativeMonotonicityError`) | Both ordering rules: a commitment must exceed the stored cumulative, and must cover the price of the current request | Two probes, each rejected with HTTP 402: one committing exactly the stored cumulative, one advancing but falling short of `cumulative + price`. Each probe uses a **fresh challenge**, so the earlier-running challenge replay guard cannot fire and be mistaken for ordering enforcement. The second probe is reported as not-probed when the price is 1 base unit, since it collapses into the first. |
 | `MPP-12` | Challenge Replay Rejection *(negative)* | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (atomic compare-and-set on challenge ID) | A byte-identical credential resubmitted against the same challenge must be rejected | HTTP 402 on the second submission. Isolation: the replayed credential is identical to one the server accepted moments earlier, so its signature and amount are already proven valid and only the challenge-ID claim can explain the rejection. |
 | `MPP-14` | Commitment Replay Rejection *(negative)* | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (`cumulativeMonotonicityError`) | A captured `(amount, signature)` pair must not be redeemable against a **new** challenge | HTTP 402 when a previously accepted commitment is re-presented under a fresh challenge. This is the realistic double-spend: the challenge replay guard cannot help because the challenge ID is new, so only the cumulative rule stands in the way. The official client SDK cannot express this probe — it re-signs on every call. |
 | `MPP-13` | Close Settlement | **yes** | MPP Channel Guide §closing-the-channel | Closing with the highest commitment settles on-chain | Server accepts the `close` credential (HTTP 200), then RPC confirms settlement: `closeEffectiveAtLedger` moves from `null` to a ledger sequence, and the contract's `withdrawn` getter equals exactly the committed amount. The channel balance is **not** asserted — `close()` pays the commitment to the recipient and then auto-refunds the remainder to the funder, so a closed channel always ends at zero. `withdrawn` is written in the same call that transfers the payout, and that transfer is non-fallible, so a mismatch would have reverted the whole close. **Running this permanently ends the channel** — skipped unless destructive checks are explicitly enabled, and it refuses to run unless the operator names the channel and the target's challenge advertises that same address. |
 
 ---
+
+**Reporting semantics (Week 2).** Beyond PASS and SKIP, a run distinguishes two
+further outcomes, because "your service is broken" and "we never reached your
+service" are not the same claim:
+
+- **FAIL** — the target answered, and the answer did not conform. This includes
+  a response that arrives but violates the spec: wrong status, unparseable
+  challenge, missing `channel`/`amount`, non-numeric amounts.
+- **ERROR** — no verdict was produced about the target at all. Either it could
+  not be reached (`unreachable`), or the run is misconfigured
+  (`configuration`), or the harness itself failed (`harness`). An ERROR is
+  never a statement about the target's conformance.
+
+Exit codes follow from that: `0` every check conformed, `1` at least one
+conformance failure, `2` at least one check produced no verdict. A run with
+both exits `1`, because a real finding outranks a missing one.
+
+`PREFLIGHT` is **not a check** and carries no spec reference, which is why it
+has no row above. It is a single diagnostic emitted when the target URL or the
+network identifier is invalid — both are wrong for every check in the suite, so
+they are reported once rather than repeated identically per check. When
+preflight fails, no check runs.
 
 **Revision note (Week 2, corrected):** `MPP-11`/`MPP-12` pass criteria were first written as "server rejects", then briefly revised to "zero balance delta / silent no-op" after reading only the `stellar-experimental/one-way-channel` on-chain contract source (which is genuinely a silent no-op for stale `settle`/`close` calls). That revision was corrected after reading the `@stellar/mpp` channel server implementation directly: the HTTP-facing server — the actual artifact Wasit tests — rejects stale/replayed commitments explicitly via `ChannelVerificationError`, before the on-chain contract is ever invoked. The contract's own no-op behavior only applies if the contract is called directly, bypassing the server, which is out of scope for Wasit.
 
