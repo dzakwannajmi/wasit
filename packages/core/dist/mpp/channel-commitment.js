@@ -10,7 +10,7 @@
  * `prepare_commitment(amount)` read-only, take the returned Bytes, and sign them
  * with the raw ed25519 commitment key. No transaction is submitted, no fee paid.
  */
-import { Account, Contract, Keypair, TransactionBuilder, nativeToScVal, rpc, } from "@stellar/stellar-sdk";
+import { Account, Contract, Keypair, TransactionBuilder, nativeToScVal, rpc, scValToNative, } from "@stellar/stellar-sdk";
 /**
  * Format-valid all-zero account used purely as a simulation source. It need not
  * exist on the ledger: read-only simulation never touches the source account.
@@ -70,6 +70,67 @@ async function withTimeout(promise, timeoutMs, label) {
         if (timer !== undefined)
             clearTimeout(timer);
     }
+}
+/**
+ * Simulates a read-only contract call and returns its raw return value.
+ *
+ * Read-only simulation costs nothing and touches no ledger state, so the source
+ * account need only be well-formed, not funded or even existent.
+ */
+async function simulateRead(parameters) {
+    const { contractId, method, args, networkPassphrase, rpcUrl, simulationTimeoutMs } = parameters;
+    const server = new rpc.Server(rpcUrl);
+    const contract = new Contract(contractId);
+    const source = new Account(SIMULATION_SOURCE_ACCOUNT, "0");
+    const transaction = new TransactionBuilder(source, {
+        fee: SIMULATION_FEE,
+        networkPassphrase,
+    })
+        .addOperation(contract.call(method, ...args))
+        .setTimeout(Math.ceil(simulationTimeoutMs / 1000))
+        .build();
+    let simulation;
+    try {
+        simulation = await withTimeout(server.simulateTransaction(transaction), simulationTimeoutMs, `${method} simulation`);
+    }
+    catch (error) {
+        if (error instanceof CommitmentSimulationError)
+            throw error;
+        throw new CommitmentSimulationError(`${method} simulation failed at transport level: ${error instanceof Error ? error.message : String(error)}`, error);
+    }
+    if (rpc.Api.isSimulationError(simulation)) {
+        throw new CommitmentSimulationError(`${method} simulation returned an error: ${simulation.error}`);
+    }
+    // Checked BEFORE isSimulationSuccess: the restore response type structurally
+    // extends the success type, so a success check alone would swallow it.
+    if (rpc.Api.isSimulationRestore(simulation)) {
+        throw new CommitmentSimulationError(`Contract ${contractId} requires a storage restore before it can be read. ` +
+            "Extend its TTL first.");
+    }
+    if (!rpc.Api.isSimulationSuccess(simulation)) {
+        throw new CommitmentSimulationError(`${method} simulation returned an unrecognised response shape.`);
+    }
+    const returnValue = simulation.result?.retval;
+    if (!returnValue) {
+        throw new CommitmentSimulationError(`${method} returned no value.`);
+    }
+    return returnValue;
+}
+/**
+ * Reads the channel contract's `withdrawn` getter: the cumulative amount already
+ * paid out to the recipient. After a close this must equal the commitment that
+ * was closed with.
+ */
+export async function readChannelWithdrawn(parameters) {
+    const value = await simulateRead({
+        contractId: parameters.channelContract,
+        method: "withdrawn",
+        args: [],
+        networkPassphrase: parameters.networkPassphrase,
+        rpcUrl: parameters.rpcUrl,
+        simulationTimeoutMs: parameters.simulationTimeoutMs ?? DEFAULT_SIMULATION_TIMEOUT_MS,
+    });
+    return BigInt(scValToNative(value));
 }
 /**
  * Simulates `prepare_commitment(amount)` and returns the bytes to be signed.

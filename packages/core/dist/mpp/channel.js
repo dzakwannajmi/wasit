@@ -1,6 +1,6 @@
 import { getChannelState } from "@stellar/mpp/channel/server";
 import { skippedDestructive } from "../check.js";
-import { signChannelCommitment } from "./channel-commitment.js";
+import { readChannelWithdrawn, signChannelCommitment } from "./channel-commitment.js";
 import { buildChannelCredential, fetchChannelChallenge, serializeChannelCredential, submitCredential, } from "./channel-credential.js";
 import { assertMppNetwork, networkPassphrase, resolveRpcUrl } from "./network.js";
 /**
@@ -305,12 +305,20 @@ export async function runMppChannelCloseCheck(options) {
                 `the channel open after ${closePollAttempts} polls. The settlement ` +
                 `was not observable on-chain.`);
         }
-        const delta = before.balance - after.balance;
-        if (delta !== amount) {
+        // The channel always ends at zero: close pays the commitment to the
+        // recipient and auto-refunds whatever is left to the funder. So the balance
+        // delta proves nothing. `withdrawn` is the real evidence — the contract
+        // records it in the same call that transfers the payout, and that transfer
+        // is non-fallible, so a mismatch there would have reverted the whole close.
+        const withdrawn = await readChannelWithdrawn({
+            channelContract: channel,
+            networkPassphrase: networkPassphrase(network),
+            rpcUrl: resolveRpcUrl(network, rpcUrl),
+        });
+        if (withdrawn !== amount) {
             return failure(id, name, `Channel closed (closeEffectiveAtLedger=${after.closeEffectiveAtLedger}), ` +
-                `but the balance moved by ${delta} instead of the committed ${amount} ` +
-                `(before=${before.balance}, after=${after.balance}). Either the payout ` +
-                `did not match the commitment, or the channel had prior on-chain withdrawals.`);
+                `but the contract recorded ${withdrawn} withdrawn instead of the ` +
+                `committed ${amount}. The payout did not match the commitment.`);
         }
         return [
             {
@@ -318,9 +326,12 @@ export async function runMppChannelCloseCheck(options) {
                 name,
                 pass: true,
                 destructive: true,
-                detail: `Close settled on-chain: balance fell by exactly the committed ${amount} ` +
-                    `(${before.balance} to ${after.balance}), and closeEffectiveAtLedger is ` +
-                    `set to ${after.closeEffectiveAtLedger}. Channel ${channel} is now closed.`,
+                detail: `Close settled on-chain: the contract recorded exactly the committed ` +
+                    `${amount} as withdrawn, and closeEffectiveAtLedger is set to ` +
+                    `${after.closeEffectiveAtLedger}. Channel balance went from ` +
+                    `${before.balance} to ${after.balance}; the remainder was auto-refunded ` +
+                    `to the funder, which is the contract's designed close behaviour. ` +
+                    `Channel ${channel} is now permanently closed.`,
             },
         ];
     }

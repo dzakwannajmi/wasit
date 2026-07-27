@@ -47,6 +47,17 @@ export declare function commitmentKeypairFromHex(secretHex: string): Keypair;
  */
 export declare function nextValidCumulative(previousCumulative: bigint, requestedAmount: bigint): bigint;
 /**
+ * Reads the channel contract's `withdrawn` getter: the cumulative amount already
+ * paid out to the recipient. After a close this must equal the commitment that
+ * was closed with.
+ */
+export declare function readChannelWithdrawn(parameters: {
+    readonly channelContract: string;
+    readonly networkPassphrase: string;
+    readonly rpcUrl: string;
+    readonly simulationTimeoutMs?: number;
+}): Promise<bigint>;
+/**
  * Simulates `prepare_commitment(amount)` and returns the bytes to be signed.
  */
 export declare function prepareCommitmentBytes(params: PrepareCommitmentParams): Promise<Buffer>;

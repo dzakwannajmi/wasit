@@ -16,10 +16,10 @@ const channelContract = process.env.CHANNEL_CONTRACT;
 const recipient = process.env.MPP_RECIPIENT;
 const commitmentPubkeyHex = process.env.COMMITMENT_PUBKEY_HEX;
 const secretKey = process.env.MPP_SECRET_KEY;
-// Required for the close action: the server sources and signs the on-chain
-// close transaction itself. Without it the SDK rejects a close credential
-// before touching the store, so a voucher-only server cannot be bricked.
-const payerSecret = process.env.MPP_PAYER_SECRET;
+// Required for the close action. The channel contract calls `to.require_auth()`,
+// so the close transaction must be sourced and signed by the RECIPIENT — not by
+// the funder. Signing with the funder key reaches the chain and fails there.
+const recipientSecret = process.env.MPP_RECIPIENT_SECRET;
 
 if (
   !network ||
@@ -27,11 +27,11 @@ if (
   !recipient ||
   !commitmentPubkeyHex ||
   !secretKey ||
-  !payerSecret
+  !recipientSecret
 ) {
   throw new Error(
     "Missing required env vars: MPP_STELLAR_NETWORK, CHANNEL_CONTRACT, MPP_RECIPIENT, " +
-      "COMMITMENT_PUBKEY_HEX, MPP_SECRET_KEY, MPP_PAYER_SECRET.",
+      "COMMITMENT_PUBKEY_HEX, MPP_SECRET_KEY, MPP_RECIPIENT_SECRET.",
   );
 }
 
@@ -44,7 +44,15 @@ const mppx = Mppx.create({
       channel: channelContract,
       commitmentKey: commitmentPublicKeyG,
       store: Store.memory(),
-      feePayer: { envelopeSigner: payerSecret },
+      feePayer: { envelopeSigner: recipientSecret },
+      // Channel-mode rejections all surface as the same generic 402 body, so
+      // without server-side logging a failure is undiagnosable from the client.
+      logger: {
+        debug: (msg: string, ...args: unknown[]) => console.log("[debug]", msg, ...args),
+        info: (msg: string, ...args: unknown[]) => console.log("[info ]", msg, ...args),
+        warn: (msg: string, ...args: unknown[]) => console.warn("[warn ]", msg, ...args),
+        error: (msg: string, ...args: unknown[]) => console.error("[error]", msg, ...args),
+      },
       network: network as `${string}:${string}`,
       recipient,
       currency: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
