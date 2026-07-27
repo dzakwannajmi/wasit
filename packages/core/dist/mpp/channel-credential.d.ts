@@ -9,8 +9,9 @@
  * amounts, so they assemble credentials directly.
  */
 import { Challenge } from "mppx";
+import { MalformedResponseError } from "../errors.js";
 export type ChannelAction = "voucher" | "close";
-export declare class ChannelChallengeError extends Error {
+export declare class ChannelChallengeError extends MalformedResponseError {
     constructor(message: string);
 }
 /** The channel-specific fields Wasit reads out of a 402 challenge. */

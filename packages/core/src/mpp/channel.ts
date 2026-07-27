@@ -1,6 +1,6 @@
 import { type ChannelState, getChannelState } from "@stellar/mpp/channel/server";
 import type { CheckResult } from "../check.js";
-import { skippedDestructive } from "../check.js";
+import { errored, skippedDestructive } from "../check.js";
 import { readChannelWithdrawn, signChannelCommitment } from "./channel-commitment.js";
 import {
   buildChannelCredential,
@@ -13,6 +13,8 @@ import { assertMppNetwork, networkPassphrase, resolveRpcUrl } from "./network.js
 export interface MppChannelDeployCheckOptions {
   channelContract: string;
   network: string; // e.g. "stellar:testnet"
+  /** Overrides the default RPC endpoint, as every other channel check does. */
+  rpcUrl?: string;
   expected: {
     token: string;
     from: string;
@@ -34,16 +36,10 @@ export async function runMppChannelDeployChecks(
     state = await getChannelState({
       channel: options.channelContract,
       network: assertMppNetwork(options.network),
+      ...(options.rpcUrl ? { rpcUrl: options.rpcUrl } : {}),
     });
   } catch (err) {
-    return [
-      {
-        id: "MPP-10",
-        name: "Channel Deploy",
-        pass: false,
-        detail: `Channel state query failed for ${options.channelContract}: ${(err as Error).message}`,
-      },
-    ];
+    return [errored("MPP-10", "Channel Deploy", err)];
   }
 
   const mismatches: string[] = [];
@@ -206,7 +202,7 @@ export async function runMppChannelOrderingCheck(
       },
     ];
   } catch (error) {
-    return failure(id, name, `Check could not run: ${(error as Error).message}`);
+    return [errored(id, name, error)];
   }
 }
 
@@ -265,7 +261,7 @@ export async function runMppChannelReplayCheck(
       },
     ];
   } catch (error) {
-    return failure(id, name, `Check could not run: ${(error as Error).message}`);
+    return [errored(id, name, error)];
   }
 }
 
@@ -339,7 +335,7 @@ export async function runMppChannelCommitmentReplayCheck(
       },
     ];
   } catch (error) {
-    return failure(id, name, `Check could not run: ${(error as Error).message}`);
+    return [errored(id, name, error)];
   }
 }
 
@@ -505,6 +501,6 @@ export async function runMppChannelCloseCheck(
       },
     ];
   } catch (error) {
-    return failure(id, name, `Check could not run: ${(error as Error).message}`);
+    return [errored(id, name, error)];
   }
 }

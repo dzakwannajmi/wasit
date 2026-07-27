@@ -1,45 +1,119 @@
 #!/usr/bin/env node
 import "dotenv/config";
 import { Command } from "commander";
-import { runX402ReadChecks, runX402PaymentChecks } from "@wasit/core";
+import { runMppChannelSuite, runX402PaymentChecks, runX402ReadChecks, } from "@wasit/core";
 const program = new Command();
 program
     .name("wasit")
     .description("Protocol-compliance testing for x402 / MPP on Stellar")
     .version("0.1.0");
+/**
+ * Prints results and returns the process exit code.
+ *
+ * A skipped check carries `pass: false` so it can never be counted as
+ * conformance, but it is not a failure and must not fail the run. An errored
+ * check produced no verdict at all and is reported separately again.
+ */
+function report(results) {
+    for (const result of results) {
+        const status = result.skipped
+            ? "SKIP"
+            : result.error
+                ? "ERROR"
+                : result.pass
+                    ? "PASS"
+                    : "FAIL";
+        const flag = result.destructive ? "  [destructive]" : "";
+        console.log(`${status}  ${result.id}  ${result.name}${flag}`);
+        console.log(`      ${result.detail}\n`);
+    }
+    const skips = results.filter((r) => r.skipped);
+    const errors = results.filter((r) => !r.skipped && r.error !== undefined);
+    const failures = results.filter((r) => !r.pass && !r.skipped && r.error === undefined);
+    const passes = results.filter((r) => r.pass);
+    const summary = [`${passes.length} passed`];
+    if (failures.length > 0)
+        summary.push(`${failures.length} failed`);
+    if (errors.length > 0)
+        summary.push(`${errors.length} could not run`);
+    if (skips.length > 0)
+        summary.push(`${skips.length} skipped`);
+    console.log(`${summary.join(", ")}.`);
+    if (errors.length > 0 && failures.length === 0) {
+        console.log("\nNo verdict: some checks never reached the target or the run is " +
+            "misconfigured. This is not a statement about the target's conformance.");
+    }
+    // 1 = the target is non-conformant. 2 = no verdict. A real finding outranks
+    // a missing one, so a run with both exits 1.
+    if (failures.length > 0)
+        return 1;
+    return errors.length > 0 ? 2 : 0;
+}
 program
     .command("test")
     .description("Run x402 compliance checks against a target service")
     .requiredOption("--target <url>", "URL of the service to test")
     .option("--network <network>", "Network identifier", "stellar:testnet")
     .option("--payer-key <key>", "Testnet payer secret key (overrides STELLAR_PRIVATE_KEY from .env)")
-    .option("--read-only", "Skip payment checks (X402-06/07), only check response format", false)
+    .option("--read-only", "Skip payment checks (X402-06/07)", false)
     .action(async (opts) => {
-    const readResults = await runX402ReadChecks({ target: opts.target });
-    let paymentResults = [];
+    const results = await runX402ReadChecks({ target: opts.target });
     const payerKey = opts.payerKey ?? process.env.STELLAR_PRIVATE_KEY;
     if (opts.readOnly) {
-        console.log("(--read-only set: skipping payment checks)");
+        console.log("(--read-only set: skipping payment checks)\n");
     }
     else if (!payerKey) {
-        console.log("(no payer key found — set STELLAR_PRIVATE_KEY in .env or pass --payer-key — skipping payment checks)");
+        console.log("(no payer key: set STELLAR_PRIVATE_KEY in .env or pass --payer-key — skipping payment checks)\n");
     }
     else {
-        paymentResults = await runX402PaymentChecks({
+        results.push(...(await runX402PaymentChecks({
             target: opts.target,
             network: opts.network,
             payerSecretKey: payerKey,
-        });
+        })));
     }
-    const allResults = [...readResults, ...paymentResults];
-    console.table(allResults);
-    const failed = allResults.filter((r) => !r.pass);
-    if (failed.length > 0) {
-        console.error(`\n${failed.length} check(s) failed.`);
+    process.exit(report(results));
+});
+program
+    .command("mpp-channel")
+    .description("Run MPP channel-mode compliance checks against a target service")
+    .requiredOption("--target <url>", "URL of the paid resource to test")
+    .option("--commitment-key <hex>", "Raw ed25519 commitment seed, hex (default: COMMITMENT_SECRET_HEX)")
+    .option("--network <network>", "CAIP-2 network id (default: MPP_STELLAR_NETWORK)")
+    .option("--rpc-url <url>", "Override the default Soroban RPC endpoint")
+    .option("--channel <address>", "Assert which channel the target bills through. Defaults to the channel " +
+    "the target advertises; a mismatch fails MPP-10. (env: CHANNEL_CONTRACT)")
+    .option("--expect-token <address>", "MPP-10: expected token contract")
+    .option("--expect-from <address>", "MPP-10: expected funder address")
+    .option("--expect-to <address>", "MPP-10: expected recipient address")
+    .option("--expect-refund-period <ledgers>", "MPP-10: expected refund waiting period")
+    .option("--allow-destructive", "Enable MPP-13. Closing settles on-chain and permanently ends the channel.", false)
+    .option("--destructive-channel <address>", "Channel MPP-13 is permitted to close (default: CHANNEL_CONTRACT_DISPOSABLE)")
+    .action(async (opts) => {
+    const commitmentSecretHex = opts.commitmentKey ?? process.env.COMMITMENT_SECRET_HEX;
+    if (!commitmentSecretHex) {
+        console.error("No commitment key. Pass --commitment-key or set COMMITMENT_SECRET_HEX in .env.");
         process.exit(1);
     }
-    else {
-        console.log(`\nAll ${allResults.length} checks passed.`);
-    }
+    const network = opts.network ?? process.env.MPP_STELLAR_NETWORK ?? "stellar:testnet";
+    const channelOverride = opts.channel ?? process.env.CHANNEL_CONTRACT;
+    const destructiveChannel = opts.destructiveChannel ?? process.env.CHANNEL_CONTRACT_DISPOSABLE;
+    const refundWaitingPeriod = Number(opts.expectRefundPeriod);
+    const results = await runMppChannelSuite({
+        target: opts.target,
+        commitmentSecretHex,
+        network,
+        allowDestructive: opts.allowDestructive === true,
+        ...(opts.rpcUrl ? { rpcUrl: opts.rpcUrl } : {}),
+        ...(channelOverride ? { channelOverride } : {}),
+        ...(destructiveChannel ? { destructiveChannel } : {}),
+        expected: {
+            ...(opts.expectToken ? { token: opts.expectToken } : {}),
+            ...(opts.expectFrom ? { from: opts.expectFrom } : {}),
+            ...(opts.expectTo ? { to: opts.expectTo } : {}),
+            ...(Number.isInteger(refundWaitingPeriod) ? { refundWaitingPeriod } : {}),
+        },
+    });
+    process.exit(report(results));
 });
 program.parse();

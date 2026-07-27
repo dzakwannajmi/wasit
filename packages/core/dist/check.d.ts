@@ -1,6 +1,7 @@
 /**
  * The result shape shared by every conformance check, across protocols.
  */
+import { type CheckError } from "./errors.js";
 export interface CheckResult {
     /** Stable catalogue identifier, e.g. "MPP-11". Must match docs/CHECKS.md. */
     id: string;
@@ -23,8 +24,23 @@ export interface CheckResult {
      * to test. See docs/CHECKS.md and SECURITY.md.
      */
     destructive?: boolean;
+    /**
+     * Set when the check produced no verdict about the target — it could not
+     * connect, or the run is misconfigured, or the harness itself failed.
+     * `pass` is false so an errored check can never be counted as conformance,
+     * but reporters must not present it as a defect in the target.
+     */
+    error?: CheckError;
 }
 /** Builds the result for a destructive check that was not opted into. */
 export declare function skippedDestructive(id: string, name: string, reason: string): CheckResult;
+/**
+ * Builds the result for a check that threw.
+ *
+ * A malformed response becomes an ordinary failure — the target answered and
+ * the answer was wrong. Everything else becomes an errored result, which is
+ * reported and exit-coded separately from conformance failures.
+ */
+export declare function errored(id: string, name: string, error: unknown): CheckResult;
 /** Builds the result for a check that was not run, for a non-destructive reason. */
 export declare function skipped(id: string, name: string, reason: string): CheckResult;

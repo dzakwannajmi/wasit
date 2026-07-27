@@ -2,14 +2,9 @@
 import "dotenv/config";
 import { Command } from "commander";
 import {
-  runMppChannelCloseCheck,
-  runMppChannelCommitmentReplayCheck,
-  runMppChannelDeployChecks,
-  runMppChannelOrderingCheck,
-  runMppChannelReplayCheck,
+  runMppChannelSuite,
   runX402PaymentChecks,
   runX402ReadChecks,
-  skipped,
   type CheckResult,
 } from "@wasit/core";
 
@@ -24,26 +19,47 @@ program
  * Prints results and returns the process exit code.
  *
  * A skipped check carries `pass: false` so it can never be counted as
- * conformance, but it is not a failure and must not fail the run.
+ * conformance, but it is not a failure and must not fail the run. An errored
+ * check produced no verdict at all and is reported separately again.
  */
 function report(results: CheckResult[]): number {
   for (const result of results) {
-    const status = result.skipped ? "SKIP" : result.pass ? "PASS" : "FAIL";
+    const status = result.skipped
+      ? "SKIP"
+      : result.error
+        ? "ERROR"
+        : result.pass
+          ? "PASS"
+          : "FAIL";
     const flag = result.destructive ? "  [destructive]" : "";
     console.log(`${status}  ${result.id}  ${result.name}${flag}`);
     console.log(`      ${result.detail}\n`);
   }
 
-  const failures = results.filter((r) => !r.pass && !r.skipped);
   const skips = results.filter((r) => r.skipped);
+  const errors = results.filter((r) => !r.skipped && r.error !== undefined);
+  const failures = results.filter(
+    (r) => !r.pass && !r.skipped && r.error === undefined,
+  );
   const passes = results.filter((r) => r.pass);
 
   const summary = [`${passes.length} passed`];
   if (failures.length > 0) summary.push(`${failures.length} failed`);
+  if (errors.length > 0) summary.push(`${errors.length} could not run`);
   if (skips.length > 0) summary.push(`${skips.length} skipped`);
   console.log(`${summary.join(", ")}.`);
 
-  return failures.length > 0 ? 1 : 0;
+  if (errors.length > 0 && failures.length === 0) {
+    console.log(
+      "\nNo verdict: some checks never reached the target or the run is " +
+        "misconfigured. This is not a statement about the target's conformance.",
+    );
+  }
+
+  // 1 = the target is non-conformant. 2 = no verdict. A real finding outranks
+  // a missing one, so a run with both exits 1.
+  if (failures.length > 0) return 1;
+  return errors.length > 0 ? 2 : 0;
 }
 
 program
@@ -91,7 +107,8 @@ program
   .option("--rpc-url <url>", "Override the default Soroban RPC endpoint")
   .option(
     "--channel <address>",
-    "Channel contract for the deploy check (default: CHANNEL_CONTRACT)",
+    "Assert which channel the target bills through. Defaults to the channel " +
+      "the target advertises; a mismatch fails MPP-10. (env: CHANNEL_CONTRACT)",
   )
   .option("--expect-token <address>", "MPP-10: expected token contract")
   .option("--expect-from <address>", "MPP-10: expected funder address")
@@ -118,65 +135,27 @@ program
 
     const network: string =
       opts.network ?? process.env.MPP_STELLAR_NETWORK ?? "stellar:testnet";
+    const channelOverride: string | undefined =
+      opts.channel ?? process.env.CHANNEL_CONTRACT;
+    const destructiveChannel: string | undefined =
+      opts.destructiveChannel ?? process.env.CHANNEL_CONTRACT_DISPOSABLE;
+    const refundWaitingPeriod = Number(opts.expectRefundPeriod);
 
-    const shared = {
+    const results = await runMppChannelSuite({
       target: opts.target as string,
       commitmentSecretHex,
       network,
+      allowDestructive: opts.allowDestructive === true,
       ...(opts.rpcUrl ? { rpcUrl: opts.rpcUrl as string } : {}),
-    };
-
-    const results: CheckResult[] = [];
-
-    // MPP-10 needs values only the channel's own operator knows, so it is
-    // opt-in rather than a failure when they are absent.
-    const deployChannel: string | undefined = opts.channel ?? process.env.CHANNEL_CONTRACT;
-    const refundPeriod = Number(opts.expectRefundPeriod);
-    const missing = [
-      deployChannel ? null : "--channel",
-      opts.expectToken ? null : "--expect-token",
-      opts.expectFrom ? null : "--expect-from",
-      opts.expectTo ? null : "--expect-to",
-      Number.isInteger(refundPeriod) ? null : "--expect-refund-period",
-    ].filter((entry): entry is string => entry !== null);
-
-    if (deployChannel && missing.length === 0) {
-      results.push(
-        ...(await runMppChannelDeployChecks({
-          channelContract: deployChannel,
-          network,
-          expected: {
-            token: opts.expectToken as string,
-            from: opts.expectFrom as string,
-            to: opts.expectTo as string,
-            refundWaitingPeriod: refundPeriod,
-          },
-        })),
-      );
-    } else {
-      results.push(
-        skipped(
-          "MPP-10",
-          "Channel Deploy",
-          `expected on-chain parameters not supplied (${missing.join(", ")}).`,
-        ),
-      );
-    }
-
-    results.push(...(await runMppChannelOrderingCheck(shared)));
-    results.push(...(await runMppChannelReplayCheck(shared)));
-    results.push(...(await runMppChannelCommitmentReplayCheck(shared)));
-
-    // Last: a close is terminal, so nothing may run against the channel after it.
-    const destructiveChannel: string | undefined =
-      opts.destructiveChannel ?? process.env.CHANNEL_CONTRACT_DISPOSABLE;
-    results.push(
-      ...(await runMppChannelCloseCheck({
-        ...shared,
-        allowDestructive: opts.allowDestructive === true,
-        ...(destructiveChannel ? { expectedChannel: destructiveChannel } : {}),
-      })),
-    );
+      ...(channelOverride ? { channelOverride } : {}),
+      ...(destructiveChannel ? { destructiveChannel } : {}),
+      expected: {
+        ...(opts.expectToken ? { token: opts.expectToken as string } : {}),
+        ...(opts.expectFrom ? { from: opts.expectFrom as string } : {}),
+        ...(opts.expectTo ? { to: opts.expectTo as string } : {}),
+        ...(Number.isInteger(refundWaitingPeriod) ? { refundWaitingPeriod } : {}),
+      },
+    });
 
     process.exit(report(results));
   });

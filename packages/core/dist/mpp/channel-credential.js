@@ -9,9 +9,10 @@
  * amounts, so they assemble credentials directly.
  */
 import { Challenge, Credential } from "mppx";
+import { MalformedResponseError, fetchTarget } from "../errors.js";
 import { signChannelCommitment } from "./channel-commitment.js";
 import { networkPassphrase, resolveRpcUrl } from "./network.js";
-export class ChannelChallengeError extends Error {
+export class ChannelChallengeError extends MalformedResponseError {
     constructor(message) {
         super(message);
         this.name = "ChannelChallengeError";
@@ -35,11 +36,18 @@ function readString(source, key) {
  * rule a check is trying to exercise.
  */
 export async function fetchChannelChallenge(target) {
-    const response = await fetch(target);
+    const response = await fetchTarget(target);
     if (response.status !== 402) {
         throw new ChannelChallengeError(`Expected HTTP 402 with a payment challenge, got ${response.status}.`);
     }
-    const challenge = Challenge.fromResponse(response);
+    let challenge;
+    try {
+        challenge = Challenge.fromResponse(response);
+    }
+    catch (error) {
+        throw new ChannelChallengeError(`Challenge could not be parsed from the WWW-Authenticate header: ` +
+            `${error.message}`);
+    }
     const request = asRecord(challenge.request);
     if (!request) {
         throw new ChannelChallengeError("Challenge carries no request object.");
@@ -55,12 +63,18 @@ export async function fetchChannelChallenge(target) {
     const cumulativeRaw = methodDetails
         ? readString(methodDetails, "cumulativeAmount")
         : undefined;
-    return {
-        challenge,
-        channelContract,
-        requestedAmount: BigInt(requested),
-        cumulativeAmount: BigInt(cumulativeRaw ?? "0"),
-    };
+    try {
+        return {
+            challenge,
+            channelContract,
+            requestedAmount: BigInt(requested),
+            cumulativeAmount: BigInt(cumulativeRaw ?? "0"),
+        };
+    }
+    catch {
+        throw new ChannelChallengeError(`Challenge carries non-numeric amounts (amount="${requested}", ` +
+            `cumulativeAmount="${cumulativeRaw ?? "0"}").`);
+    }
 }
 /**
  * Serialises an already-signed commitment into an Authorization header value.
@@ -94,6 +108,8 @@ export async function buildChannelCredential(parameters) {
 }
 /** Submits a credential and captures both status and body for diagnostics. */
 export async function submitCredential(target, credential) {
-    const response = await fetch(target, { headers: { Authorization: credential } });
+    const response = await fetchTarget(target, {
+        headers: { Authorization: credential },
+    });
     return { status: response.status, body: await response.text() };
 }

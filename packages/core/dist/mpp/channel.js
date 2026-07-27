@@ -1,5 +1,5 @@
 import { getChannelState } from "@stellar/mpp/channel/server";
-import { skippedDestructive } from "../check.js";
+import { errored, skippedDestructive } from "../check.js";
 import { readChannelWithdrawn, signChannelCommitment } from "./channel-commitment.js";
 import { buildChannelCredential, fetchChannelChallenge, serializeChannelCredential, submitCredential, } from "./channel-credential.js";
 import { assertMppNetwork, networkPassphrase, resolveRpcUrl } from "./network.js";
@@ -14,17 +14,11 @@ export async function runMppChannelDeployChecks(options) {
         state = await getChannelState({
             channel: options.channelContract,
             network: assertMppNetwork(options.network),
+            ...(options.rpcUrl ? { rpcUrl: options.rpcUrl } : {}),
         });
     }
     catch (err) {
-        return [
-            {
-                id: "MPP-10",
-                name: "Channel Deploy",
-                pass: false,
-                detail: `Channel state query failed for ${options.channelContract}: ${err.message}`,
-            },
-        ];
+        return [errored("MPP-10", "Channel Deploy", err)];
     }
     const mismatches = [];
     if (state.token !== options.expected.token) {
@@ -139,7 +133,7 @@ export async function runMppChannelOrderingCheck(options) {
         ];
     }
     catch (error) {
-        return failure(id, name, `Check could not run: ${error.message}`);
+        return [errored(id, name, error)];
     }
 }
 /**
@@ -184,7 +178,7 @@ export async function runMppChannelReplayCheck(options) {
         ];
     }
     catch (error) {
-        return failure(id, name, `Check could not run: ${error.message}`);
+        return [errored(id, name, error)];
     }
 }
 /**
@@ -236,7 +230,7 @@ export async function runMppChannelCommitmentReplayCheck(options) {
         ];
     }
     catch (error) {
-        return failure(id, name, `Check could not run: ${error.message}`);
+        return [errored(id, name, error)];
     }
 }
 function sleep(ms) {
@@ -336,6 +330,6 @@ export async function runMppChannelCloseCheck(options) {
         ];
     }
     catch (error) {
-        return failure(id, name, `Check could not run: ${error.message}`);
+        return [errored(id, name, error)];
     }
 }

@@ -6,7 +6,8 @@
  * the caller may target a private or self-hosted node.
  */
 import { Networks } from "@stellar/stellar-sdk";
-export class UnsupportedNetworkError extends Error {
+import { ConfigurationError } from "../errors.js";
+export class UnsupportedNetworkError extends ConfigurationError {
     constructor(network) {
         super(`Unsupported network "${network}". Expected "stellar:testnet" or "stellar:pubnet".`);
         this.name = "UnsupportedNetworkError";
@@ -48,7 +49,7 @@ export function resolveRpcUrl(network, override) {
         return override;
     const fallback = DEFAULT_RPC_URLS[resolved];
     if (!fallback) {
-        throw new Error(`No default RPC endpoint for ${resolved}. Pass an explicit rpcUrl.`);
+        throw new ConfigurationError(`No default RPC endpoint for ${resolved}. Pass an explicit rpcUrl.`);
     }
     return fallback;
 }

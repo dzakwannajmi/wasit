@@ -5,9 +5,10 @@
  * restated here, so they cannot drift. RPC endpoints are overridable because
  * the caller may target a private or self-hosted node.
  */
+import { ConfigurationError } from "../errors.js";
 /** CAIP-2 network identifiers supported by the MPP checks. */
 export type MppNetwork = "stellar:testnet" | "stellar:pubnet";
-export declare class UnsupportedNetworkError extends Error {
+export declare class UnsupportedNetworkError extends ConfigurationError {
     constructor(network: string);
 }
 export declare function isMppNetwork(value: string): value is MppNetwork;

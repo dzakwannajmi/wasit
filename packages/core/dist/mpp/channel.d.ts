@@ -2,6 +2,8 @@ import type { CheckResult } from "../check.js";
 export interface MppChannelDeployCheckOptions {
     channelContract: string;
     network: string;
+    /** Overrides the default RPC endpoint, as every other channel check does. */
+    rpcUrl?: string;
     expected: {
         token: string;
         from: string;
