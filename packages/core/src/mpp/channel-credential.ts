@@ -10,12 +10,13 @@
  */
 
 import { Challenge, Credential } from "mppx";
+import { MalformedResponseError, fetchTarget } from "../errors.js";
 import { signChannelCommitment } from "./channel-commitment.js";
 import { networkPassphrase, resolveRpcUrl } from "./network.js";
 
 export type ChannelAction = "voucher" | "close";
 
-export class ChannelChallengeError extends Error {
+export class ChannelChallengeError extends MalformedResponseError {
   public constructor(message: string) {
     super(message);
     this.name = "ChannelChallengeError";
@@ -58,14 +59,23 @@ function readString(source: Record<string, unknown>, key: string): string | unde
  * rule a check is trying to exercise.
  */
 export async function fetchChannelChallenge(target: string): Promise<ChannelChallenge> {
-  const response = await fetch(target);
+  const response = await fetchTarget(target);
   if (response.status !== 402) {
     throw new ChannelChallengeError(
       `Expected HTTP 402 with a payment challenge, got ${response.status}.`,
     );
   }
 
-  const challenge = Challenge.fromResponse(response);
+  let challenge: Challenge.Challenge;
+  try {
+    challenge = Challenge.fromResponse(response);
+  } catch (error) {
+    throw new ChannelChallengeError(
+      `Challenge could not be parsed from the WWW-Authenticate header: ` +
+        `${(error as Error).message}`,
+    );
+  }
+
   const request = asRecord(challenge.request);
   if (!request) {
     throw new ChannelChallengeError("Challenge carries no request object.");
@@ -86,12 +96,19 @@ export async function fetchChannelChallenge(target: string): Promise<ChannelChal
     ? readString(methodDetails, "cumulativeAmount")
     : undefined;
 
-  return {
-    challenge,
-    channelContract,
-    requestedAmount: BigInt(requested),
-    cumulativeAmount: BigInt(cumulativeRaw ?? "0"),
-  };
+  try {
+    return {
+      challenge,
+      channelContract,
+      requestedAmount: BigInt(requested),
+      cumulativeAmount: BigInt(cumulativeRaw ?? "0"),
+    };
+  } catch {
+    throw new ChannelChallengeError(
+      `Challenge carries non-numeric amounts (amount="${requested}", ` +
+        `cumulativeAmount="${cumulativeRaw ?? "0"}").`,
+    );
+  }
 }
 
 /**
@@ -157,6 +174,8 @@ export async function submitCredential(
   target: string,
   credential: string,
 ): Promise<SubmissionResult> {
-  const response = await fetch(target, { headers: { Authorization: credential } });
+  const response = await fetchTarget(target, {
+    headers: { Authorization: credential },
+  });
   return { status: response.status, body: await response.text() };
 }

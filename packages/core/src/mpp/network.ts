@@ -7,11 +7,12 @@
  */
 
 import { Networks } from "@stellar/stellar-sdk";
+import { ConfigurationError } from "../errors.js";
 
 /** CAIP-2 network identifiers supported by the MPP checks. */
 export type MppNetwork = "stellar:testnet" | "stellar:pubnet";
 
-export class UnsupportedNetworkError extends Error {
+export class UnsupportedNetworkError extends ConfigurationError {
   public constructor(network: string) {
     super(
       `Unsupported network "${network}". Expected "stellar:testnet" or "stellar:pubnet".`,
@@ -60,7 +61,7 @@ export function resolveRpcUrl(network: string, override?: string): string {
 
   const fallback = DEFAULT_RPC_URLS[resolved];
   if (!fallback) {
-    throw new Error(
+    throw new ConfigurationError(
       `No default RPC endpoint for ${resolved}. Pass an explicit rpcUrl.`,
     );
   }
