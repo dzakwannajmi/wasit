@@ -1,5 +1,6 @@
-import { getChannelState } from "@stellar/mpp/channel/server";
+import { type ChannelState, getChannelState } from "@stellar/mpp/channel/server";
 import type { CheckResult } from "../check.js";
+import { skippedDestructive } from "../check.js";
 import { signChannelCommitment } from "./channel-commitment.js";
 import {
   buildChannelCredential,
@@ -7,7 +8,7 @@ import {
   serializeChannelCredential,
   submitCredential,
 } from "./channel-credential.js";
-import { networkPassphrase, resolveRpcUrl } from "./network.js";
+import { assertMppNetwork, networkPassphrase, resolveRpcUrl } from "./network.js";
 
 export interface MppChannelDeployCheckOptions {
   channelContract: string;
@@ -32,7 +33,7 @@ export async function runMppChannelDeployChecks(
   try {
     state = await getChannelState({
       channel: options.channelContract,
-      network: options.network as `${string}:${string}`,
+      network: assertMppNetwork(options.network),
     });
   } catch (err) {
     return [
@@ -335,6 +336,160 @@ export async function runMppChannelCommitmentReplayCheck(
         detail:
           `Captured commitment (${amount}) correctly rejected when re-presented ` +
           `against a fresh challenge (HTTP 402).`,
+      },
+    ];
+  } catch (error) {
+    return failure(id, name, `Check could not run: ${(error as Error).message}`);
+  }
+}
+
+export interface MppChannelCloseCheckOptions extends MppChannelCheckOptions {
+  /**
+   * Contract address the operator intends to destroy. The check refuses to run
+   * unless the target's challenge advertises exactly this channel, so pointing
+   * a destructive run at the wrong service closes nothing.
+   */
+  expectedChannel?: string;
+  allowDestructive?: boolean;
+  closePollAttempts?: number;
+  closePollDelayMs?: number;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function runMppChannelCloseCheck(
+  options: MppChannelCloseCheckOptions,
+): Promise<CheckResult[]> {
+  const id = "MPP-13";
+  const name = "Close Settlement";
+  const {
+    target,
+    commitmentSecretHex,
+    network,
+    rpcUrl,
+    expectedChannel,
+    allowDestructive = false,
+    closePollAttempts = 6,
+    closePollDelayMs = 2_000,
+  } = options;
+
+  if (!allowDestructive) {
+    return [
+      skippedDestructive(
+        id,
+        name,
+        "closing settles the channel on-chain and permanently ends it. " +
+          "Re-run with destructive checks enabled, against a channel you own.",
+      ),
+    ];
+  }
+
+  if (!expectedChannel) {
+    return failure(
+      id,
+      name,
+      "Destructive checks are enabled but no expected channel was named. " +
+        "Name the channel you intend to close, so a misconfigured target " +
+        "cannot close a different one.",
+    );
+  }
+
+  try {
+    const challenge = await fetchChannelChallenge(target);
+    const channel = challenge.channelContract;
+
+    // The target decides which channel it bills through, so the address in the
+    // challenge is the one that would actually be closed. Refusing on mismatch
+    // is what makes naming the channel a safeguard rather than a formality.
+    if (channel !== expectedChannel) {
+      return failure(
+        id,
+        name,
+        `Refusing to close: ${target} bills through channel ${channel}, but the ` +
+          `run named ${expectedChannel} as the channel to destroy. Point the ` +
+          `target at the intended channel, or correct the expected address.`,
+      );
+    }
+
+    const readState = (): Promise<ChannelState> =>
+      getChannelState({
+        channel,
+        network: assertMppNetwork(network),
+        ...(rpcUrl ? { rpcUrl } : {}),
+      });
+
+    const before = await readState();
+    if (before.closeEffectiveAtLedger !== null) {
+      return failure(
+        id,
+        name,
+        `Channel ${channel} is already closing or closed ` +
+          `(closeEffectiveAtLedger=${before.closeEffectiveAtLedger}). ` +
+          `This check needs a channel that is still open.`,
+      );
+    }
+
+    const amount = challenge.cumulativeAmount + challenge.requestedAmount;
+    const { credential } = await buildChannelCredential({
+      challenge,
+      amount,
+      commitmentSecretHex,
+      network,
+      rpcUrl,
+      action: "close",
+    });
+
+    const closed = await submitCredential(target, credential);
+    if (closed.status !== 200) {
+      return failure(
+        id,
+        name,
+        `Close credential (${amount}) was not accepted — expected HTTP 200, ` +
+          `got ${closed.status}: ${closed.body}`,
+      );
+    }
+
+    let after: ChannelState | undefined;
+    for (let attempt = 0; attempt < closePollAttempts; attempt += 1) {
+      after = await readState();
+      if (after.closeEffectiveAtLedger !== null) break;
+      await sleep(closePollDelayMs);
+    }
+
+    if (!after || after.closeEffectiveAtLedger === null) {
+      return failure(
+        id,
+        name,
+        `Server reported the close succeeded, but on-chain state still shows ` +
+          `the channel open after ${closePollAttempts} polls. The settlement ` +
+          `was not observable on-chain.`,
+      );
+    }
+
+    const delta = before.balance - after.balance;
+    if (delta !== amount) {
+      return failure(
+        id,
+        name,
+        `Channel closed (closeEffectiveAtLedger=${after.closeEffectiveAtLedger}), ` +
+          `but the balance moved by ${delta} instead of the committed ${amount} ` +
+          `(before=${before.balance}, after=${after.balance}). Either the payout ` +
+          `did not match the commitment, or the channel had prior on-chain withdrawals.`,
+      );
+    }
+
+    return [
+      {
+        id,
+        name,
+        pass: true,
+        destructive: true,
+        detail:
+          `Close settled on-chain: balance fell by exactly the committed ${amount} ` +
+          `(${before.balance} to ${after.balance}), and closeEffectiveAtLedger is ` +
+          `set to ${after.closeEffectiveAtLedger}. Channel ${channel} is now closed.`,
       },
     ];
   } catch (error) {

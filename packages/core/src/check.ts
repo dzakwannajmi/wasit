@@ -42,3 +42,15 @@ export function skippedDestructive(
     detail: `Skipped (destructive): ${reason}`,
   };
 }
+
+/** Builds the result for a check that was not run, for a non-destructive reason. */
+export function skipped(id: string, name: string, reason: string): CheckResult {
+  return {
+    id,
+    name,
+    pass: false,
+    skipped: true,
+    skipReason: reason,
+    detail: `Skipped: ${reason}`,
+  };
+}

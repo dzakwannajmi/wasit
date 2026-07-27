@@ -28,12 +28,15 @@ in every test report.
 
 ## MPP — Channel Mode
 
-| ID | Check Name | Spec Reference | What It Checks | Pass Criteria |
-|---|---|---|---|---|
-| `MPP-10` | Channel Deploy | MPP Channel Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable |
-| `MPP-11` | Cumulative Commitment Ordering | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server implementation (`cumulativeMonotonicityError`) | A commitment where amount <= the previous cumulative (or that does not cover the requested amount) must be rejected before any on-chain call is made | Server throws `ChannelVerificationError` — verified via a non-success/error response from the HTTP-facing server, not a silent accept. (Note: the underlying `settle`/`close` on-chain contract call would itself silently no-op for a stale commitment if invoked directly — but Wasit tests the HTTP-facing server behavior per its "artifact under test" scope, and that layer rejects explicitly, before the contract is ever called.) |
-| `MPP-12` | Replay Rejection *(negative)* | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server implementation (challenge replay via atomic store) | Resubmitting an already-used challenge/credential must be rejected | Server throws `ChannelVerificationError` ("Challenge already used. Replay rejected.") via atomic compare-and-set on the challenge ID — testnet-only by default |
-| `MPP-13` | Close Settlement | MPP Channel Guide §closing-the-channel | Closing with the highest commitment settles correctly | RPC verifies the final balance matches the last commitment |
+Verified against `@stellar/mpp@0.7.1`, `mppx@0.8.14`, `@stellar/stellar-sdk@16.1.0`.
+
+| ID | Check Name | Destructive | Spec Reference | What It Checks | Pass Criteria |
+|---|---|---|---|---|---|
+| `MPP-10` | Channel Deploy | no | MPP Channel Guide | The channel contract deploys correctly | Contract address is valid and its state is queryable via `getChannelState()`, matching the parameters it was opened with |
+| `MPP-11` | Cumulative Commitment Ordering | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (`cumulativeMonotonicityError`) | Both ordering rules: a commitment must exceed the stored cumulative, and must cover the price of the current request | Two probes, each rejected with HTTP 402: one committing exactly the stored cumulative, one advancing but falling short of `cumulative + price`. Each probe uses a **fresh challenge**, so the earlier-running challenge replay guard cannot fire and be mistaken for ordering enforcement. The second probe is reported as not-probed when the price is 1 base unit, since it collapses into the first. |
+| `MPP-12` | Challenge Replay Rejection *(negative)* | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (atomic compare-and-set on challenge ID) | A byte-identical credential resubmitted against the same challenge must be rejected | HTTP 402 on the second submission. Isolation: the replayed credential is identical to one the server accepted moments earlier, so its signature and amount are already proven valid and only the challenge-ID claim can explain the rejection. |
+| `MPP-14` | Commitment Replay Rejection *(negative)* | no | MPP Channel Guide §closing-the-channel; `@stellar/mpp` channel server (`cumulativeMonotonicityError`) | A captured `(amount, signature)` pair must not be redeemable against a **new** challenge | HTTP 402 when a previously accepted commitment is re-presented under a fresh challenge. This is the realistic double-spend: the challenge replay guard cannot help because the challenge ID is new, so only the cumulative rule stands in the way. The official client SDK cannot express this probe — it re-signs on every call. |
+| `MPP-13` | Close Settlement | **yes** | MPP Channel Guide §closing-the-channel | Closing with the highest commitment settles on-chain | Server accepts the `close` credential (HTTP 200), then RPC confirms settlement: `closeEffectiveAtLedger` moves from `null` to a ledger sequence, and `balance` falls by exactly the committed amount. **Assumption:** the balance assertion holds only when nothing was withdrawn on-chain before the close. `getChannelState()` does not expose `withdrawn`, so this is assumed rather than verified; it holds for a channel driven purely by off-chain vouchers. **Running this permanently ends the channel** — skipped unless destructive checks are explicitly enabled, and only valid against a channel the operator owns. |
 
 ---
 
@@ -44,3 +47,20 @@ be expanded in Week 2. `X402-02` deliberately checks both header names
 because Stellar's own official documentation is not yet internally
 consistent (`PAYMENT-REQUIRED` vs `X-Payment`) — see the problem
 statement in the SOW.
+
+**Note on error granularity (Week 2).** All channel-mode rejections return the
+same HTTP 402 body: `{"type": ".../problems/verification-failed", "title":
+"Verification Failed", ...}`. Replay, non-monotonic commitments, bad signatures
+and a settling channel are indistinguishable from the response alone. Cause:
+`@stellar/mpp` throws `ChannelVerificationError`, which extends `StellarMppError`
+rather than mppx's `PaymentError`, so `mppx` rewraps every one of them into a
+generic `VerificationFailedError`. mppx already defines precise types for this
+family — `session/invalid-signature`, `session/signer-mismatch`,
+`session/amount-exceeds-deposit`, `session/delta-too-small`,
+`session/insufficient-balance`, `session/channel-finalized` — and none are
+currently reachable from channel mode.
+
+Wasit therefore isolates each rule by **construction** rather than by asserting
+on the response type: every check is built so that exactly one rejection path
+can fire, and the "Pass Criteria" column above records how. This is a gap in the
+official SDK, not in any service under test, and is being reported upstream.

@@ -9,7 +9,8 @@
     "@stellar/mpp": "^0.7.1",
     "@stellar/stellar-sdk": "^16.1.0",
     "@wasit/core": "*",
-    "commander": "^15.0.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
     "mppx": "^0.8.14"
   },
   "scripts": {
