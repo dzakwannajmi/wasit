@@ -22,6 +22,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   checkStatus,
   runMppChannelSuite,
+  runMppChargeSuite,
   runX402PaymentChecks,
   runX402ReadChecks,
   summarize,
@@ -205,6 +206,48 @@ server.registerTool(
     }
 
     return present(results);
+  },
+);
+
+server.registerTool(
+  "wasit_mpp_charge_test",
+  {
+    title: "Test MPP charge-mode settlement",
+    description:
+      "Runs MPP-01 against a running service: pays the advertised charge and " +
+      "verifies on-chain that the settlement moved exactly the advertised " +
+      "amount, to the advertised recipient, in the advertised token. " +
+      "NOT IDEMPOTENT - every call settles a real payment and spends testnet " +
+      "funds from the payer key. Repeated calls repeatedly spend. The payer " +
+      "key is read from MPP_PAYER_SECRET in this server's environment. " +
+      "Testnet only.",
+    inputSchema: {
+      target: z.string().describe("Full URL of the paid resource, including scheme"),
+      network: z.string().optional().describe('CAIP-2 network id, default "stellar:testnet"'),
+      rpcUrl: z.string().optional().describe("Override the Soroban RPC endpoint"),
+    },
+    outputSchema: runOutputShape,
+    annotations: {
+      readOnlyHint: false,
+      // Not destructive: nothing is permanently ended, unlike MPP-13. But each
+      // call spends, so it is emphatically not idempotent.
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  async ({ target, network, rpcUrl }) => {
+    const payerSecretKey = process.env.MPP_PAYER_SECRET;
+    if (!payerSecretKey) return missingKey("MPP_PAYER_SECRET");
+
+    return present(
+      await runMppChargeSuite({
+        target,
+        network: network ?? process.env.MPP_STELLAR_NETWORK ?? "stellar:testnet",
+        payerSecretKey,
+        ...(rpcUrl ? { rpcUrl } : {}),
+      }),
+    );
   },
 );
 

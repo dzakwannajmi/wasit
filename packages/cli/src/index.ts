@@ -4,6 +4,7 @@ import { Command } from "commander";
 import {
   checkStatus,
   runMppChannelSuite,
+  runMppChargeSuite,
   runX402PaymentChecks,
   runX402ReadChecks,
   summarize,
@@ -116,7 +117,7 @@ program
       console.error(
         "No commitment key. Pass --commitment-key or set COMMITMENT_SECRET_HEX in .env.",
       );
-      process.exit(1);
+      process.exit(2);
     }
 
     const network: string =
@@ -141,6 +142,32 @@ program
         ...(opts.expectTo ? { to: opts.expectTo as string } : {}),
         ...(Number.isInteger(refundWaitingPeriod) ? { refundWaitingPeriod } : {}),
       },
+    });
+
+    process.exit(report(results));
+  });
+
+program
+  .command("mpp-charge")
+  .description("Run the MPP charge-mode check (MPP-01) against a target service")
+  .requiredOption("--target <url>", "URL of the paid resource to test")
+  .option("--payer-key <key>", "Payer secret key, S... (default: MPP_PAYER_SECRET)")
+  .option("--network <network>", "CAIP-2 network id (default: MPP_STELLAR_NETWORK)")
+  .option("--rpc-url <url>", "Override the default Soroban RPC endpoint")
+  .action(async (opts) => {
+    const payerSecretKey = opts.payerKey ?? process.env.MPP_PAYER_SECRET;
+    if (!payerSecretKey) {
+      console.error("No payer key. Pass --payer-key or set MPP_PAYER_SECRET in .env.");
+      process.exit(2);
+    }
+
+    console.log("MPP-01 settles a real payment. If the target is reachable, testnet funds will move.\n");
+
+    const results = await runMppChargeSuite({
+      target: opts.target,
+      network: opts.network ?? process.env.MPP_STELLAR_NETWORK ?? "stellar:testnet",
+      payerSecretKey,
+      ...(opts.rpcUrl ? { rpcUrl: opts.rpcUrl } : {}),
     });
 
     process.exit(report(results));

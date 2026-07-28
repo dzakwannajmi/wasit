@@ -5,4 +5,6 @@ export * from "./errors.js";
 
 export * from "./x402/simulator.js";
 export * from "./mpp/channel.js";
+export * from "./mpp/charge.js";
+export * from "./mpp/charge-suite.js";
 export * from "./mpp/suite.js";

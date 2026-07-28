@@ -24,7 +24,21 @@ in every test report.
 
 | ID | Check Name | Spec Reference | What It Checks | Pass Criteria |
 |---|---|---|---|---|
-| `MPP-01` | Charge Settlement On-Chain | MPP Charge Guide | The charge transaction actually settles on Stellar | Horizon lookup of the tx referenced in the `Payment-Receipt` response header confirms a successful transaction with the correct amount. Verified against `@stellar/mpp@0.7.1` — mode `"pull"` (default): `onProgress` only fires through `"signed"`, the settled tx reference comes from `Payment-Receipt`, not `onProgress`. |
+| `MPP-01` | Charge Settlement On-Chain | MPP Charge Guide; CAP-46 transfer events | The charge settles on-chain for exactly what the target advertised | The target's own 402 challenge is read first, unpaid, capturing the advertised `amount` (base units), `currency` and `recipient`. After payment, Stellar RPC `getTransaction` confirms the transaction referenced by the `Payment-Receipt` header succeeded, and its CAP-46 `transfer` contract event shows exactly one balance change: the advertised amount, to the advertised recipient, emitted by the advertised token contract, sent from this run's own payer. Verifying the **event** rather than the transaction envelope means a token contract whose `transfer` moves a different amount than its arguments claim is still caught. Verifying the **sender** means a target cannot satisfy the check by referencing some pre-existing transaction it did not cause. Verified against `@stellar/mpp@0.7.1` — mode `"pull"` (default): `onProgress` only fires through `"signed"`, so the settled tx reference comes from `Payment-Receipt`, not `onProgress`. |
+
+**Note on MPP-01's cost (Week 2).** MPP-01 is **not** destructive: nothing is
+permanently ended and the check can be run again. But it is not free and not
+idempotent — every run settles a real payment from the payer key and moves
+testnet funds, and repeated runs spend repeatedly. This is inherent to the check
+rather than an implementation choice: charge mode has no dry-run, and a
+settlement that did not happen cannot be verified on-chain. Both front ends say
+so before running, and the MCP tool declares `idempotentHint: false`.
+
+Settlement is read from Stellar RPC rather than Horizon, so the same endpoint
+serves every MPP check and `--rpc-url` applies uniformly. The tradeoff is
+retention: RPC keeps only recent history, so MPP-01 must verify a settlement it
+just triggered, not an arbitrary past one. That matches how the check is used —
+it pays, then verifies what it paid.
 
 ## MPP — Channel Mode
 
@@ -61,6 +75,32 @@ has no row above. It is a single diagnostic emitted when the target URL or the
 network identifier is invalid — both are wrong for every check in the suite, so
 they are reported once rather than repeated identically per check. When
 preflight fails, no check runs.
+
+**Note on interfaces and access paths (Week 2).** The catalogue is exercised by
+two interfaces over one core: the `wasit` CLI and the `wasit-mcp` MCP server.
+Both run identical check code against the same suite functions, so the two can
+never disagree about the same target. Every check in this catalogue is
+reachable from both: `test` / `wasit_x402_test` for x402, `mpp-charge` /
+`wasit_mpp_charge_test` for charge mode, and `mpp-channel` /
+`wasit_mpp_channel_test` for channel mode. Only the reporting surface differs — exit
+codes are a CLI concept, and the MCP server reports the same verdict as an
+`outcome` field in its structured output.
+
+`MPP-13` is reachable from both interfaces, but by different routes. Over MCP,
+`wasit_mpp_channel_test` runs the non-destructive channel checks (`MPP-10`,
+`MPP-11`, `MPP-12`, `MPP-14`) and reports `MPP-13` as SKIP, so an agent can see
+that the check exists and why it did not run, rather than silently receiving a
+shorter catalogue. The destructive route is a **separate tool**,
+`wasit_mpp_channel_test_with_close`, which is registered only when a human
+starts the server with `WASIT_ALLOW_DESTRUCTIVE=1` or `--allow-destructive`.
+Without that opt-in the tool is absent from `tools/list` altogether: an agent
+cannot invoke a tool it cannot see, which is a stronger guarantee than a boolean
+argument it could set for itself. When the tool is registered, it still requires
+a `destructiveChannel` argument naming the channel it is permitted to close, and
+the guard described in the `MPP-13` row still applies unchanged — the run
+refuses unless the target's challenge advertises that same address. Signing keys
+are read from the server process environment and are never accepted as tool
+arguments, so an agent never handles them.
 
 **Revision note (Week 2, corrected):** `MPP-11`/`MPP-12` pass criteria were first written as "server rejects", then briefly revised to "zero balance delta / silent no-op" after reading only the `stellar-experimental/one-way-channel` on-chain contract source (which is genuinely a silent no-op for stale `settle`/`close` calls). That revision was corrected after reading the `@stellar/mpp` channel server implementation directly: the HTTP-facing server — the actual artifact Wasit tests — rejects stale/replayed commitments explicitly via `ChannelVerificationError`, before the on-chain contract is ever invoked. The contract's own no-op behavior only applies if the contract is called directly, bypassing the server, which is out of scope for Wasit.
 
