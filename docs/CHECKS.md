@@ -15,10 +15,28 @@ in every test report.
 | `X402-01` | 402 Response Status | x402 spec, HTTP semantics | An unpaid request must be answered with status code `402` | Response status is exactly `402`, not `401`/`403`/other |
 | `X402-02` | Payment Header Present | x402 built-on-stellar guide | The 402 response must include a payment header | Either `PAYMENT-REQUIRED` or `X-Payment` header is present (both are checked — the spec itself is not yet consistent, see note in README) |
 | `X402-03` | Header Payload Decodable | x402 spec §payment-required-object | The header value must be valid base64 that decodes to JSON | `atob()` + `JSON.parse()` succeed without error |
-| `X402-04` | Required Fields Present | x402 spec §payment-required-object | The payload must include the core fields | `price`/`amount`, `network`, `payTo` are all present and non-empty |
+| `X402-04` | Required Fields Present | x402 spec §payment-required-object | The payload must include the core payment terms, under the field names its own advertised version requires | `network` and `payTo` are present and non-empty, and the price field matches the advertised `x402Version`: `maxAmountRequired` for v1, `amount` for v2 (renamed in v2, which also drops the embedded resource object). The version is read from the challenge rather than accepting whichever name happens to appear, because a service advertising `x402Version: 2` while emitting the v1 field name is not conformant to the version it claims — and reporting that as a merely absent price would hide the actual defect. An unrecognised version fails: the field names cannot be checked against a version whose schema is unknown. |
 | `X402-05` | Network Identifier Valid | x402 built-on-stellar guide | Network id format follows CAIP-2 | Matches the pattern `stellar:testnet` or `stellar:pubnet` |
-| `X402-06` | Signature Resubmit Accepted | x402 spec §payment-flow | A resubmitted request with a valid signature must be accepted | Response is no longer 402; returns 2xx with the original resource |
-| `X402-07` | Invalid Signature Rejected *(negative)* | x402 spec §payment-flow | A deliberately malformed signature must be REJECTED | Server still responds 402/4xx, not a false accept |
+| `X402-06` | Signature Resubmit Accepted | x402 spec §payment-flow | A resubmitted request carrying a valid signature must be accepted | Response is no longer 402; a 2xx returns the original resource. The challenge is re-read immediately before signing, so the payment answers a challenge the target issued just now rather than a stale one. **Settles a real payment** — see the cost note below. |
+| `X402-07` | Invalid Signature Rejected *(negative)* | x402 spec §payment-flow | A deliberately corrupted signature must be REJECTED | The target answers with any status other than 200. Rejection is established only by an answer: a target that cannot be reached, or whose challenge cannot be read, produces no verdict and is reported as ERROR or SKIP. Treating a thrown error as proof of rejection would let an unreachable host pass a security check. The payload is corrupted **after** signing, so it is well-formed in every respect except the signature it carries, and only signature verification can explain a rejection. |
+
+**Note on the x402 payment checks' cost (Week 2).** `X402-06` and `X402-07`
+are not free. `X402-06` settles a real payment against the target, and `X402-07`
+attempts one with a corrupted signature; both move or risk moving testnet funds
+from the payer key, and repeated runs spend repeatedly. Like `MPP-01` this is
+inherent rather than an implementation choice — a payment flow that was never
+exercised cannot be verified. `X402-01` through `X402-05` read the challenge
+only and cost nothing; `--read-only` (CLI) or `readOnly: true` (MCP) restricts a
+run to those. The payment checks are also skipped entirely when no payer key is
+present, so the default posture is the cheap one.
+
+**Note on cascading failures (Week 2).** The read-only checks inspect
+progressively deeper parts of one challenge: the status, then the header, then
+its payload, then the fields inside it. When one fails, the checks after it have
+nothing left to inspect, and they are **skipped rather than failed**. A target
+answering 404 produces one finding, not five. The same applies across the
+payment checks: when `X402-06` cannot exercise the payment flow at all,
+`X402-07` is skipped rather than credited with a rejection it never observed.
 
 ## MPP — Charge Mode
 
@@ -104,11 +122,14 @@ arguments, so an agent never handles them.
 
 **Revision note (Week 2, corrected):** `MPP-11`/`MPP-12` pass criteria were first written as "server rejects", then briefly revised to "zero balance delta / silent no-op" after reading only the `stellar-experimental/one-way-channel` on-chain contract source (which is genuinely a silent no-op for stale `settle`/`close` calls). That revision was corrected after reading the `@stellar/mpp` channel server implementation directly: the HTTP-facing server — the actual artifact Wasit tests — rejects stale/replayed commitments explicitly via `ChannelVerificationError`, before the on-chain contract is ever invoked. The contract's own no-op behavior only applies if the contract is called directly, bypassing the server, which is out of scope for Wasit.
 
-**Status note:** this is an initial draft (Week 1). `MPP-*` checks will
-be expanded in Week 2. `X402-02` deliberately checks both header names
-because Stellar's own official documentation is not yet internally
-consistent (`PAYMENT-REQUIRED` vs `X-Payment`) — see the problem
-statement in the SOW.
+**Status note (Week 2).** All twelve checks in this catalogue are implemented
+and reachable from both front ends. `X402-02` deliberately accepts either header
+name because Stellar's own official documentation is not yet internally
+consistent (`PAYMENT-REQUIRED` vs `X-Payment`); that divergence is a
+documentation defect upstream, not a choice this catalogue is making. Note that
+the `x402Version` field-name difference checked by `X402-04` is **not** a
+divergence of the same kind: it is a deliberate, documented change between
+protocol versions, and the SDK implements it correctly.
 
 **Note on error granularity (Week 2).** All channel-mode rejections return the
 same HTTP 402 body: `{"type": ".../problems/verification-failed", "title":

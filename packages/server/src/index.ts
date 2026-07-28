@@ -171,7 +171,9 @@ server.registerTool(
     description:
       "Runs the x402 conformance checks (X402-01..07) against a running service. " +
       "Payment checks are included only when STELLAR_PRIVATE_KEY is set in this " +
-      "server's environment; otherwise they are skipped. Testnet only.",
+      "server's environment; otherwise they are skipped. When they do run, "
+      + "X402-06 settles a real payment and X402-07 attempts one, so each call "
+      + "spends testnet funds and repeated calls spend repeatedly. Testnet only.",
     inputSchema: {
       target: z.string().describe("Full URL of the paid resource, including scheme"),
       network: z

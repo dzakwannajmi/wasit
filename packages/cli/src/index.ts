@@ -70,6 +70,9 @@ program
         "(no payer key: set STELLAR_PRIVATE_KEY in .env or pass --payer-key — skipping payment checks)\n",
       );
     } else {
+      console.log(
+        "X402-06 settles a real payment and X402-07 attempts one. Testnet funds will move.\n",
+      );
       results.push(
         ...(await runX402PaymentChecks({
           target: opts.target,
