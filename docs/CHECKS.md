@@ -146,7 +146,7 @@ currently reachable from channel mode.
 Wasit therefore isolates each rule by **construction** rather than by asserting
 on the response type: every check is built so that exactly one rejection path
 can fire, and the "Pass Criteria" column above records how. This is a gap in the
-official SDK, not in any service under test, and is being reported upstream.
+official SDK, not in any service under test, and is documented in [docs/findings/upstream-sdk.md](findings/upstream-sdk.md) for upstream reporting.
 
 **Note on close authorisation (Week 2).** The channel contract's `close()` calls
 `to.require_auth()` — the **recipient** must authorise the close, not the funder.
@@ -154,5 +154,4 @@ official SDK, not in any service under test, and is being reported upstream.
 payment rather than authorisation; configuring it with the funder's key produces
 a transaction that reaches the chain and fails there with an opaque
 `scecInvalidAction`, which the SDK surfaces as `[object Object]`. By contrast,
-`close_start()` requires `from.require_auth()` — the funder. Both details are
-reported upstream.
+`close_start()` requires `from.require_auth()` — the funder. Both details are documented in [docs/findings/upstream-sdk.md](findings/upstream-sdk.md) for upstream reporting.
