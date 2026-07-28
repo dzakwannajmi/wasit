@@ -1,0 +1,54 @@
+# Configuration
+
+Copy `.env.example` to `.env` and fill in what the checks you intend to run
+require. Nothing is needed for a read-only x402 run.
+
+**Testnet only.** Several checks settle real transactions. Do not put pubnet
+keys in this file.
+
+## What each check needs
+
+| Checks | Required |
+|---|---|
+| `X402-01`–`05` | nothing |
+| `X402-06`, `07` | `STELLAR_PRIVATE_KEY` |
+| `MPP-01` | `MPP_PAYER_SECRET`, `MPP_STELLAR_NETWORK` |
+| `MPP-10`–`12`, `14` | `COMMITMENT_SECRET_HEX`, `MPP_STELLAR_NETWORK` |
+| `MPP-13` | the above, plus `CHANNEL_CONTRACT_DISPOSABLE` and an explicit opt-in |
+| `MPP-10` parameters | `--expect-token`, `--expect-from`, `--expect-to`, `--expect-refund-period` |
+
+The fixture servers need their own values — see `.env.example`. Those are only
+required to run the bundled fixtures, not to test a third-party service.
+
+## Networks
+
+`MPP_STELLAR_NETWORK` accepts `stellar:testnet` or `stellar:pubnet` and nothing
+else; anything else is a configuration error reported once via `PREFLIGHT`.
+
+Only testnet has a default RPC endpoint. Pubnet deliberately has none, so a
+pubnet run must pass `--rpc-url` explicitly rather than silently reaching a
+third-party node.
+
+## Getting testnet keys
+
+```bash
+stellar keys generate --network testnet <name>
+stellar keys address <name>
+stellar keys show <name>
+```
+
+Fund an account through friendbot:
+
+```bash
+curl "https://friendbot.stellar.org/?addr=<G...>"
+```
+
+`COMMITMENT_SECRET_HEX` is a raw ed25519 seed in hex, not a Stellar `S...`
+string — it signs channel commitments directly rather than transactions.
+
+## The disposable channel
+
+`MPP-13` closes a channel permanently. `CHANNEL_CONTRACT_DISPOSABLE` should name
+a channel opened for the purpose of being destroyed, never the one under active
+test. After a successful `MPP-13` run that channel is spent and a new one must
+be opened before the check can run again.
