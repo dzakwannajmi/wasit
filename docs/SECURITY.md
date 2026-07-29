@@ -145,8 +145,7 @@ does and does not mean.
 ## Findings in upstream SDKs
 
 Defects found in the official SDKs during development are documented in
-[findings/upstream-sdk.md](findings/upstream-sdk.md) and reported to their
-maintainers. Those are protocol and developer-experience defects rather than
+[findings/upstream-sdk.md](findings/upstream-sdk.md) and prepared for reporting to their maintainers. Those are protocol and developer-experience defects rather than
 exploitable vulnerabilities; anything exploitable would go to the maintainers
 privately and would not appear in that file until it was resolved.
 
