@@ -271,4 +271,4 @@ Not planned: mainnet support, contract auditing, a hosted service.
 
 ## License
 
-Not yet chosen.
+Apache License 2.0 — see [LICENSE](LICENSE).
