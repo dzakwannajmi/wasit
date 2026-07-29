@@ -118,7 +118,7 @@ credited unless you prefer otherwise.
 Things that are in scope: key material leaking into output, logs, or MCP tool
 arguments; a destructive check running without both required opt-ins; a check
 that reports PASS without actually verifying what its pass criteria in
-[CHECKS.md](CHECKS.md) claim.
+[CHECKS.md](docs/CHECKS.md) claim.
 
 Things that are not: the fact that some checks spend money, or that the tool
 will run against a target you were not authorised to test. Both are documented
@@ -139,13 +139,13 @@ When Wasit finds a conformance defect in somebody else's service:
 
 A FAIL from Wasit is a statement about a specific check against a specific
 target at a specific moment. It is not a security assessment. See
-[design/scope-boundary.md](design/scope-boundary.md) for what a passing result
+[design/scope-boundary.md](docs/design/scope-boundary.md) for what a passing result
 does and does not mean.
 
 ## Findings in upstream SDKs
 
 Defects found in the official SDKs during development are documented in
-[findings/upstream-sdk.md](findings/upstream-sdk.md) and prepared for reporting to their maintainers. Those are protocol and developer-experience defects rather than
+[findings/upstream-sdk.md](docs/findings/upstream-sdk.md) and prepared for reporting to their maintainers. Those are protocol and developer-experience defects rather than
 exploitable vulnerabilities; anything exploitable would go to the maintainers
 privately and would not appear in that file until it was resolved.
 
@@ -153,6 +153,6 @@ privately and would not appear in that file until it was resolved.
 
 Wasit is pre-1.0 and unpublished. Only `main` is supported. There are no
 backports, and check behaviour may change as the x402 and MPP specifications
-stabilise — which is why every check in [CHECKS.md](CHECKS.md) records the
+stabilise — which is why every check in [CHECKS.md](docs/CHECKS.md) records the
 specification and SDK version it was verified against, and why every report
 should record the same.
