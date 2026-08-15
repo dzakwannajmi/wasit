@@ -1,5 +1,6 @@
 import { errored, skipped, type CheckResult } from "../check.js";
 import {
+  ConfigurationError,
   MalformedResponseError,
   assertHttpUrl,
   fetchTarget,
@@ -7,8 +8,96 @@ import {
 
 export type { CheckResult };
 
-export interface X402SimulatorOptions {
+/**
+ * How to address the target's paid endpoint.
+ *
+ * A paid x402 endpoint is not necessarily a GET. An endpoint that computes
+ * something for the caller naturally takes a POST with a body, and real
+ * services expose only that. Issuing the wrong verb draws a 404 and produces a
+ * report claiming the service never answers 402 — a false finding about a
+ * conformant service, which is the worst thing a conformance tester can emit.
+ */
+export interface RequestShape {
+  /** HTTP method. Defaults to GET. */
+  readonly method?: string;
+  /** Raw request body, sent verbatim. Not permitted with GET or HEAD. */
+  readonly body?: string;
+  /** Headers the endpoint needs before it will issue a challenge at all. */
+  readonly headers?: Readonly<Record<string, string>>;
+}
+
+export interface X402SimulatorOptions extends RequestShape {
   target: string;
+}
+
+const BODYLESS_METHODS = new Set(["GET", "HEAD"]);
+const KNOWN_METHODS = new Set([
+  "GET",
+  "HEAD",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "OPTIONS",
+]);
+
+/**
+ * Validates a request shape and turns it into fetch init.
+ *
+ * A bad method, or a body on a verb that cannot carry one, is a configuration
+ * error rather than a finding: nothing has been learned about the target.
+ */
+function buildInit(shape: RequestShape): RequestInit {
+  const method = (shape.method ?? "GET").toUpperCase();
+
+  if (!KNOWN_METHODS.has(method)) {
+    throw new ConfigurationError(
+      `"${shape.method}" is not an HTTP method. Expected one of ` +
+        `${[...KNOWN_METHODS].join(", ")}.`,
+    );
+  }
+
+  if (shape.body !== undefined && BODYLESS_METHODS.has(method)) {
+    throw new ConfigurationError(
+      `A request body cannot be sent with ${method}. Name the method the ` +
+        `endpoint actually uses, e.g. --method POST.`,
+    );
+  }
+
+  const headers: Record<string, string> = { ...(shape.headers ?? {}) };
+
+  // An endpoint that takes a body almost always parses it as JSON and rejects
+  // anything arriving without a content type. Defaulted rather than required,
+  // and overridable by naming the header explicitly.
+  if (
+    shape.body !== undefined &&
+    !Object.keys(headers).some((name) => name.toLowerCase() === "content-type")
+  ) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return {
+    method,
+    ...(shape.body !== undefined ? { body: shape.body } : {}),
+    ...(Object.keys(headers).length > 0 ? { headers } : {}),
+  };
+}
+
+/**
+ * Adds the x402 payment header to the caller's own request shape.
+ *
+ * The payment header wins on collision: a caller-supplied header of the same
+ * name would silently invalidate the payment being tested.
+ */
+function withPaymentHeaders(
+  shape: RequestShape,
+  paymentHeaders: Record<string, string>,
+): RequestInit {
+  const init = buildInit(shape);
+  return {
+    ...init,
+    headers: { ...((init.headers as Record<string, string>) ?? {}), ...paymentHeaders },
+  };
 }
 
 /**
@@ -156,17 +245,19 @@ export async function runX402ReadChecks(
 ): Promise<CheckResult[]> {
   const { target } = options;
 
-  // A bad URL is wrong for every check, so it is reported once rather than
-  // five times over.
+  // A bad URL or an unusable request shape is wrong for every check, so it is
+  // reported once rather than five times over.
+  let init: RequestInit;
   try {
     assertHttpUrl(target);
+    init = buildInit(options);
   } catch (error) {
     return [errored("PREFLIGHT", "Run Preflight", error)];
   }
 
   let response: Response;
   try {
-    response = await fetchTarget(target);
+    response = await fetchTarget(target, init);
   } catch (error) {
     return [
       errored("X402-01", "402 Response Status", error),
@@ -263,7 +354,7 @@ import { x402Client, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer } from "@x402/stellar";
 import { ExactStellarScheme as ExactStellarClientScheme } from "@x402/stellar/exact/client";
 
-export interface X402PaymentCheckOptions {
+export interface X402PaymentCheckOptions extends RequestShape {
   readonly target: string;
   readonly network: string;
   readonly payerSecretKey: string;
@@ -290,7 +381,7 @@ async function preparePayment(options: X402PaymentCheckOptions) {
     options.payerSecretKey,
   );
 
-  const challenge = await fetchTarget(options.target);
+  const challenge = await fetchTarget(options.target, buildInit(options));
 
   let paymentRequired;
   try {
@@ -313,8 +404,11 @@ async function checkSignatureAccepted(
   options: X402PaymentCheckOptions,
 ): Promise<CheckResult> {
   const { httpClient, paymentPayload } = await preparePayment(options);
-  const headers = httpClient.encodePaymentSignatureHeader(paymentPayload);
-  const paid = await fetchTarget(options.target, { headers });
+  const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
+  const paid = await fetchTarget(
+    options.target,
+    withPaymentHeaders(options, paymentHeaders),
+  );
 
   const pass = paid.status >= 200 && paid.status < 300;
   return {
@@ -351,8 +445,11 @@ async function checkInvalidSignatureRejected(
     },
   };
 
-  const headers = httpClient.encodePaymentSignatureHeader(corrupted);
-  const response = await fetchTarget(options.target, { headers });
+  const paymentHeaders = httpClient.encodePaymentSignatureHeader(corrupted);
+  const response = await fetchTarget(
+    options.target,
+    withPaymentHeaders(options, paymentHeaders),
+  );
 
   const pass = response.status !== 200;
   return {
@@ -375,6 +472,7 @@ export async function runX402PaymentChecks(
 ): Promise<CheckResult[]> {
   try {
     assertHttpUrl(options.target);
+    buildInit(options);
   } catch (error) {
     return [errored("PREFLIGHT", "Run Preflight", error)];
   }

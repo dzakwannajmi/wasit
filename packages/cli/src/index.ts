@@ -11,6 +11,27 @@ import {
   type CheckResult,
 } from "@wasit/core";
 
+/**
+ * Accumulates repeated --header flags into one object.
+ *
+ * Exits 2 rather than 1 on a malformed value: nothing was learned about the
+ * target, so this is a configuration error, not a conformance failure.
+ */
+function collectHeader(
+  value: string,
+  previous: Record<string, string> | undefined,
+): Record<string, string> {
+  const separator = value.indexOf(":");
+  if (separator < 1) {
+    console.error(`Invalid --header "${value}". Expected "Name: value".`);
+    process.exit(2);
+  }
+  return {
+    ...(previous ?? {}),
+    [value.slice(0, separator).trim()]: value.slice(separator + 1).trim(),
+  };
+}
+
 const program = new Command();
 
 program
@@ -58,9 +79,26 @@ program
     "--payer-key <key>",
     "Testnet payer secret key (overrides STELLAR_PRIVATE_KEY from .env)",
   )
+  .option(
+    "--method <verb>",
+    "HTTP method the paid endpoint uses (default: GET). Paid endpoints that " +
+      "compute something usually take POST.",
+  )
+  .option("--body <json>", "Request body, sent verbatim. Implies Content-Type: application/json.")
+  .option(
+    "--header <name:value>",
+    "Extra request header the endpoint needs before it will issue a challenge. Repeatable.",
+    collectHeader,
+  )
   .option("--read-only", "Skip payment checks (X402-06/07)", false)
   .action(async (opts) => {
-    const results = await runX402ReadChecks({ target: opts.target });
+    const shape = {
+      ...(opts.method ? { method: opts.method as string } : {}),
+      ...(opts.body !== undefined ? { body: opts.body as string } : {}),
+      ...(opts.header ? { headers: opts.header as Record<string, string> } : {}),
+    };
+
+    const results = await runX402ReadChecks({ target: opts.target, ...shape });
     const payerKey: string | undefined = opts.payerKey ?? process.env.STELLAR_PRIVATE_KEY;
 
     if (opts.readOnly) {
@@ -78,6 +116,7 @@ program
           target: opts.target,
           network: opts.network,
           payerSecretKey: payerKey,
+          ...shape,
         })),
       );
     }
