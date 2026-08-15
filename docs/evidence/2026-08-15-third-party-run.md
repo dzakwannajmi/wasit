@@ -2,29 +2,34 @@
 
 **Date:** 2026-08-15
 **Wasit:** branch `main`, x402 read-only checks (`X402-01` … `X402-05`)
-**Method:** every target cloned and run locally from source. No hosted service
-was contacted. Payment checks (`X402-06`, `X402-07`) were not run — this pass
-covers the challenge-shape checks only, which cost nothing and settle nothing.
+**Method:** every target was cloned and run locally from source against Stellar
+testnet. No hosted deployment belonging to any of these projects was contacted.
+Payment checks (`X402-06`, `X402-07`) were not run — this pass covers the
+challenge-shape checks only, which cost nothing and settle nothing.
 
 ## Summary
 
-Four x402 repositories in the Stellar ecosystem were examined. Two expose a
-Stellar-denominated paid endpoint that can be exercised; both conform. The
-other two do not expose one at all, for different reasons.
+Seven x402-related repositories in the Stellar ecosystem were examined. Three
+expose a Stellar-denominated paid endpoint that can be exercised from a clone;
+all three conform on every check. The other four do not expose one, for four
+different reasons.
 
 | Repository | Commit | x402 package | Verdict |
 |---|---|---|---|
+| `mks044/reapp-poc` | `7fadd4c` (2026-04-28) | `@x402/express@2.9.0` | **5/5 PASS** |
 | `Hoops-Finance/calypso-x402` | `e33d521` (2026-04-13) | `@x402/express@2.9.0` | **5/5 PASS** |
 | `Andy00L/x402-autopilot` | `b9e88e2` (2026-04-12) | `@x402/express@latest` | **5/5 PASS** |
-| `TKCollective/x402-research-skill` | `9c657fa0` (2026-08-09) | `@coinbase/x402@2.1.0`, `@x402/core@2.11.0` | No testable endpoint |
-| `fxjrin/defi-copilot` | `e97879d` (2026-04-12) | `x402-stellar@0.2.0` | No testable endpoint |
+| `TKCollective/x402-research-skill` | `9c657fa0` (2026-08-09) | `@coinbase/x402@2.1.0`, `@x402/core@2.11.0` | Stellar path built, not mounted |
+| `winsznx/routedock` | `806e434` (2026-08-08) | `@x402/core@2.9.0`, `mppx@0.5.7` | Client SDK |
+| `fxjrin/defi-copilot` | `e97879d` (2026-04-12) | `x402-stellar@0.2.0` | Client + facilitator |
+| `StreamCharge/ApiCharge` | `fe756fe` (2026-05-19) | none | No x402 code in the public repo |
 
 ## Results
 
-### Hoops-Finance/calypso-x402 — 5/5 PASS
+### mks044/reapp-poc — 5/5 PASS
 
-Paid endpoint: `POST /plan`, $0.01, `stellar:testnet`. Uses an in-process
-facilitator rather than a remote one.
+REAPP (Real Agentic Payment Protocol), SCF-funded. Paid endpoint:
+`POST /api/search`, $0.01, `stellar:testnet`, port 8080.
 
 ```
 PASS  X402-01  402 Response Status
@@ -35,10 +40,23 @@ PASS  X402-05  Network Identifier Valid
 ```
 
 Challenge carried `x402Version: 2`, `amount: "100000"`, `network:
-"stellar:testnet"`, and a `payTo` address, under the `PAYMENT-REQUIRED`
-header.
+"stellar:testnet"`, `extra.areFeesSponsored: true`, under `PAYMENT-REQUIRED`.
 
-Command:
+Notable: this is the only one of the three whose middleware configures
+`accepts` as an array rather than a single object. The emitted challenge is
+identical in shape to the other two, so `@x402/*` normalises both forms.
+
+```bash
+wasit test --target http://localhost:8080/api/search --method POST --body '{}' --read-only
+```
+
+### Hoops-Finance/calypso-x402 — 5/5 PASS
+
+Paid endpoint: `POST /plan`, $0.01, `stellar:testnet`, port 9990. Uses an
+in-process facilitator rather than a remote one.
+
+Challenge carried `x402Version: 2`, `amount: "100000"`, under
+`PAYMENT-REQUIRED`.
 
 ```bash
 wasit test --target http://localhost:9990/plan --method POST --body '{}' --read-only
@@ -46,113 +64,133 @@ wasit test --target http://localhost:9990/plan --method POST --body '{}' --read-
 
 ### Andy00L/x402-autopilot — 5/5 PASS
 
-Paid endpoint: `GET /prices`, $0.001, `stellar:testnet`. Four paywalled
-services ship in this repository (ports 4001–4004); one was exercised, since
-they share one resource-server construction.
+Paid endpoint: `GET /prices`, $0.001, `stellar:testnet`, port 4001. Four
+paywalled services ship here (ports 4001–4004); one was exercised, since they
+share a single resource-server construction in `data-sources/src/shared.ts`.
 
-```
-PASS  X402-01  402 Response Status
-PASS  X402-02  Payment Header Present
-PASS  X402-03  Header Payload Decodable
-PASS  X402-04  Required Fields Present
-PASS  X402-05  Network Identifier Valid
-```
+Challenge carried `x402Version: 2`, `amount: "10000"`, under
+`PAYMENT-REQUIRED`.
 
-Challenge carried `x402Version: 2`, `amount: "10000"`, `network:
-"stellar:testnet"`, under the `PAYMENT-REQUIRED` header.
-
-Note on provenance: this service reads its `payTo` from a `WEATHER_API_WALLET`
-environment variable which the repository leaves blank for the operator to
-fill. The address appearing in the challenge is therefore ours, not the
-project's, and says nothing about the project.
-
-Command:
+Provenance note: this service reads `payTo` from a `WEATHER_API_WALLET`
+variable the repository leaves blank. The address in the challenge is ours, not
+the project's, and says nothing about the project. The same applies to REAPP's
+`X402_PAY_TO`.
 
 ```bash
 wasit test --target http://localhost:4001/prices --read-only
 ```
 
-### TKCollective/x402-research-skill — no testable endpoint
+### Not testable
 
-This is a live, commercially operated service (listed on Coinbase Bazaar) that
-settles on Base, SKALE, and — per its own configuration — Stellar. Its Stellar
-facilitator is constructed and registered, and three Stellar accept configs
-exist (`stellarAcceptResearch`, `stellarAcceptDeep`, `stellarAcceptBatch`).
+**`TKCollective/x402-research-skill`** — a live, commercially operated service
+listed on Coinbase Bazaar that settles on Base, SKALE and, per its own
+configuration, Stellar. Its Stellar facilitator is constructed and registered,
+and three Stellar accept configs exist. None is mounted on a route; a comment
+at `index.js:1045` states they are "preserved … for use on dedicated future
+routes". The Stellar path is built but not yet reachable over HTTP.
 
-None of them is mounted on a route. A comment at `index.js:1045` states the
-definitions are "preserved … for use on dedicated future routes". The Stellar
-payment path is therefore built but not yet reachable over HTTP, so there is
-nothing for the checks to address.
+**`winsznx/routedock`** — a client SDK. `MppSessionClient` and
+`MppChargeClient` construct `Mppx` and call `mppx.fetch(url)`: this is the
+payer side. Every `server.listen` in the repository is inside `__tests__`.
 
-### fxjrin/defi-copilot — no testable endpoint
+**`fxjrin/defi-copilot`** — the MCP server is a client; a local facilitator on
+port 4022 exposes `/supported` and `/verify`. The resource server at
+`src/server.ts` mounts no payment middleware and serves only `/health` and `/`.
 
-The x402 role here is the payer, not the payee: the MCP server acts as a
-client, and a local facilitator (port 4022) exposes `/supported` and `/verify`.
-The resource server at `src/server.ts` mounts no payment middleware and serves
-only `/health` and `/`.
-
-Worth recording: this implementation identifies its network as
-`stellar-testnet`, not the CAIP-2 form `stellar:testnet` that `X402-05`
-requires and that both testable services above emit. The string appears in the
-facilitator's `/supported` response and in service metadata rather than in a
-402 challenge, so no check observes it — but it is a divergence in the
-ecosystem, in a package (`x402-stellar@0.2.0`) independent of the `@x402/*`
-line.
+**`StreamCharge/ApiCharge`** — SCF-funded and live at apicharge.com, but the
+public repository contains no `@x402/*` dependency and no payment middleware,
+only Stellar RPC examples. The paid implementation lives somewhere that is not
+public, so it cannot be exercised from a clone. Testing it would require the
+operator's participation.
 
 ## Observations
 
-**The payment header name divergence is real in the field.** Both testable
+**The payment header name divergence is real in the field.** All three testable
 services emit `PAYMENT-REQUIRED`. Stellar's own conceptual guide describes that
 name while its working quickstart, built on `@x402/stellar`, reads `X-Payment`.
 `X402-02` accepts either. Before this run the divergence was evidenced only by
-Stellar's documentation contradicting itself; it now has two field
-confirmations.
+Stellar's documentation contradicting itself; it now has three field
+confirmations and none for the other spelling.
 
 **A Stellar-denominated x402 endpoint is harder to find than the ecosystem's
-surface suggests.** All four repositories advertise Stellar x402 support in
-their READMEs, badges, or npm keywords. Two of the four have no reachable
-Stellar-denominated paid endpoint. This is not a criticism of either project —
-one is mid-migration, the other is a client by design — but it does mean the
-count of *running* Stellar x402 services is lower than the count of projects
-describing themselves as such.
+surface suggests.** All seven repositories advertise Stellar x402 support in
+their READMEs, badges, or npm keywords. Four of the seven have no reachable
+Stellar-denominated paid endpoint. This is not a criticism of any of them —
+each is a client, mid-migration, or closed-source by choice — but the count of
+*running, externally exercisable* Stellar x402 services is lower than the count
+of projects describing themselves as such.
+
+**No target ran from a clean clone.** All three testable services needed a
+repair before they would start: an uninitialised orchestrator wallet, a
+facilitator API key with no working keyless path, and a workspace package that
+had to be compiled before the API would boot. None of these is a defect worth
+reporting; together they are the point. If exercising someone's conformance
+requires replicating their production stack, almost nobody will do it — which
+is the argument for a tool an operator can point at their own deployment rather
+than one that demands outsiders reproduce it.
 
 **A resource server will not start when no facilitator answers.**
 `@x402/core`'s `x402ResourceServer.initialize()` throws when it cannot load
-supported payment kinds from any facilitator, so the service cannot serve
-challenges at all — it fails at boot, not at payment time. Availability of an
-x402 service is therefore coupled to availability of a third party. Not a spec
-violation; an operational property worth knowing.
+supported payment kinds from any facilitator, so the service fails at boot
+rather than at payment time. Availability of an x402 service is coupled to
+availability of a third party. Not a spec violation; an operational property
+worth knowing.
 
 **A documented keyless fallback that cannot be taken.**
 `x402-autopilot`'s `.env.example` states the data-source servers "fall back to
 https://x402.org/facilitator (Coinbase) if OZ_FACILITATOR_URL is unset". The
-URL does default correctly, but `createAuthHeaders` in `data-sources/src/shared.ts`
-calls `env("OZ_API_KEY")` unconditionally and that helper throws when the
-variable is empty — so the keyless path cannot actually be taken. Reported here
-rather than upstream because it is a defect in a hackathon project rather than
-in an SDK; if the maintainer wants it, the fix is to attach `createAuthHeaders`
-only when the OpenZeppelin facilitator is in use.
+URL does default correctly, but `createAuthHeaders` in
+`data-sources/src/shared.ts` calls `env("OZ_API_KEY")` unconditionally and that
+helper throws on an empty value, so the keyless path cannot be taken. Recorded
+here rather than reported upstream because it is a defect in a hackathon
+project rather than in an SDK; the fix would be to attach `createAuthHeaders`
+only when the OpenZeppelin facilitator is in use. REAPP has the same
+unconditional key requirement, and both were worked around by pointing at
+`https://x402.org/facilitator`, which ignores the unused bearer token.
+
+**CAIP-2 is not universal.** `defi-copilot` identifies its network as
+`stellar-testnet`, not the CAIP-2 form `stellar:testnet` that `X402-05`
+requires and that all three testable services emit. The string appears in that
+project's facilitator `/supported` response and service metadata rather than in
+a 402 challenge, so no check observed it — but it is a divergence, in a package
+(`x402-stellar@0.2.0`) independent of the `@x402/*` line.
 
 ## What this run found in Wasit itself
 
-`runX402ReadChecks` issued a bare `GET` at every target. `calypso-x402`'s paid
-endpoints are both `POST`, so the wrong verb drew a 404 and the run reported
-that the service never answers 402 — a false finding about a conformant
-service, which is the worst output a conformance tester can produce.
+`runX402ReadChecks` issued a bare `GET` at every target. Two of the three
+testable endpoints are `POST`, so the wrong verb drew a 404 and the run
+reported that the service never answers 402 — a false finding about a
+conformant service, which is the worst output a conformance tester can produce.
 
 Our own fixture is a `GET`, so nothing we wrote ourselves would have exposed
 this. It took third-party code. `--method`, `--body` and `--header` now thread
-through the whole suite, and an unusable request shape is reported once through
+through the whole suite, including the payment checks: had they addressed the
+endpoint differently from the challenge read, they would have failed for the
+wrong reason too. An unusable request shape is reported once through
 `PREFLIGHT` as a configuration error rather than as a finding about the target.
+
+## Limits of this run
+
+- Only `X402-01` … `X402-05` were exercised. The payment checks, which settle
+  real transactions, were not run against any third-party service.
+- No MPP check was run against a third-party service.
+- All three services were run from a clone on our own machine, configured by
+  us. A passing result describes the code as published, not any deployment the
+  project operates.
+- No operator was contacted before this run, and none is named as having
+  endorsed or authorised it. Every repository is public and openly licensed;
+  nothing here required permission, and nothing here should be read as an
+  operator's participation.
 
 ## Reproducing
 
 ```bash
 mkdir -p targets && cd targets
+git clone https://github.com/mks044/reapp-poc.git
 git clone https://github.com/Hoops-Finance/calypso-x402.git
 git clone https://github.com/Andy00L/x402-autopilot.git
 ```
 
-Each needs its own environment file; see the repositories' own instructions.
-Both were run entirely on localhost against Stellar testnet, and no hosted
-deployment belonging to either project was contacted.
+Each needs its own environment file; see each repository's own instructions.
+For all three, pointing the facilitator at `https://x402.org/facilitator`
+avoids needing an OpenZeppelin Channels API key.
