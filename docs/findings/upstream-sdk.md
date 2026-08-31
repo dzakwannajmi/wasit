@@ -24,7 +24,7 @@ as the package whose types are unreachable, not as the package at fault.
 
 ## Finding 1 — Channel-mode errors collapse to a single generic type
 
-**Status:** not filed yet
+**Status:** filed — [stellar/stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66)
 **Severity:** moderate — no security impact, significant debuggability impact
 
 ### Summary
@@ -107,7 +107,7 @@ Neither has been implemented or tested by us.
 
 ## Finding 2 — `feePayer.envelopeSigner` is the authoriser, not the fee payer
 
-**Status:** not filed yet
+**Status:** filed — [stellar/stellar-mpp-sdk#67](https://github.com/stellar/stellar-mpp-sdk/issues/67)
 **Severity:** moderate — misleading name plus an opaque failure
 
 ### Summary
