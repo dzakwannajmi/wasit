@@ -2,6 +2,20 @@
 
 All notable changes to Wasit are recorded here. Versions follow [Semantic Versioning](https://semver.org/): patch releases are fixes, minor releases add checks or features without breaking existing usage, major releases break something.
 
+## [0.1.1] — 2026-09-01
+
+`@wasit-dev/server` only. `core` and `cli` are unchanged and stay at 0.1.0 —
+only the package that actually changed gets a version bump.
+
+Fixed: the `wasit://checks` MCP resource located `docs/CHECKS.md` by walking
+up from the server's own installed location, which found it in a local git
+checkout but not in an `npx @wasit-dev/server` install with no repo present.
+The resource was silently absent rather than erroring. `docs/CHECKS.md` is
+now copied into the package at publish time (a `prepack` script) and shipped
+under `files`, so it resolves the same way whether Wasit is run from a
+checkout or installed straight from npm. The four test tools were never
+affected by this — only the check catalogue resource was.
+
 ## [0.1.0] — 2026-09-01
 
 First public release. All three packages are now live on npm under the `@wasit-dev` organization.

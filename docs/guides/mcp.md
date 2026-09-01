@@ -73,18 +73,6 @@ variables above. Use absolute paths for `node packages/server/dist/index.js`
 if launching from a local checkout instead of npx, since a client launches the
 server from a working directory you don't control.
 
-## Known limitation: the checks resource needs a local checkout
-
-`wasit://checks` (below) currently locates `docs/CHECKS.md` by walking up from
-the server's own installed file. That works when Wasit is run from a git
-checkout, but an `npx @wasit-dev/server` install has no `docs/` directory
-alongside it — the resource is silently absent in that case, no error, just
-missing. The four test tools themselves are unaffected; only the check
-catalogue resource is. Until this is fixed (tracked: bundling `CHECKS.md` into
-the published `server` package), set `WASIT_CHECKS_PATH` to a local copy, for
-example after cloning the repo once just for this file, or downloading
-`docs/CHECKS.md` from GitHub directly.
-
 ## Tools
 
 | Tool | Checks | Cost |
@@ -112,8 +100,10 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
 
 `wasit://checks` serves `docs/CHECKS.md` — the authority on what each check
 asserts. An agent should read it before interpreting a result rather than
-inferring pass criteria from a check's name. See the known limitation above
-for npm-only installs.
+inferring pass criteria from a check's name. As of `@wasit-dev/server@0.1.1`
+this works on an `npx`-only install too: the file is copied into the
+published package at publish time (`prepack` script), so it needs no local
+checkout to resolve.
 
 ## Secrets are never tool arguments
 

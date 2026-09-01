@@ -1,6 +1,6 @@
 {
   "name": "@wasit-dev/server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server exposing Wasit's x402/MPP conformance checks as tools for Claude Code and other MCP-compatible agents.",
   "type": "module",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "main": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "docs"
   ],
   "repository": {
     "type": "git",
@@ -36,7 +37,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "prepack": "node -e \"const fs=require('fs');fs.mkdirSync('docs',{recursive:true});fs.copyFileSync('../../docs/CHECKS.md','docs/CHECKS.md')\""
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
