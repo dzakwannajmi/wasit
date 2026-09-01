@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CopyButton } from "@/components/CopyButton";
+import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 
 const INSTALL_CMD = "npx @wasit-dev/cli test <your-service-url>";
 
@@ -15,7 +17,7 @@ export default function Home() {
           <p className="tagline">
             Independent conformance testing for <b>x402</b> and{" "}
             <b>MPP</b> on Stellar. Wasit runs the real payment flow against
-            your service and verifies the on-chain settlement itself — not
+            your service and verifies the on-chain settlement itself, not
             just whether the response looks right.
           </p>
 
@@ -24,12 +26,20 @@ export default function Home() {
             <code className="mono">$ {INSTALL_CMD}</code>
             <CopyButton text={INSTALL_CMD} />
           </div>
+          <div className="hero-trust">
+            Open source · Testnet only · No signup required ·{" "}
+            <Link href="/why">Why we built this</Link>
+          </div>
         </div>
       </div>
 
-      <section>
+      <section id="what-it-checks">
         <div className="wrap">
           <h2>What it checks</h2>
+          <p className="section-lead">
+            Thirteen checks, each traced to a spec clause in the Check
+            Catalogue. Nothing here is guessed.
+          </p>
           <table className="checks-table">
             <tbody>
               <tr>
@@ -42,7 +52,7 @@ export default function Home() {
                 </td>
               </tr>
               <tr>
-                <td className="ct-name">MPP — Charge mode</td>
+                <td className="ct-name">MPP - Charge mode</td>
                 <td className="ct-count">1 check</td>
                 <td className="ct-desc">
                   Settlement verified independently on-chain via the token
@@ -51,11 +61,11 @@ export default function Home() {
                 </td>
               </tr>
               <tr>
-                <td className="ct-name">MPP — Channel mode</td>
+                <td className="ct-name">MPP - Channel mode</td>
                 <td className="ct-count">5 checks</td>
                 <td className="ct-desc">
                   Deployment, cumulative commitment ordering, challenge
-                  replay, commitment replay, and close settlement —
+                  replay, commitment replay, and close settlement,
                   including negative cases a service must reject.
                 </td>
               </tr>
@@ -64,9 +74,32 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
+      <section id="how-it-works">
+        <div className="wrap">
+          <h2>How it works</h2>
+          <p className="section-lead">
+            Wasit talks to two things: your service, over HTTP, and Stellar,
+            over RPC. It never trusts the first about what happened on the
+            second.
+          </p>
+          <HowItWorksFlow />
+          <p className="section-body">
+            Step 5 is the point of the tool. A receipt only proves a service
+            claims to have been paid; the chain proves it actually happened.{" "}
+            <Link href="/docs/get-started/how-it-works">
+              Full flow in the docs →
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      <section id="why-different">
         <div className="wrap">
           <h2>Why it&apos;s different</h2>
+          <p className="section-lead">
+            Three things that follow directly from checking the chain
+            instead of the response.
+          </p>
           <div className="why-grid">
             <div className="why-item">
               <h3>Verifies settlement, not shape</h3>
@@ -79,7 +112,7 @@ export default function Home() {
             <div className="why-item">
               <h3>Every check maps to a spec clause</h3>
               <p>
-                The full catalogue is published in CHECKS.md — what each
+                The full catalogue is published in CHECKS.md: what each
                 check asserts and which spec/SDK version it was verified
                 against, not a black box.
               </p>
@@ -96,7 +129,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
+      <section id="quick-start">
         <div className="wrap">
           <h2>Quick start</h2>
 

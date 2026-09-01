@@ -99,11 +99,73 @@ export function plainText(markdown: string): string {
 }
 
 /**
+ * Pulls one named "##" section out of an arbitrary markdown file — heading
+ * line through (not including) the next "##" or end of file. Unlike
+ * splitDoc, this doesn't assume the file's own title sits on line 1
+ * (README.md's does not: it opens with a centered <div> and badges), so
+ * it's used for pulling a single well-known section out of a file that
+ * isn't structured like the docs/guides/*.md files.
+ */
+export function extractSection(markdown: string, heading: string): string | null {
+  const lines = markdown.split("\n");
+  const startIndex = lines.findIndex((line) => line.trim() === `## ${heading}`);
+  if (startIndex === -1) return null;
+
+  let endIndex = lines.length;
+  for (let i = startIndex + 1; i < lines.length; i++) {
+    if (/^##\s+/.test(lines[i])) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  return lines.slice(startIndex, endIndex).join("\n").trim() + "\n";
+}
+
+/**
  * The one page on the docs site that isn't sourced from a repo markdown
  * file — package links. Written as markdown so it renders through the
  * same pipeline (and picks up heading ids from rehype-slug) as
  * everything else.
  */
+/**
+ * "Quick Start" is hand-authored rather than pulled from a repo file: it's
+ * the same two snippets already shown on the homepage (the CLI one-liner,
+ * the Claude Code MCP registration), just given a full docs page with a
+ * bit more context and links onward to the CLI/MCP guides.
+ */
+export const QUICK_START_MD = `# Quick Start
+
+Two ways to run Wasit, depending on whether a person or an agent is driving.
+
+## From a terminal
+
+\`\`\`bash
+# run once, no install
+npx @wasit-dev/cli test https://your-service.example.com
+
+# or install globally
+npm install -g @wasit-dev/cli
+wasit test https://your-service.example.com
+\`\`\`
+
+\`test\` runs the x402 checks. \`mpp-charge\` and \`mpp-channel\` run the MPP
+checks — see the CLI Guide for every subcommand and flag.
+
+## From Claude Code (MCP)
+
+\`\`\`bash
+claude mcp add --transport stdio wasit \\
+  --env MPP_STELLAR_NETWORK=stellar:testnet \\
+  --env STELLAR_PRIVATE_KEY=S... \\
+  -- npx -y @wasit-dev/server
+\`\`\`
+
+This registers the MCP server so an agent can call Wasit's tools directly —
+see the MCP Guide for what each tool checks, and Configuration for where
+\`STELLAR_PRIVATE_KEY\` and the other environment values come from.
+`;
+
 export const INSTALL_MD = `# Install
 
 Wasit ships as three npm packages — install only the ones you need.
@@ -171,11 +233,75 @@ assertDocsInSync();
 /** Resolves one docs page's markdown from its URL slug (the segments
  *  after /docs). Returns null for anything generateStaticParams didn't
  *  enumerate — the route calls notFound() on that. */
+function getHowItWorksMarkdown(): string {
+  const readme = readRepoDoc("README.md");
+  const section = extractSection(readme, "How It Works");
+  if (!section) {
+    throw new Error(
+      'docs: README.md has no "## How It Works" section anymore — update the Get Started group in lib/docs-nav.ts / lib/content.ts.'
+    );
+  }
+  return promoteHeadings(section);
+}
+
+/**
+ * "Why Wasit Exists" — the standalone article page at /why (see
+ * app/why/page.tsx). Reuses README.md's own "## The Problem" section
+ * verbatim, the same way getHowItWorksMarkdown() reuses "## How It
+ * Works", so this page can't drift from the README's real explanation.
+ *
+ * The page supplies its own <h1> ("Why Wasit Exists"), so the section's
+ * own "## The Problem" heading line is dropped rather than promoted —
+ * unlike getHowItWorksMarkdown(), nothing here becomes a whole page
+ * under its own extracted title. The body has no nested headings, so no
+ * promoteHeadings() shift is needed. The two doc links inside it are
+ * repo-relative (resolve on GitHub, not on this site), so they're
+ * rewritten to real GitHub blob URLs; everything else — including the
+ * one em dash in the body prose — stays exactly as authored in the
+ * README, consistent with extractSection()'s own contract.
+ */
+export function getWhyItExistsMarkdown(): string {
+  const readme = readRepoDoc("README.md");
+  const section = extractSection(readme, "The Problem");
+  if (!section) {
+    throw new Error(
+      'site: README.md has no "## The Problem" section anymore — update app/why/page.tsx / lib/content.ts.'
+    );
+  }
+
+  const body = section
+    .replace(/^##\s+The Problem\s*\n+/, "")
+    .replace(
+      /\(docs\/CHECKS\.md(#[^)]*)?\)/g,
+      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md$1)"
+    )
+    .replace(
+      /\(docs\/findings\/upstream-sdk\.md\)/g,
+      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/findings/upstream-sdk.md)"
+    )
+    .trim();
+
+  return `${body}
+
+## Who it's for
+
+**Shipping a service.** Run Wasit against your own x402 or MPP endpoint before a customer finds the gap you missed.
+
+**Building on top of one.** Wire Wasit's MCP tools into an agent so it checks a target's real conformance before trusting it.
+`;
+}
+
 export function resolveDocMarkdown(slug: string[]): { title: string; markdown: string } | null {
-  if (slug.length === 0) return { title: "Install", markdown: INSTALL_MD };
   if (slug.length !== 2) return null;
 
   const [groupKey, pageSlug] = slug;
+
+  if (groupKey === "get-started") {
+    if (pageSlug === "install") return { title: "Install", markdown: INSTALL_MD };
+    if (pageSlug === "quick-start") return { title: "Quick Start", markdown: QUICK_START_MD };
+    if (pageSlug === "how-it-works") return { title: "How It Works", markdown: getHowItWorksMarkdown() };
+    return null;
+  }
   const sourceFile = GROUP_SOURCE_FILES[groupKey];
   const group = findGroup(groupKey);
   if (!sourceFile || !group) return null;
