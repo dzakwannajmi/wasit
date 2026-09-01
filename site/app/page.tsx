@@ -5,6 +5,34 @@ import { CopyButton } from "@/components/CopyButton";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 
 const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url>";
+const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
+
+const FEATURES: { title: string; body: string }[] = [
+  {
+    title: "On-chain settlement",
+    body: "Reads the token contract's own transfer event via Stellar RPC. A response that only claims success does not pass.",
+  },
+  {
+    title: "Traceable checks",
+    body: "Every check in the catalogue maps to a spec clause and the SDK version it was verified against.",
+  },
+  {
+    title: "One core, two interfaces",
+    body: "The CLI and the MCP server run identical check code, so a terminal run and an agent run can never disagree.",
+  },
+  {
+    title: "Free by default",
+    body: "Read-only checks cost nothing to run. Checks that spend or mutate state are opt-in and clearly flagged.",
+  },
+  {
+    title: "Testnet-only by design",
+    body: "Destructive checks require an explicit flag and only run against a channel you name as disposable.",
+  },
+  {
+    title: "Open source",
+    body: "Apache-2.0, full source and Check Catalogue on GitHub — nothing about how a check works is hidden.",
+  },
+];
 
 export default function Home() {
   return (
@@ -46,44 +74,21 @@ export default function Home() {
           </div>
         </div>
 
-        <section id="what-it-checks">
+        <section id="features">
           <div className="wrap">
-            <h2>What it checks</h2>
+            <h2>Features</h2>
             <p className="section-lead">
-              Thirteen checks, each traced to a spec clause in the Check
-              Catalogue. Nothing here is guessed.
+              Independent, traceable, and free by default — how Wasit is
+              built, not just what it checks.
             </p>
-            <table className="checks-table">
-              <tbody>
-                <tr>
-                  <td className="ct-name">x402</td>
-                  <td className="ct-count">7 checks</td>
-                  <td className="ct-desc">
-                    402 response, payment header, payload decode, required
-                    fields, network id, a real accepted payment, a rejected
-                    corrupted signature.
-                  </td>
-                </tr>
-                <tr>
-                  <td className="ct-name">MPP - Charge mode</td>
-                  <td className="ct-count">1 check</td>
-                  <td className="ct-desc">
-                    Settlement verified independently on-chain via the token
-                    contract&apos;s own CAP-46 transfer event, not the
-                    response the target returns.
-                  </td>
-                </tr>
-                <tr>
-                  <td className="ct-name">MPP - Channel mode</td>
-                  <td className="ct-count">5 checks</td>
-                  <td className="ct-desc">
-                    Deployment, cumulative commitment ordering, challenge
-                    replay, commitment replay, and close settlement,
-                    including negative cases a service must reject.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="features-grid">
+              {FEATURES.map((f) => (
+                <div className="feature-card" key={f.title}>
+                  <h3>{f.title}</h3>
+                  <p>{f.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -103,42 +108,6 @@ export default function Home() {
                 Full flow in the docs →
               </Link>
             </p>
-          </div>
-        </section>
-
-        <section id="why-different">
-          <div className="wrap">
-            <h2>Why it&apos;s different</h2>
-            <p className="section-lead">
-              Three things that follow directly from checking the chain
-              instead of the response.
-            </p>
-            <div className="why-grid">
-              <div className="why-item">
-                <h3>Verifies settlement, not shape</h3>
-                <p>
-                  Reads the token contract&apos;s own on-chain transfer event
-                  via Stellar RPC, so a response that merely claims success
-                  doesn&apos;t pass.
-                </p>
-              </div>
-              <div className="why-item">
-                <h3>Every check maps to a spec clause</h3>
-                <p>
-                  The full catalogue is published in CHECKS.md: what each
-                  check asserts and which spec/SDK version it was verified
-                  against, not a black box.
-                </p>
-              </div>
-              <div className="why-item">
-                <h3>CLI and MCP, same core</h3>
-                <p>
-                  The terminal command and the MCP tools run identical check
-                  code, so a CLI run and an agent&apos;s run can never
-                  disagree about the same target.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -166,6 +135,30 @@ export default function Home() {
                 {"  "}--env STELLAR_PRIVATE_KEY=S... \{"\n"}
                 {"  "}-- npx -y @wasit-dev/server
               </pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="get-started" className="cta-section">
+          <div className="wrap cta-wrap">
+            <h2>Ready to test your x402 or MPP integration?</h2>
+            <p className="section-lead">
+              Point it at your service and get a pass/fail report backed by
+              on-chain verification. No signup, no config file required to
+              start.
+            </p>
+            <div className="cta-actions">
+              <Link href="/docs/get-started/quick-start" className="cta-primary">
+                Read the quick start
+              </Link>
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="cta-secondary"
+              >
+                View on GitHub
+              </a>
             </div>
           </div>
         </section>

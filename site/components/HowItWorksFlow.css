@@ -26,12 +26,20 @@
   --xy-controls-button-border-color-default: var(--border-strong);
 }
 
+/* Tall enough that the four request/response lanes (18/39/61/82%,
+   see LANE_TOP in HowItWorksFlow.tsx) land ~35px apart on wasit's and
+   service's edges — enough room for each edge's label pill to sit
+   clear of its neighbors instead of the two lanes/four overlapping
+   edges the previous version had. Content stays vertically centered
+   in the taller box via justify-content. */
 .flow-actor {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   width: 176px;
+  min-height: 184px;
   padding: 16px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 10px;
@@ -60,7 +68,7 @@
 }
 
 .react-flow__edge-text { fill: var(--muted); font-size: 11px; }
-.react-flow__edge-textbg { fill: var(--surface); }
+.react-flow__edge-textbg { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; }
 .flow-edge-accent .react-flow__edge-path { stroke: var(--accent); stroke-width: 2; }
 .flow-edge-accent .react-flow__edge-text { fill: color-mix(in oklab, var(--accent), white 20%); font-weight: 600; }
 

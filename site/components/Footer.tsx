@@ -59,11 +59,14 @@ export function Footer() {
   return (
     <footer>
       <div className="wrap footer-top">
-        <p className="footer-statement">
-          VERIFY THE
-          <br />
-          SETTLEMENT
-        </p>
+        <div className="footer-brand-block">
+          <p className="footer-statement">
+            VERIFY THE
+            <br />
+            SETTLEMENT
+          </p>
+          <span className="footer-wordmark">wasit</span>
+        </div>
 
         <div className="footer-columns">
           {FOOTER_COLUMNS.map((col) => (
@@ -88,11 +91,6 @@ export function Footer() {
       </div>
 
       <div className="wrap footer-mid">
-        <Link href="/" className="footer-brand-row">
-          <span className="footer-logo mono">W</span>
-          <span className="footer-brand mono">wasit</span>
-        </Link>
-
         <div className="footer-actions">
           <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener" aria-label="Wasit on GitHub" className="footer-icon-link">
             <GitHubIcon />
@@ -104,7 +102,8 @@ export function Footer() {
       </div>
 
       <div className="wrap footer-bottom">
-        <span className="fine">© {year} Wasit. Open source.</span>
+        <span className="fine">© {year} Wasit.</span>
+        <span className="fine">Powered by Stellar</span>
       </div>
     </footer>
   );

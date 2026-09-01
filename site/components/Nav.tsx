@@ -1,54 +1,61 @@
 import Link from "next/link"
-import GlassSurface from "./GlassSurface"
+import { DocsSearch } from "./DocsSearch"
+
+const GITHUB_URL = "https://github.com/dzakwannajmi/wasit"
+
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"
+      />
+    </svg>
+  )
+}
 
 /**
- * Sticky glass navbar. Its links point at the landing page's own
- * sub-heading sections (#what-it-checks, #how-it-works, etc. — see the
- * `id`s on app/page.tsx's <section> elements) rather than separate
- * routes, so from any other page they do a normal navigation to "/"
- * and then jump to that section; from "/" itself they just scroll.
- * "Docs" stays a real page link, styled apart from the anchor links so
- * it still reads as the primary destination.
+ * Full-width bar navbar (React Flow docs-style layout), spread edge to
+ * edge with its own wide max-width rather than sharing the page's
+ * 880px `.wrap` content column — see .navbar in globals.css for why
+ * that column would otherwise bunch brand+links+actions toward the
+ * center on anything wider than a laptop screen.
  *
- * A fixed-size floating pill (see .nav-shell in globals.css) rather
- * than a bar that contracts on scroll — same width and border-radius
- * at rest and once scrolled.
+ * Link labels mirror the landing page's own section ids/headings
+ * one-to-one (see app/page.tsx) — keep the two in sync when either
+ * changes.
  */
 export function Nav() {
   return (
-    <header>
-      <div className="nav-shell">
-        <GlassSurface
-          width="100%"
-          height={56}
-          borderRadius={50}
-          borderWidth={0.03}
-          backgroundOpacity={0.4}
-          saturation={1.4}
-          blur={8}
-          displace={0}
-          distortionScale={-60}
-          redOffset={0}
-          greenOffset={3}
-          blueOffset={6}
-          mixBlendMode="difference"
-          className="nav-glass"
-        >
-          <div className="navbar">
-            <Link href="/" className="brand">
-              wasit
-            </Link>
-            <nav className="navlinks">
-              <Link href="/#what-it-checks">What it checks</Link>
-              <Link href="/#how-it-works">How it works</Link>
-              <Link href="/#why-different">Why it&apos;s different</Link>
-              <Link href="/#quick-start">Quick start</Link>
-              <Link href="/docs" className="navlinks-docs">
-                Docs
-              </Link>
-            </nav>
-          </div>
-        </GlassSurface>
+    <header className="site-header">
+      <div className="navbar">
+        <div className="navbar-left">
+          <Link href="/" className="brand">
+            wasit
+          </Link>
+          <nav className="navlinks">
+            <Link href="/#features">Features</Link>
+            <Link href="/#how-it-works">How it works</Link>
+            <Link href="/#quick-start">Quick start</Link>
+          </nav>
+        </div>
+
+        <div className="navbar-right">
+          <DocsSearch />
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="Wasit on GitHub"
+            className="nav-icon-link"
+          >
+            <GitHubIcon />
+          </a>
+          <Link href="/docs" className="navlinks-docs">
+            Docs
+          </Link>
+        </div>
       </div>
     </header>
   )

@@ -37,7 +37,7 @@
   --sidebar-primary: var(--fg);
   --sidebar-primary-foreground: var(--bg);
   --sidebar-accent: var(--accent-bg);
-  --sidebar-accent-foreground: var(--fg);
+  --sidebar-accent-foreground: var(--accent);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--fg);
 }
@@ -207,16 +207,17 @@
   border: 1px solid var(--fg);
 }
 .docs-home-cta-primary:hover {
-  background: var(--muted);
-  border-color: var(--muted);
-  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 .docs-home-cta-secondary {
   border: 1px solid var(--border-strong);
   color: var(--fg);
 }
 .docs-home-cta-secondary:hover {
-  border-color: var(--fg);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .docs-home-grid {
   display: grid;
@@ -236,8 +237,8 @@
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .docs-home-card:hover {
-  border-color: var(--border-strong);
-  background: color-mix(in oklab, var(--surface) 80%, var(--fg) 6%);
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--surface) 82%, var(--accent) 10%);
 }
 .docs-home-card-icon {
   flex: none;
@@ -247,7 +248,7 @@
   color: var(--muted);
 }
 .docs-home-card:hover .docs-home-card-icon {
-  color: var(--fg);
+  color: var(--accent);
 }
 .docs-home-card-body {
   display: flex;
@@ -278,6 +279,7 @@
 }
 .docs-home-card:hover .docs-home-card-arrow {
   opacity: 1;
+  color: var(--accent);
   transform: translate(0, 0);
 }
 
@@ -356,4 +358,34 @@
 }
 .typeset-docs :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
+}
+
+/* Nav offset — the site-wide Nav (components/Nav.tsx, rendered in
+   app/docs/layout.tsx above <SidebarProvider>) is 64px tall and lives
+   in normal document flow, so SidebarInset's own content already
+   starts below it for free. The desktop sidebar itself doesn't: shadcn
+   renders it `fixed inset-y-0` (viewport-relative, ignores document
+   flow entirely), so left alone it would render from y:0 and sit
+   underneath Nav instead of below it. Pushing its top/height down by
+   Nav's height fixes that; SidebarRail (the drag handle) is positioned
+   relative to this same box, so it follows automatically. Left
+   unlayered for the same reason as every other override in this file —
+   these are plain utility classes from Tailwind's own `utilities`
+   layer, so an unlayered rule is the only way to reliably beat them
+   regardless of import order. Only applies at the md breakpoint and up
+   — below that the sidebar renders as a full-screen Sheet overlay
+   instead, which is supposed to cover Nav too. */
+@media (min-width: 768px) {
+  [data-slot="sidebar-container"] {
+    top: 64px;
+    height: calc(100svh - 64px);
+  }
+}
+
+/* Breadcrumb link hover ("Docs" / group name, top of a docs page) —
+   shadcn's own component only ships `hover:text-foreground`, which has
+   nothing to do with the site's purple accent. Unlayered so it beats
+   that utility class regardless of import order. */
+[data-slot="breadcrumb-link"]:hover {
+  color: var(--accent);
 }
