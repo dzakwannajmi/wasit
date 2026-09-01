@@ -76,7 +76,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-jakarta);
   --font-mono: var(--font-fira-mono);
 }
 

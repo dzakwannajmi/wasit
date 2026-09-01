@@ -46,7 +46,7 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
         onClick={onCopy}
         aria-label={copied ? "Copied" : "Copy code"}
         className={cn(
-          "absolute right-2 top-2 flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs transition-colors",
+          "absolute right-2 top-2 flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors",
           copied
             ? "border-foreground/40 bg-background text-foreground"
             : "border-border bg-background/80 text-sidebar-foreground/70 hover:border-foreground/30 hover:text-foreground"

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fira_Mono, Inter } from "next/font/google";
+import { Fira_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const firaMono = Fira_Mono({
@@ -9,9 +9,9 @@ const firaMono = Fira_Mono({
   display: "swap",
 });
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${firaMono.variable} ${inter.variable}`}>
+    <html lang="en" className={`${firaMono.variable} ${plusJakartaSans.variable}`}>
       <body>{children}</body>
     </html>
   );

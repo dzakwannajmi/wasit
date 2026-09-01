@@ -83,11 +83,11 @@ export function DocsSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <span className="flex size-8 items-center justify-center rounded-md border border-sidebar-border font-mono text-xs">
+                <span className="flex size-8 items-center justify-center rounded-md border border-sidebar-border text-xs">
                   W
                 </span>
                 <span className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-mono font-semibold">wasit</span>
+                  <span className="font-semibold">wasit</span>
                   <span className="text-xs text-sidebar-foreground/60">docs</span>
                 </span>
               </Link>
