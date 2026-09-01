@@ -9,7 +9,7 @@ import {
   runX402ReadChecks,
   summarize,
   type CheckResult,
-} from "@wasit/core";
+} from "@wasit-dev/core";
 
 /**
  * Accumulates repeated --header flags into one object.

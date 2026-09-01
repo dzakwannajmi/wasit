@@ -1,9 +1,38 @@
 {
-  "name": "@wasit/core",
+  "name": "@wasit-dev/core",
   "version": "0.1.0",
+  "description": "Check suite for x402/MPP protocol-conformance testing on Stellar. Powers the wasit CLI and wasit-mcp server.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzakwannajmi/wasit.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/dzakwannajmi/wasit#readme",
+  "bugs": {
+    "url": "https://github.com/dzakwannajmi/wasit/issues"
+  },
+  "keywords": [
+    "stellar",
+    "x402",
+    "mpp",
+    "soroban",
+    "conformance-testing",
+    "payments"
+  ],
+  "author": "Muhammad Dzakwan Najmi",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },

@@ -48,7 +48,7 @@ flowchart TB
         MCP["wasit-mcp<br/>MCP server"]
     end
 
-    CORE["@wasit/core<br/>check suites"]
+    CORE["@wasit-dev/core<br/>check suites"]
 
     subgraph target["The artifact under test"]
         SVC["Your running service"]
@@ -105,13 +105,18 @@ surface.
 returns an identical HTTP 402 body. The SDK defines precise error types for each
 of these and none are reachable, because of a class-hierarchy mismatch between
 two packages. An operator debugging a rejected payment cannot tell which rule
-they broke. See [docs/CHECKS.md](docs/CHECKS.md#note-on-error-granularity-week-2).
+they broke. See [docs/CHECKS.md](docs/CHECKS.md#note-on-error-granularity-week-2)
+and the full write-up in [docs/findings/upstream-sdk.md](docs/findings/upstream-sdk.md).
+Filed upstream as [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66);
+independently confirmed by [RouteDock's fix](https://github.com/winsznx/routedock/pull/241)
+for the same defect.
 
 **A parameter named for one thing does another.** `feePayer.envelopeSigner`
 reads like the account paying transaction fees. It is actually the account
 providing authorisation, and the channel contract requires different accounts
 for different operations. Getting it wrong produces a transaction that reaches
-the chain and fails there, surfaced by the SDK as `[object Object]`.
+the chain and fails there, surfaced by the SDK as `[object Object]`. Filed
+upstream as [stellar-mpp-sdk#67](https://github.com/stellar/stellar-mpp-sdk/issues/67).
 
 Wasit exists so these are found by a tool, before they are found by a user.
 
@@ -128,8 +133,8 @@ Wasit exists so these are found by a tool, before they are found by a user.
 | CLI | Done, three subcommands |
 | MCP server | Done, three tools + one behind an opt-in |
 | Error taxonomy and exit codes | Done |
-| Testing against third-party services | Not started |
-| Upstream reports to SDK maintainers | Drafted, not filed |
+| Testing against third-party services | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet |
+| Upstream reports to SDK maintainers | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67) |
 | Published to npm | No |
 | Mainnet | Out of scope — see [Design Notes](#design-notes) |
 
@@ -258,10 +263,9 @@ users actually experience. The revision notes in
 
 ## Roadmap
 
-- Run the suite against third-party x402/MPP services and publish aggregate
-  findings
-- File the upstream reports with the SDK maintainers
-- Publish `@wasit/cli` and `@wasit/server` to npm
+- Run the suite against a third-party service with the operator's explicit
+  authorization — the existing evidence runs don't qualify, see Status above
+- Publish `@wasit-dev/cli` and `@wasit-dev/server` to npm
 - Expand the catalogue as the x402 and MPP specs stabilise
 - Evidence documents under `docs/evidence/` for each verified run
 

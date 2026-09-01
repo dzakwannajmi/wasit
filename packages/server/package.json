@@ -1,15 +1,46 @@
 {
-  "name": "@wasit/server",
+  "name": "@wasit-dev/server",
   "version": "0.1.0",
+  "description": "MCP server exposing Wasit's x402/MPP conformance checks as tools for Claude Code and other MCP-compatible agents.",
   "type": "module",
+  "bin": {
+    "wasit-mcp": "dist/index.js"
+  },
   "main": "dist/index.js",
-  "bin": { "wasit-mcp": "dist/index.js" },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@wasit/core": "*",
-    "zod": "^4.4.3"
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzakwannajmi/wasit.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://github.com/dzakwannajmi/wasit#readme",
+  "bugs": {
+    "url": "https://github.com/dzakwannajmi/wasit/issues"
+  },
+  "keywords": [
+    "stellar",
+    "x402",
+    "mpp",
+    "mcp",
+    "model-context-protocol",
+    "conformance-testing"
+  ],
+  "author": "Muhammad Dzakwan Najmi",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@wasit-dev/core": "^0.1.0",
+    "zod": "^4.4.3"
   }
 }

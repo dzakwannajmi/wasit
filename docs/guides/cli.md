@@ -1,6 +1,6 @@
 # CLI Guide
 
-The `wasit` binary is a thin adapter over `@wasit/core`. Every check it runs is
+The `wasit` binary is a thin adapter over `@wasit-dev/core`. Every check it runs is
 the same code the MCP server runs, so the two cannot disagree about the same
 target.
 

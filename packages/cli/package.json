@@ -1,19 +1,49 @@
 {
-  "name": "@wasit/cli",
+  "name": "@wasit-dev/cli",
   "version": "0.1.0",
+  "description": "CLI for x402/MPP protocol-conformance testing on Stellar \u2014 verifies a service's payment flow settles on-chain per spec.",
   "type": "module",
   "bin": {
     "wasit": "dist/index.js"
   },
-  "dependencies": {
-    "@stellar/mpp": "^0.7.1",
-    "@stellar/stellar-sdk": "^16.1.0",
-    "@wasit/core": "*",
-    "commander": "^12.0.0",
-    "dotenv": "^16.0.0",
-    "mppx": "^0.8.14"
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzakwannajmi/wasit.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/dzakwannajmi/wasit#readme",
+  "bugs": {
+    "url": "https://github.com/dzakwannajmi/wasit/issues"
+  },
+  "keywords": [
+    "stellar",
+    "x402",
+    "mpp",
+    "soroban",
+    "conformance-testing",
+    "cli",
+    "payments"
+  ],
+  "author": "Muhammad Dzakwan Najmi",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@stellar/mpp": "^0.7.1",
+    "@stellar/stellar-sdk": "^16.1.0",
+    "@wasit-dev/core": "^0.1.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "mppx": "^0.8.14"
   }
 }

@@ -3,7 +3,7 @@
  * MCP server exposing Wasit's conformance checks to agents.
  *
  * The suite logic is not reimplemented here: this is an adapter over
- * `@wasit/core`, so the CLI and an agent running the same checks against the
+ * `@wasit-dev/core`, so the CLI and an agent running the same checks against the
  * same target always reach the same verdict.
  *
  * MPP-13 permanently closes a channel and cannot be undone. An agent cannot be
@@ -27,7 +27,7 @@ import {
   runX402ReadChecks,
   summarize,
   type CheckResult,
-} from "@wasit/core";
+} from "@wasit-dev/core";
 import { z } from "zod";
 
 const DESTRUCTIVE_ENABLED =
