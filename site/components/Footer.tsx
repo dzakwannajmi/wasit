@@ -64,7 +64,7 @@ export function Footer() {
           <Image
             src="/W-White.png"
             alt="Wasit"
-            width={380}
+            width={427}
             height={100}
             className="footer-wordmark-img"
           />

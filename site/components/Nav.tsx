@@ -37,7 +37,7 @@ export function Nav() {
       <div className="navbar">
         <div className="navbar-left">
           <Link href="/" className="brand" aria-label="Wasit">
-            <Image src="/W-White.png" alt="Wasit" width={380} height={100} className="brand-logo" priority />
+            <Image src="/W-White.png" alt="Wasit" width={427} height={100} className="brand-logo" priority />
           </Link>
           <nav className="navlinks">
             <Link href="/#comparison">Why Wasit</Link>

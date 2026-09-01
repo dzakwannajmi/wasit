@@ -2,6 +2,19 @@
 
 All notable changes to Wasit are recorded here. Versions follow [Semantic Versioning](https://semver.org/): patch releases are fixes, minor releases add checks or features without breaking existing usage, major releases break something.
 
+## 2026-09-01 — READMEs
+
+README only, no code changes. Each package now ships a `README.md`
+(previously absent, so the npm listing page for all three was empty).
+`@wasit-dev/cli` and `@wasit-dev/server` also pick up a fresh build — their
+published `dist/` predated some already-merged source changes.
+
+| Package | Version |
+|---|---|
+| `@wasit-dev/core` | 0.1.0 → 0.1.1 |
+| `@wasit-dev/cli` | 0.1.0 → 0.1.1 |
+| `@wasit-dev/server` | 0.1.1 → 0.1.2 |
+
 ## [0.1.1] — 2026-09-01
 
 `@wasit-dev/server` only. `core` and `cli` are unchanged and stay at 0.1.0 —

@@ -1,6 +1,6 @@
 {
   "name": "@wasit-dev/server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server exposing Wasit's x402/MPP conformance checks as tools for Claude Code and other MCP-compatible agents.",
   "type": "module",
   "bin": {
