@@ -624,20 +624,21 @@ h2 {
 .cta-card-button:hover span { transform: translateX(3px); }
 .cta-card-caption { margin: 0; color: var(--muted); font-size: 12px; }
 
-/* Pixel-swap hover — covers the whole informational block: headline,
-   subtext, and the code snippet all cross-fade together and the mosaic
-   wipes across the full box, not just one line of text. The final CTA
-   button and caption below are deliberately kept outside .cta-swap
-   (see the JSX) so the actual call to action is never covered or
-   hidden mid-hover. Inspired by the "Pixel Swap" effect at
+/* Pixel-swap hover, scoped to headline + subtext only — the code
+   snippet below (.cta-terminal, in the JSX) is deliberately OUTSIDE
+   this zone so its copy button is never covered and stays clickable
+   at all times, hover or not. Inspired by the "Pixel Swap" effect at
    reactbits.dev/animations/pixel-swap, rebuilt here in plain CSS
    against this site's own dark/purple palette rather than pulled from
    there — that component lives in React Bits' paid Pro collection, and
-   this needed no new dependency anyway. Every moving piece uses
-   `transition`, not `@keyframes` `animation`, specifically so it
-   reverses cleanly wherever the mouse leaves mid-hover — an
-   `animation` would just stop in place and snap back instead of
-   playing backward. */
+   this needed no new dependency anyway.
+
+   Instant, not staggered: every square appears at once with no
+   transition-delay and a near-zero duration, so the fill always reads
+   as one solid purple block, never a wipe caught mid-sweep (a longer,
+   staggered version looked like an unfinished, stepped shape on any
+   hover shorter than its full sweep time — which is most real
+   hovers). */
 .cta-swap {
   position: relative;
   overflow: hidden;
@@ -651,25 +652,24 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   padding: 8px;
-  transition: opacity 200ms ease;
+  transition: opacity 40ms linear;
 }
-.cta-swap:hover .cta-swap-face { opacity: 0; transition-duration: 120ms; }
+.cta-swap:hover .cta-swap-face { opacity: 0; }
 
-/* The mosaic layer: a grid of small squares, each scaled to 0 and
-   transparent at rest. --i (set inline per pixel in page.tsx, a fixed
-   deterministic shuffle rather than reading order) staggers when each
-   one grows in, so the wipe reads as scattered rather than a uniform
-   sweep. 12x8 so it comfortably covers the taller block (headline +
-   subtext + terminal) rather than just a single line. */
+/* The mosaic layer: a grid of small squares, scaled to 0 and
+   transparent at rest, all switching to full size/opacity together
+   (no --i-based stagger) — see the comment above for why. 10x4 covers
+   the headline + subtext block (no longer the taller headline +
+   subtext + terminal block from the previous version). */
 .cta-pixels {
   position: absolute;
   inset: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   pointer-events: none;
 }
 .cta-pixel {
@@ -677,19 +677,13 @@ h2 {
   border-radius: 3px;
   transform: scale(0);
   opacity: 0;
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
-  transition-delay: calc(var(--i) * 2ms);
+  transition: transform 60ms linear, opacity 60ms linear;
 }
 .cta-swap:hover .cta-pixel { transform: scale(1); opacity: 1; }
 
-/* Second face: white on the purple mosaic — "font kontras" — fills the
-   entire box now instead of one small badge, delayed past the pixels'
-   own worst-case cover time (95 * 2ms stagger + 220ms ~= 410ms) so the
-   reveal text only appears once the wipe has actually finished
-   covering the block. Kept fast on purpose: a normal, brief hover must
-   be enough to see the box fully covered — the old ~950ms sweep meant
-   most real hovers never got past a half-filled, stepped-looking
-   mid-animation state before the mouse moved on. */
+/* Second face: white on the purple mosaic — "font kontras" — appears
+   right behind the pixels, no separate wait for a sweep to finish
+   since there no longer is one. */
 .cta-swap-hover {
   position: absolute;
   inset: 0;
@@ -702,10 +696,10 @@ h2 {
   padding: 8px;
   text-align: center;
   opacity: 0;
-  transition: opacity 220ms ease;
+  transition: opacity 60ms linear;
   pointer-events: none;
 }
-.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 400ms; }
+.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 40ms; }
 .cta-swap-hover-eyebrow {
   font-size: clamp(20px, 3vw, 26px);
   font-weight: 700;

@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -12,15 +11,12 @@ const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
 // .cta-swap in globals.css) — inspired by
 // reactbits.dev/animations/pixel-swap, rebuilt in plain CSS/no new
 // dependency rather than pulled from there, since that component is
-// part of React Bits' paid Pro collection. (i * 17) % count is a
-// fixed, deterministic shuffle (17 and 30 share no common factor, so
-// it visits every index exactly once) — not Math.random(), which
-// would make the server-rendered stagger order differ from the
-// client's and fail hydration.
+// part of React Bits' paid Pro collection. Every cell switches state
+// at once (no per-cell stagger) — see .cta-pixel in globals.css — so
+// this is just a fixed cell count, not a shuffled order.
 const CTA_PIXEL_COLS = 10;
-const CTA_PIXEL_ROWS = 3;
+const CTA_PIXEL_ROWS = 4;
 const CTA_PIXEL_COUNT = CTA_PIXEL_COLS * CTA_PIXEL_ROWS;
-const CTA_PIXEL_ORDER = Array.from({ length: CTA_PIXEL_COUNT }, (_, i) => (i * 17) % CTA_PIXEL_COUNT);
 
 type CompareRow = { without: string; with: string };
 
@@ -229,15 +225,16 @@ export default function Home() {
         <section id="get-started" className="cta-section">
           <div className="wrap cta-wrap">
             <div className="cta-card">
-              {/* Hover reveal across the whole informational block —
-                  headline, subtext, and the code snippet all cross-fade
-                  together while a grid of small squares wipes across in
-                  between (.cta-pixels), purple, in the site's own
-                  accent — see the CSS comment on .cta-swap for why this
-                  uses `transition`, not `animation`, on every moving
-                  piece. The final CTA button and caption sit outside
-                  this zone (below) so the actual call to action is
-                  never covered or hidden mid-hover. */}
+              {/* Hover reveal, headline + subtext only — an instant
+                  (no stagger, no wipe delay) purple swap, not an
+                  animated sweep, in the site's own accent. The code
+                  snippet below is deliberately OUTSIDE this zone: it
+                  was inside it before, and hovering the card would
+                  cover the copy button and make it uncopiable exactly
+                  while the mouse was over that area. Keeping the
+                  terminal (and its copy button) fully outside .cta-swap
+                  means it's never covered, faded, or blocked — always
+                  clickable. */}
               <div className="cta-swap">
                 <div className="cta-swap-face">
                   <h2>Ready to test your x402 or MPP integration?</h2>
@@ -246,36 +243,34 @@ export default function Home() {
                     backed by on-chain verification. No signup, no config
                     file required to start.
                   </p>
-
-                  {/* Same .terminal/.terminal-bar/.cmdbox chrome as the
-                      hero — reused as-is, not a lookalike, so the two
-                      stay pixel-identical by construction. */}
-                  <div className="terminal cta-terminal">
-                    <div className="terminal-bar">
-                      <span className="terminal-dot terminal-dot-red" />
-                      <span className="terminal-dot terminal-dot-yellow" />
-                      <span className="terminal-dot terminal-dot-green" />
-                    </div>
-                    <div className="cmdbox">
-                      <code className="mono">$ {INSTALL_CMD}</code>
-                      <CopyButton text={INSTALL_CMD} />
-                    </div>
-                  </div>
                 </div>
 
                 <div className="cta-pixels" aria-hidden="true">
-                  {CTA_PIXEL_ORDER.map((delayRank, i) => (
-                    <span
-                      key={i}
-                      className="cta-pixel"
-                      style={{ "--i": delayRank } as unknown as CSSProperties}
-                    />
+                  {Array.from({ length: CTA_PIXEL_COUNT }, (_, i) => (
+                    <span key={i} className="cta-pixel" />
                   ))}
                 </div>
 
                 <div className="cta-swap-hover">
                   <span className="cta-swap-hover-eyebrow">One command.</span>
                   <span className="cta-swap-hover-eyebrow">Verified on-chain.</span>
+                </div>
+              </div>
+
+              {/* Same .terminal/.terminal-bar/.cmdbox chrome as the hero
+                  — reused as-is, not a lookalike, so the two stay
+                  pixel-identical by construction. Outside .cta-swap on
+                  purpose (see comment above) — always visible, copy
+                  button always clickable, hover or not. */}
+              <div className="terminal cta-terminal">
+                <div className="terminal-bar">
+                  <span className="terminal-dot terminal-dot-red" />
+                  <span className="terminal-dot terminal-dot-yellow" />
+                  <span className="terminal-dot terminal-dot-green" />
+                </div>
+                <div className="cmdbox">
+                  <code className="mono">$ {INSTALL_CMD}</code>
+                  <CopyButton text={INSTALL_CMD} />
                 </div>
               </div>
 
