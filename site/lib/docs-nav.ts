@@ -75,6 +75,7 @@ export const DOCS_NAV: DocNavEntry[] = [
     pages: [
       { title: "Overview", slug: ["cli", "overview"] },
       { title: "Exit codes", slug: ["cli", "exit-codes"] },
+      { title: "Check Catalogue", slug: ["cli", "checks"] },
       { title: "x402 (Test)", slug: ["cli", "test-x402"] },
       { title: "MPP Charge Mode", slug: ["cli", "mpp-charge"] },
       { title: "MPP Channel Mode", slug: ["cli", "mpp-channel"] },
