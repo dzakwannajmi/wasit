@@ -10,7 +10,9 @@ downloads and runs the binary on demand. A local checkout still works the same
 way (`node packages/server/dist/index.js`) and is only needed if you're
 developing Wasit itself.
 
-## Claude Code
+## Claude Code & Claude Desktop
+
+### Claude Code
 
 Add the server with `claude mcp add`, passing your Stellar testnet credentials
 as environment variables:
@@ -32,7 +34,7 @@ connected with `claude mcp list`, then ask Claude Code directly, for example
 
 To remove it later: `claude mcp remove wasit`.
 
-## Claude Desktop
+### Claude Desktop
 
 Open Settings, go to the Developer tab, and click "Edit Config". This opens
 (or creates) the config file at:

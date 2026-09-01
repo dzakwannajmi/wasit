@@ -22,7 +22,7 @@ A run with both a failure and an error exits `1`: a real finding outranks a
 missing one. Skipped checks never affect the exit code — a skipped check is
 neither a pass nor a defect.
 
-## `test` — x402
+## x402 (Test)
 
 ```bash
 node packages/cli/dist/index.js test --target <url> [options]
@@ -39,7 +39,7 @@ Without a payer key the payment checks are skipped automatically, so the default
 posture costs nothing. When they do run, **`X402-06` settles a real payment and
 `X402-07` attempts one.**
 
-## `mpp-charge` — MPP charge mode
+## MPP Charge Mode
 
 ```bash
 node packages/cli/dist/index.js mpp-charge --target <url> [options]
@@ -56,7 +56,7 @@ node packages/cli/dist/index.js mpp-charge --target <url> [options]
 has no dry run, and a settlement that never happened cannot be verified
 on-chain.
 
-## `mpp-channel` — MPP channel mode
+## MPP Channel Mode
 
 ```bash
 node packages/cli/dist/index.js mpp-channel --target <url> [options]

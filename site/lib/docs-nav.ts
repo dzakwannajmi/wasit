@@ -1,5 +1,5 @@
 import {
-  Package,
+  Rocket,
   SquareTerminal,
   Cable,
   Settings2,
@@ -24,6 +24,11 @@ import {
  * as lib/content.ts's cleanHeadingText) — keep them in sync by eye; a
  * mismatch is a stale sidebar label, not a broken page (assertDocsInSync
  * only checks *counts*).
+ *
+ * "Get Started" is the one exception: its three pages are hand-authored
+ * or pulled from a single named section of a file (see lib/content.ts's
+ * resolveDocMarkdown and getHowItWorksMarkdown), not a whole file split
+ * by "##", so it's exempt from assertDocsInSync's count check.
  */
 
 export type DocNavPage = { title: string; slug: string[] }
@@ -46,10 +51,14 @@ export type DocNavEntry = DocNavGroup | DocNavLink
 
 export const DOCS_NAV: DocNavEntry[] = [
   {
-    kind: "link",
-    title: "Install",
-    icon: Package,
-    page: { title: "Install", slug: [] },
+    kind: "group",
+    title: "Get Started",
+    icon: Rocket,
+    pages: [
+      { title: "Install", slug: ["get-started", "install"] },
+      { title: "Quick Start", slug: ["get-started", "quick-start"] },
+      { title: "How It Works", slug: ["get-started", "how-it-works"] },
+    ],
   },
   {
     kind: "group",
@@ -58,9 +67,9 @@ export const DOCS_NAV: DocNavEntry[] = [
     pages: [
       { title: "Overview", slug: ["cli", "overview"] },
       { title: "Exit codes", slug: ["cli", "exit-codes"] },
-      { title: "test - x402", slug: ["cli", "test-x402"] },
-      { title: "mpp-charge - MPP charge mode", slug: ["cli", "mpp-charge"] },
-      { title: "mpp-channel - MPP channel mode", slug: ["cli", "mpp-channel"] },
+      { title: "x402 (Test)", slug: ["cli", "test-x402"] },
+      { title: "MPP Charge Mode", slug: ["cli", "mpp-charge"] },
+      { title: "MPP Channel Mode", slug: ["cli", "mpp-channel"] },
       { title: "Reading output", slug: ["cli", "reading-output"] },
     ],
   },
@@ -70,8 +79,7 @@ export const DOCS_NAV: DocNavEntry[] = [
     icon: Cable,
     pages: [
       { title: "Overview", slug: ["mcp", "overview"] },
-      { title: "Claude Code", slug: ["mcp", "claude-code"] },
-      { title: "Claude Desktop", slug: ["mcp", "claude-desktop"] },
+      { title: "Claude Code & Claude Desktop", slug: ["mcp", "claude-code"] },
       { title: "Manual / other clients", slug: ["mcp", "other-clients"] },
       { title: "Tools", slug: ["mcp", "tools"] },
       { title: "Resource", slug: ["mcp", "resource"] },

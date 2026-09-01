@@ -96,32 +96,264 @@
    beat layered ones regardless of that ordering, so these are
    guaranteed to apply. globals.css now also declares Tailwind's layer
    order up front to fix the root cause; this stays as a belt-and-braces
-   rule and gives the tables the site's own look (mirrors the homepage's
-   .checks-table) rather than typeset's generic defaults. */
+   rule.
+   Card look (rounded outer frame via .table-scroll, thin dividers
+   between cells instead of a heavy grid, header row one shade lighter
+   than the body) rather than typeset's generic defaults. */
 .table-scroll {
   overflow-x: auto;
   margin: 1.3em 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.85em;
+  background: var(--accent-bg);
 }
 .typeset-docs table {
   width: 100%;
   min-width: max-content;
   border-collapse: collapse;
-  font-size: 0.875em;
+  font-size: 0.9em;
   line-height: 1.6;
 }
 .typeset-docs thead th {
   text-align: left;
-  font-weight: 500;
-  color: var(--muted);
-  padding: 0.55em 1.4em 0.55em 0;
+  font-weight: 600;
+  color: var(--fg);
+  background: color-mix(in oklab, var(--accent-bg) 80%, white 12%);
+  padding: 0.9em 1.35em;
   border-bottom: 1px solid var(--border-strong);
-  white-space: nowrap;
+  border-right: 1px solid var(--border);
 }
 .typeset-docs tbody td {
-  padding: 0.85em 1.4em 0.85em 0;
+  padding: 0.9em 1.35em;
   border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   vertical-align: top;
+}
+.typeset-docs thead th:last-child,
+.typeset-docs tbody td:last-child {
+  border-right: none;
 }
 .typeset-docs tbody tr:last-child td {
   border-bottom: none;
+}
+/* Inline code inside a table cell (e.g. a "Type" column) reads as a
+   small pill against the cell background instead of typeset's default
+   :not(pre) > code look, which is nearly invisible on the card's own
+   --surface background. table cells never contain a fenced code block
+   here, so a plain "code" selector is enough. */
+.typeset-docs td code {
+  background: var(--border);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.4em;
+  padding: 0.15em 0.55em;
+}
+
+/* Mermaid diagrams: the library renders its own inline-styled SVG, so
+   this just gives it a frame that matches the rest of the docs surface
+   and lets a wide diagram scroll horizontally instead of squeezing. */
+.mermaid-diagram {
+  margin: 1.6em 0;
+  padding: 1.25em;
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5em;
+}
+.mermaid-diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+.mermaid-error {
+  margin: 1.6em 0;
+  padding: 1em 1.25em;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5em;
+  font-size: 0.875em;
+}
+
+/* /docs landing page (components/docs-home.tsx) — hero + grouped card
+   links, not an article. Scoped with a docs-home- prefix; headings and
+   paragraphs inside it still pick up .typeset's normal type scale for
+   free since that's a descendant selector, not a direct-child one. Left
+   unlayered for the same cascade-order reason as the table rules above. */
+.docs-home-lead {
+  color: var(--muted);
+  font-size: 1.05em;
+  line-height: 1.6;
+  max-width: 56ch;
+}
+.docs-home-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75em;
+  margin-top: 1.5em;
+}
+.docs-home-cta-primary,
+.docs-home-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875em;
+  font-weight: 500;
+  padding: 0.65em 1.15em;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.docs-home-cta-primary {
+  background: var(--fg);
+  color: var(--bg);
+  border: 1px solid var(--fg);
+}
+.docs-home-cta-primary:hover {
+  background: var(--muted);
+  border-color: var(--muted);
+  color: var(--bg);
+}
+.docs-home-cta-secondary {
+  border: 1px solid var(--border-strong);
+  color: var(--fg);
+}
+.docs-home-cta-secondary:hover {
+  border-color: var(--fg);
+}
+.docs-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85em;
+  margin-top: 1.1em;
+}
+.docs-home-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85em;
+  padding: 1.1em 1.2em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.docs-home-card:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in oklab, var(--surface) 80%, var(--fg) 6%);
+}
+.docs-home-card-icon {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+  margin-top: 0.15em;
+  color: var(--muted);
+}
+.docs-home-card:hover .docs-home-card-icon {
+  color: var(--fg);
+}
+.docs-home-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  flex: 1;
+  min-width: 0;
+}
+.docs-home-card-title {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--fg);
+}
+.docs-home-card-desc {
+  font-size: 0.825em;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.docs-home-card-arrow {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin-top: 0.2em;
+  color: var(--muted);
+  opacity: 0;
+  transform: translate(-2px, 2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.docs-home-card:hover .docs-home-card-arrow {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Fenced code blocks: typeset's own default background resolves to
+   --color-muted -> --surface (#0a0a0a), which reads as almost the same
+   color as the page background (#000000) — a code block was basically
+   invisible until you looked closely at the text. --accent-bg is
+   already the app's "one step up from the page" surface (used for the
+   sidebar's own hover state), reused here so a block reads as a
+   distinct panel instead of floating text. Unlayered so it beats
+   typeset's own @layer components rule regardless of import order. */
+.typeset-docs pre {
+  background: var(--accent-bg);
+  border: 1px solid var(--border-strong);
+}
+
+/* Headings inside an article, fully re-declared and left UNLAYERED —
+   same reasoning as the table/pre rules above, but the bug it dodges is
+   different: globals.css has its own bare, SITE-WIDE `h2 { ... }` rule
+   (the small uppercase eyebrow label used above homepage sections, e.g.
+   "WHAT IT CHECKS") that is *also* unlayered, while typeset's own
+   h1-h6 rules live in `@layer components`. Unlayered always beats
+   layered, so on a /docs page every h2 was silently rendering as that
+   12px muted eyebrow label instead of an actual heading — this is what
+   "sub-headings look too small/washed out" turned out to be. Re-declare
+   every property that global rule (or any future one like it) could
+   touch, so a docs heading can never again depend on winning that
+   layering race. h2/h3 go to a true bold (700, up from typeset's 600)
+   so a sub-heading reads clearly as one at a glance. */
+.typeset-docs :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  color: var(--fg);
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0;
+}
+.typeset-docs h1 {
+  font-size: 1.75em;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: var(--typeset-flow);
+}
+.typeset-docs h2 {
+  font-size: 1.25em;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: calc(var(--typeset-flow) * 1.4);
+}
+.typeset-docs h3 {
+  font-size: 1.125em;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-top: var(--typeset-flow);
+}
+.typeset-docs h4 {
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-top: var(--typeset-flow);
+}
+.typeset-docs h5 {
+  font-size: 0.875em;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: calc(var(--typeset-flow) / 0.875);
+}
+.typeset-docs h6 {
+  font-size: 0.8125em;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: calc(var(--typeset-flow) / 0.8125);
+}
+.typeset-docs :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
 }

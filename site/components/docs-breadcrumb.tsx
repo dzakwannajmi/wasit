@@ -15,7 +15,7 @@ export function DocsBreadcrumb() {
   const pathname = usePathname()
   const slug = pathname.replace(/^\/docs\/?/, "").split("/").filter(Boolean)
   const found = findNavPage(slug)
-  const pageTitle = found?.page.title ?? (slug.length === 0 ? "Install" : "Docs")
+  const pageTitle = found?.page.title ?? "Docs"
 
   return (
     <Breadcrumb>

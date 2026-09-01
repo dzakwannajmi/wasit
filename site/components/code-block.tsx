@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Check, Copy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { MermaidDiagram } from "@/components/mermaid-diagram"
 
 function extractText(node: React.ReactNode): string {
   if (typeof node === "string") return node
@@ -24,6 +25,17 @@ function extractText(node: React.ReactNode): string {
 export function CodeBlock({ children, className, ...props }: React.ComponentPropsWithoutRef<"pre">) {
   const [copied, setCopied] = React.useState(false)
   const text = extractText(children).replace(/\n$/, "")
+
+  // ReactMarkdown always calls this renderer with the fenced block's own
+  // <code language-xxx> element as `children` — pull its className back
+  // out to tell a ```mermaid fence apart from an ordinary one. Mermaid
+  // blocks skip the copy-button chrome entirely and render as a diagram.
+  const codeClassName = React.isValidElement(children)
+    ? ((children.props as { className?: string }).className ?? "")
+    : ""
+  if (/language-mermaid/.test(codeClassName)) {
+    return <MermaidDiagram source={text} />
+  }
 
   const onCopy = async () => {
     try {

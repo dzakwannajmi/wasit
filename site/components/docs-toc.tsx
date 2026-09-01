@@ -55,7 +55,7 @@ export function DocsToc({ contentSelector, className }: { contentSelector: strin
 
   return (
     <nav aria-label="On this page" className={cn("space-y-3", className)}>
-      <div className="text-xs uppercase tracking-wider text-sidebar-foreground/50">
+      <div className="text-sm font-bold uppercase tracking-wider text-sidebar-foreground/80">
         On this page
       </div>
       <ul className="space-y-2">
