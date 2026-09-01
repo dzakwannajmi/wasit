@@ -13,6 +13,11 @@
 @import "./typeset.css";
 
 :root {
+  /* The site is dark-only regardless of the visitor's OS setting, so
+     pin color-scheme rather than leaving it to the default "light" —
+     GlassSurface's own CSS (components/GlassSurface.css) uses
+     light-dark() and needs this to resolve to its dark variant. */
+  color-scheme: dark;
   --bg: #000000;
   --fg: #ededed;
   --muted: #a0a0a0;
@@ -20,6 +25,11 @@
   --border-strong: #2e2e2e;
   --surface: #0a0a0a;
   --radius: 0.35em;
+  /* Stellar's own purple (matches the badge color already used in
+     README.md) — the one spot of color on an otherwise monochrome
+     page, used sparingly: the hero's bolded protocol names, the final
+     step of the "How it works" flow, and inline links in prose. */
+  --accent: #7c3aed;
 
   /* Typeset reads these theme tokens directly (see app/typeset.css) —
      map them onto our own palette instead of letting it fall back to
@@ -61,13 +71,78 @@ a:hover { color: var(--muted); }
 
 .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
 
-/* Nav */
-header { border-bottom: 1px solid var(--border); padding: 18px 0; }
-.navbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.brand { font-weight: 700; letter-spacing: -0.5px; font-size: 15px; }
-.navlinks { display: flex; gap: 20px; font-size: 13px; color: var(--muted); }
+/* Nav — a floating GlassSurface pill (components/GlassSurface.tsx),
+   inset from the viewport edges rather than a flush full-width bar, so
+   the frosted/refractive effect reads as a card over the page instead
+   of a plain header. margin-top gives it a gap from the very top on
+   first paint; the matching `top: 16px` sticky offset holds it there
+   once the page scrolls. Fixed size — same width, height and
+   border-radius at rest and once scrolled, no shrink animation. */
+header {
+  position: sticky;
+  top: 16px;
+  margin-top: 16px;
+  z-index: 50;
+  padding: 0 20px;
+}
+.nav-shell { max-width: 700px; margin: 0 auto; }
+/* The vendored GlassSurface CSS relies on backdrop-filter/box-shadow
+   alone to read as a "card" — fine when there's scrolled content
+   behind it to blur, but the page background is pure black same as
+   the glass tint, so at rest (nothing scrolled behind it yet) the
+   pill would otherwise have no visible edge at all. A real border
+   makes the shape legible immediately, not just once you scroll. */
+.nav-glass { border: 1px solid var(--border-strong); }
+.nav-glass .glass-surface__content { padding: 0; }
+/* Same specificity trick as the compound selector below: two classes
+   beats GlassSurface.css's own single-class `.glass-surface--svg` rule
+   outright, so this always wins regardless of which stylesheet the
+   bundler happens to register first — an extra ambient shadow so the
+   pill visibly floats over the page's near-black background, which
+   the vendor's own shadow (tuned for a lighter surrounding) is too
+   faint to do here. */
+.nav-glass.glass-surface--svg { box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.75); }
+/* width: 100% is load-bearing, not decorative — .glass-surface__content
+   (GlassSurface.css) centers its child instead of stretching it, so
+   without an explicit width .navbar would shrink to fit its own
+   content and sit centered inside the pill: brand and links bunched
+   together in the middle instead of pinned to opposite edges. */
+.navbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; height: 100%; padding: 0 22px; }
+/* Same weight/tracking as .wordmark below, at nav scale — the navbar
+   "wasit" wordmark is meant to read as the same brand mark as the
+   hero's "WASIT", so it inherits the body font (Plus Jakarta Sans)
+   rather than the mono face used for code and package names. Sized up
+   so it reads as a title next to the nav links, not just a label. */
+.brand { flex: none; font-weight: 700; letter-spacing: -0.6px; font-size: 21px; }
+.navlinks {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
 .navlinks a { color: var(--muted); }
 .navlinks a:hover { color: var(--fg); }
+/* The one CTA-styled link in the nav — a solid accent pill rather than
+   just bolder text, so it reads as the primary destination the way the
+   plain anchor links (which just jump to a section on this same page)
+   don't need to. */
+.navlinks-docs {
+  color: #fff !important;
+  background: var(--accent);
+  padding: 8px 18px;
+  border-radius: 999px;
+  transition: background 160ms ease;
+}
+.navlinks-docs:hover { background: color-mix(in oklab, var(--accent), white 12%); color: #fff !important; }
+
+@media (max-width: 640px) {
+  /* No hamburger menu yet — on a narrow viewport the shrinking pill
+     doesn't have room for five links, so only keep the one that isn't
+     already reachable by scrolling the page itself. */
+  .navlinks a:not(.navlinks-docs) { display: none; }
+}
 
 /* Hero */
 .hero { padding: 72px 0 40px; border-bottom: 1px solid var(--border); }
@@ -80,7 +155,7 @@ header { border-bottom: 1px solid var(--border); padding: 18px 0; }
   text-wrap: balance;
 }
 .tagline { max-width: 560px; color: var(--muted); font-size: 17px; line-height: 1.6; margin: 0 0 36px; }
-.tagline b { color: var(--fg); font-weight: 500; }
+.tagline b { color: var(--accent); font-weight: 600; }
 
 .label {
   font-size: 11px;
@@ -105,12 +180,63 @@ header { border-bottom: 1px solid var(--border); padding: 18px 0; }
 .copy-btn:hover { color: var(--fg); border-color: var(--fg); }
 
 /* Sections */
-section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+/* scroll-margin-top keeps an anchor-linked section's own heading clear
+   of the sticky glass header (see .navlinks in Nav.tsx) instead of
+   landing right underneath it. */
+section { padding: 48px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 100px; }
 section:last-of-type { border-bottom: none; }
 h2 {
-  font-size: 12px; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--muted); margin: 0 0 28px; font-weight: 400;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--fg);
+  margin: 0 0 20px;
 }
+/* Hero trust line — three honest, checkable facts under the install
+   command; not a marketing badge row. */
+.hero-trust { margin-top: 16px; color: var(--muted); font-size: 12px; letter-spacing: 0.2px; }
+.hero-trust a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.hero-trust a:hover { color: var(--fg); }
+
+/* /why — standalone typeset article page (shadcn's typeset article
+ * layout: no docs sidebar/TOC, just a centered reading column). */
+.article-wrap {
+  max-width: 700px;
+  padding-top: 64px;
+  padding-bottom: 80px;
+}
+.article-wrap .typeset h1 {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 0 0 28px;
+}
+.article-wrap .typeset hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+/* Section intros — every section now opens with a real sentence before
+   its table/grid/list, instead of a bare heading dropped straight onto
+   the data. Keeps the page reading like prose that happens to include
+   structured content, not a spec sheet. */
+.section-lead { font-size: 16px; line-height: 1.6; color: var(--fg); max-width: 640px; margin: 0 0 20px; }
+.section-body { font-size: 14px; line-height: 1.7; color: var(--muted); max-width: 640px; margin: 0 0 14px; }
+.section-body:last-of-type { margin-bottom: 0; }
+.section-lead a, .section-body a { color: var(--accent); }
+.section-lead a:hover, .section-body a:hover { text-decoration: underline; }
+.section-lead code, .section-body code {
+  font-family: var(--font-fira-mono), monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--fg);
+}
+
 /* Checks table */
 .checks-table { width: 100%; border-collapse: collapse; }
 .checks-table td { padding: 14px 0; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; }
@@ -134,15 +260,41 @@ pre.codeblock {
 }
 pre.codeblock .cm { color: var(--muted); }
 
-/* Footer */
-footer { padding: 48px 0 0; }
-.footer-top { display: flex; flex-direction: column; gap: 8px; padding: 40px 0 28px; }
-.footer-brand { font-weight: 700; font-size: 15px; }
-.footer-tagline { color: var(--muted); font-size: 14px; max-width: 440px; margin: 0; }
-.footer-links { display: flex; gap: 20px; font-size: 13px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
-.footer-links a { color: var(--muted); }
-.footer-links a:hover { color: var(--fg); }
-.footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 20px 0 40px; }
+/* Footer — a big brand statement beside four real link columns, then
+   a logo/CTA row, then a thin utility bar. Same dark/hairline-border/
+   mono language as the rest of the homepage, not VSCO's own palette —
+   only the layout shape (statement + columns, pill CTAs, slim bottom
+   bar) is borrowed. */
+footer { padding: 88px 0 0; border-top: 1px solid var(--border); }
+
+.footer-top { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; padding-bottom: 56px; }
+.footer-statement {
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  max-width: 340px;
+  margin: 0;
+  text-wrap: balance;
+}
+.footer-columns { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 32px; flex: 1; max-width: 480px; }
+.footer-col h3 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 16px; }
+.footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer-col a { color: var(--fg); font-size: 14px; }
+.footer-col a:hover { color: var(--muted); }
+
+.footer-mid { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 28px 0; border-top: 1px solid var(--border); }
+.footer-brand-row { display: flex; align-items: center; gap: 10px; }
+.footer-logo { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px; font-weight: 700; flex: none; }
+.footer-brand-row .footer-brand { font-weight: 700; font-size: 15px; }
+
+/* Pure logo marks — no button chrome, just the glyph with a hover fade. */
+.footer-actions { display: flex; align-items: center; gap: 18px; }
+.footer-icon-link { display: flex; color: var(--muted); }
+.footer-icon-link:hover { color: var(--fg); }
+.footer-icon-link svg { width: 18px; height: 18px; }
+
+.footer-bottom { padding: 20px 0 40px; }
 .fine { color: var(--muted); font-size: 12px; }
 
 @media (max-width: 640px) {
@@ -150,4 +302,6 @@ footer { padding: 48px 0 0; }
   .links-grid { grid-template-columns: 1fr; }
   .checks-table .ct-name { width: auto; display: block; }
   .checks-table tr { display: flex; flex-direction: column; gap: 4px; }
+  .footer-columns { grid-template-columns: repeat(2, 1fr); max-width: none; }
+  .footer-mid { flex-direction: row; }
 }
