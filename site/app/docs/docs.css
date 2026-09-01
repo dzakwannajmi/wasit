@@ -1,0 +1,127 @@
+/* Tailwind + shadcn/ui theme, scoped to the /docs/** routes only (imported
+   from app/docs/layout.tsx, which every docs page renders under) — the
+   rest of the site stays plain CSS. This is what powers the sidebar-07 shell
+   (https://ui.shadcn.com/blocks/sidebar#sidebar-07): the collapsible
+   left sidebar, breadcrumb header, sheet/tooltip primitives it depends
+   on all read Tailwind utility classes, which only exist where this
+   file is loaded. */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  /* Every shadcn token below is mapped onto Wasit's own terminal
+     palette (--bg/--fg/--muted/--border/--surface/--radius, defined in
+     ../globals.css and already in scope everywhere) instead of
+     shadcn's default neutral scale — see .planning/landing-page.md for
+     where that palette came from. New tokens only; nothing here
+     redeclares a name from globals.css. */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--fg);
+  --primary: var(--fg);
+  --primary-foreground: var(--bg);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--fg);
+  --muted-bg: var(--surface);
+  --accent-bg: #161616;
+  --accent-foreground: var(--fg);
+  --destructive: #b91c1c;
+  --input: var(--border);
+  --ring: var(--fg);
+
+  --sidebar: var(--bg);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--fg);
+  --sidebar-primary-foreground: var(--bg);
+  --sidebar-accent: var(--accent-bg);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--fg);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-bg);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent-bg);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-fira-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+/* Markdown tables inside docs content, styled explicitly and left
+   UNLAYERED on purpose: typeset.css's own table rules live in
+   `@layer components`, and depending on how that layer ends up ordered
+   against Tailwind's `base` layer (this file's preflight reset zeroes
+   every element's padding and border-width) across the two separate
+   stylesheets a /docs page loads — globals.css site-wide, this file
+   scoped to /docs — components can lose to base. Unlayered rules always
+   beat layered ones regardless of that ordering, so these are
+   guaranteed to apply. globals.css now also declares Tailwind's layer
+   order up front to fix the root cause; this stays as a belt-and-braces
+   rule and gives the tables the site's own look (mirrors the homepage's
+   .checks-table) rather than typeset's generic defaults. */
+.table-scroll {
+  overflow-x: auto;
+  margin: 1.3em 0;
+}
+.typeset-docs table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+.typeset-docs thead th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 0.55em 1.4em 0.55em 0;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.typeset-docs tbody td {
+  padding: 0.85em 1.4em 0.85em 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.typeset-docs tbody tr:last-child td {
+  border-bottom: none;
+}

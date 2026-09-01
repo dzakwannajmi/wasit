@@ -1,0 +1,155 @@
+/* Establishes Tailwind's own layer order (theme, base, components,
+   utilities) right here, in the FIRST stylesheet the whole site loads
+   (globals.css, via the root layout) — before typeset.css below ever
+   registers its own "components" layer. Without this, on /docs pages
+   (the only place Tailwind actually loads, scoped to app/docs/docs.css)
+   "components" gets fixed as the very first layer seen in the document,
+   so Tailwind's later `@layer theme, base, components, utilities;` can't
+   move it after "base" anymore — and typeset's table/heading rules lose
+   to Tailwind's preflight reset (padding/border zeroed on every element).
+   Declaring the order here, up front, fixes that for every route. */
+@layer theme, base, components, utilities;
+
+@import "./typeset.css";
+
+:root {
+  --bg: #000000;
+  --fg: #ededed;
+  --muted: #a0a0a0;
+  --border: #1f1f1f;
+  --border-strong: #2e2e2e;
+  --surface: #0a0a0a;
+  --radius: 0.35em;
+
+  /* Typeset reads these theme tokens directly (see app/typeset.css) —
+     map them onto our own palette instead of letting it fall back to
+     the color-mix() approximations. */
+  --color-foreground: var(--fg);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--border);
+  --color-muted: var(--surface);
+  --color-ring: var(--fg);
+}
+
+/* The docs reading rhythm — fonts + size/leading/flow per shadcn/typeset's
+   preset pattern (https://ui.shadcn.com/docs/typeset). */
+.typeset-docs {
+  --typeset-font-body: var(--font-inter);
+  --typeset-font-heading: var(--font-fira-mono);
+  --typeset-font-mono: var(--font-fira-mono);
+  --typeset-size: 15px;
+  --typeset-leading: 1.7;
+  --typeset-flow: 1.3em;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: var(--font-fira-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+
+a { color: var(--fg); text-decoration: none; }
+a:hover { color: var(--muted); }
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+/* Nav */
+header { border-bottom: 1px solid var(--border); padding: 18px 0; }
+.navbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { font-family: var(--font-fira-mono), monospace; font-weight: 700; letter-spacing: -0.5px; font-size: 15px; }
+.navlinks { display: flex; gap: 20px; font-family: var(--font-fira-mono), monospace; font-size: 13px; color: var(--muted); }
+.navlinks a { color: var(--muted); }
+.navlinks a:hover { color: var(--fg); }
+
+/* Hero */
+.hero { padding: 72px 0 40px; border-bottom: 1px solid var(--border); }
+.wordmark {
+  font-family: var(--font-fira-mono), monospace;
+  font-weight: 700;
+  font-size: clamp(48px, 10vw, 84px);
+  letter-spacing: -2px;
+  line-height: 0.95;
+  margin: 0 0 22px;
+  text-wrap: balance;
+}
+.tagline { max-width: 560px; color: var(--muted); font-size: 17px; line-height: 1.6; margin: 0 0 36px; }
+.tagline b { color: var(--fg); font-weight: 500; }
+
+.label {
+  font-family: var(--font-fira-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.cmdbox {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: 14px 16px;
+  max-width: 560px;
+}
+.cmdbox code { font-family: var(--font-fira-mono), monospace; font-size: 14px; color: var(--fg); white-space: pre; overflow-x: auto; }
+.copy-btn {
+  flex: none; background: transparent; border: 1px solid var(--border-strong); color: var(--muted);
+  font-family: var(--font-fira-mono), monospace; font-size: 11px; padding: 6px 10px; cursor: pointer; border-radius: 3px;
+}
+.copy-btn:hover { color: var(--fg); border-color: var(--fg); }
+
+/* Sections */
+section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+section:last-of-type { border-bottom: none; }
+h2 {
+  font-family: var(--font-fira-mono), monospace; font-size: 12px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 28px; font-weight: 400;
+}
+/* Checks table */
+.checks-table { width: 100%; border-collapse: collapse; }
+.checks-table td { padding: 14px 0; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; }
+.checks-table tr:last-child td { border-bottom: none; }
+.checks-table .ct-name { font-family: var(--font-fira-mono), monospace; color: var(--fg); width: 220px; }
+.checks-table .ct-count { font-family: var(--font-fira-mono), monospace; color: var(--muted); width: 90px; }
+.checks-table .ct-desc { color: var(--muted); }
+
+/* Why grid */
+.why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.why-item h3 { font-family: var(--font-fira-mono), monospace; font-size: 13px; font-weight: 500; color: var(--fg); margin: 0 0 10px; letter-spacing: -0.2px; }
+.why-item p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
+
+/* Quick start */
+.quickstart-block { margin-bottom: 28px; }
+.quickstart-block:last-child { margin-bottom: 0; }
+.quickstart-block .qs-label { font-family: var(--font-fira-mono), monospace; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+pre.codeblock {
+  font-family: var(--font-fira-mono), monospace; font-size: 13px; line-height: 1.7; color: var(--fg);
+  background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; overflow-x: auto; margin: 0;
+}
+pre.codeblock .cm { color: var(--muted); }
+
+/* Footer */
+footer { padding: 48px 0 0; }
+.footer-top { display: flex; flex-direction: column; gap: 8px; padding: 40px 0 28px; }
+.footer-brand { font-family: var(--font-fira-mono), monospace; font-weight: 700; font-size: 15px; }
+.footer-tagline { color: var(--muted); font-size: 14px; max-width: 440px; margin: 0; }
+.footer-links { display: flex; gap: 20px; font-family: var(--font-fira-mono), monospace; font-size: 13px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+.footer-links a { color: var(--muted); }
+.footer-links a:hover { color: var(--fg); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 20px 0 40px; }
+.fine { color: var(--muted); font-size: 12px; font-family: var(--font-fira-mono), monospace; }
+
+@media (max-width: 640px) {
+  .why-grid { grid-template-columns: 1fr; }
+  .links-grid { grid-template-columns: 1fr; }
+  .checks-table .ct-name { width: auto; display: block; }
+  .checks-table tr { display: flex; flex-direction: column; gap: 4px; }
+}
