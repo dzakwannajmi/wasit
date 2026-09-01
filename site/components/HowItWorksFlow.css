@@ -1,0 +1,83 @@
+/* Custom theming for the "How it works" sequence diagram
+   (HowItWorksFlow.tsx). @xyflow/react/dist/style.css supplies the
+   functional base (drag handles, edge paths, panning); everything
+   here just re-skins it to match the site's dark/monochrome palette
+   instead of the library's light-mode defaults. */
+
+.flow-canvas {
+  width: 100%;
+  height: 380px;
+  margin: 28px 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.react-flow {
+  --xy-background-color-default: var(--surface);
+  --xy-edge-stroke-default: #4a4a4a;
+  --xy-edge-stroke-width-default: 1.5;
+  --xy-edge-label-background-color-default: var(--surface);
+  --xy-controls-button-background-color-default: #141414;
+  --xy-controls-button-background-color-hover-default: #1f1f1f;
+  --xy-controls-button-color-default: var(--muted);
+  --xy-controls-button-color-hover-default: var(--fg);
+  --xy-controls-button-border-color-default: var(--border-strong);
+}
+
+.flow-actor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 176px;
+  padding: 16px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: #111;
+  text-align: center;
+  cursor: grab;
+}
+.flow-actor:active { cursor: grabbing; }
+.flow-actor--chain {
+  border-color: color-mix(in oklab, var(--accent), transparent 30%);
+  background: color-mix(in oklab, var(--accent), #111 88%);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent), transparent 70%);
+}
+.flow-actor-label { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; color: var(--fg); }
+.flow-actor--chain .flow-actor-label { color: color-mix(in oklab, var(--accent), white 25%); }
+.flow-actor-sub { font-size: 11px; color: var(--muted); }
+
+/* Connection anchors are structural, not something a visitor is meant
+   to notice or drag from (nodesConnectable is off) — keep them small
+   and quiet rather than the library's bright default dots. */
+.react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background: var(--border-strong);
+  border: none;
+}
+
+.react-flow__edge-text { fill: var(--muted); font-size: 11px; }
+.react-flow__edge-textbg { fill: var(--surface); }
+.flow-edge-accent .react-flow__edge-path { stroke: var(--accent); stroke-width: 2; }
+.flow-edge-accent .react-flow__edge-text { fill: color-mix(in oklab, var(--accent), white 20%); font-weight: 600; }
+
+.react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.react-flow__controls-button {
+  border-bottom: 1px solid var(--border-strong);
+}
+.react-flow__controls-button svg { fill: currentColor; }
+
+.react-flow__attribution {
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+}
+.react-flow__attribution a { color: var(--muted); }
