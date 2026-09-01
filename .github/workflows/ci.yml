@@ -1,0 +1,75 @@
+name: CI
+
+# Runs on every push to main and every pull request targeting main. The
+# two jobs below are independent (packages/ and site/ are separate npm
+# projects with their own lockfiles — see each job's comment), so they
+# run in parallel; both must pass for the workflow to succeed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  packages:
+    name: Build packages (cli, core, server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # All three packages declare "engines": { "node": ">=24" } —
+          # keep this in sync with packages/*/package.json if that
+          # requirement ever changes.
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # npm's own workspace runner does NOT build in dependency order —
+      # "npm run build --workspaces" runs workspaces alphabetically
+      # (cli, core, server), not by their dependency graph
+      # (https://github.com/npm/cli/issues/4139). cli and server both
+      # depend on @wasit-dev/core, so core must be built first or their
+      # type-check fails against a missing/stale dist/. Building each
+      # workspace by name keeps this order explicit instead of relying
+      # on npm to get it right.
+      - name: Build @wasit-dev/core
+        run: npm run build -w packages/core
+
+      - name: Build @wasit-dev/cli
+        run: npm run build -w packages/cli
+
+      - name: Build @wasit-dev/server
+        run: npm run build -w packages/server
+
+  site:
+    name: Build site (Next.js)
+    runs-on: ubuntu-latest
+    # site/ is a standalone npm project (its own package-lock.json, not
+    # part of the root "packages/*" workspaces array), so every step
+    # below runs with site/ as its working directory rather than using
+    # npm's -w flag.
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
