@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w packages/core && npm run build -w packages/cli && npm run build -w packages/server",
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
