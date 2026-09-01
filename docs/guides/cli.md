@@ -27,6 +27,18 @@ A run with both a failure and an error exits `1`: a real finding outranks a
 missing one. Skipped checks never affect the exit code — a skipped check is
 neither a pass nor a defect.
 
+## Check Catalogue
+
+```bash
+wasit checks [--protocol x402|mpp-charge|mpp-channel] [--json]
+```
+
+Lists every check by ID without needing to open this doc or CHECKS.md: name,
+which protocol/subcommand runs it, and whether it is negative (only passes if
+the target correctly *rejects* something), destructive, or settles real funds.
+This is a quick reference, not a replacement for [CHECKS.md](../CHECKS.md) —
+full pass criteria, spec citations, and revision notes only live there.
+
 ## x402 (Test)
 
 ```bash
@@ -39,6 +51,7 @@ wasit test --target <url> [options]
 | `--network <id>` | `stellar:testnet` | CAIP-2 |
 | `--payer-key <key>` | `STELLAR_PRIVATE_KEY` | Secret key, `S...` |
 | `--read-only` | off | Restricts the run to `X402-01`–`05` |
+| `--json` | off | Machine-readable output (see below) instead of formatted text |
 
 Without a payer key the payment checks are skipped automatically, so the default
 posture costs nothing. When they do run, **`X402-06` settles a real payment and
@@ -56,6 +69,7 @@ wasit mpp-charge --target <url> [options]
 | `--payer-key <key>` | `MPP_PAYER_SECRET` | Secret key, `S...` |
 | `--network <id>` | `MPP_STELLAR_NETWORK` | CAIP-2 |
 | `--rpc-url <url>` | testnet default | Required for pubnet |
+| `--json` | off | Machine-readable output (see below) instead of formatted text |
 
 **Every run settles a real payment.** There is no read-only mode: charge mode
 has no dry run, and a settlement that never happened cannot be verified
@@ -80,6 +94,7 @@ wasit mpp-channel --target <url> [options]
 | `--expect-refund-period <n>` | — | `MPP-10`, in ledgers |
 | `--allow-destructive` | off | Enables `MPP-13` |
 | `--destructive-channel <addr>` | `CHANNEL_CONTRACT_DISPOSABLE` | Channel `MPP-13` may close |
+| `--json` | off | Machine-readable output (see below) instead of formatted text |
 
 `MPP-10`–`12` and `MPP-14` cost nothing. `MPP-13` closes a channel permanently
 and is skipped unless both `--allow-destructive` and a named channel are given.
@@ -115,3 +130,32 @@ reported once rather than repeated identically.
 
 See [../design/error-model.md](../design/error-model.md) for what each status
 means.
+
+### `--json`
+
+```bash
+wasit test --target https://api.example.com/paid-endpoint --read-only --json
+```
+
+```json
+{
+  "outcome": "conformant",
+  "passed": 5,
+  "failed": 0,
+  "errored": 0,
+  "skipped": 0,
+  "results": [
+    { "id": "X402-01", "name": "402 Response Status", "status": "PASS", "detail": "...", "destructive": false }
+  ]
+}
+```
+
+Any advisory line that would normally print above the results (missing payer
+key, `--read-only` set, a payment-cost warning) is written to stderr instead of
+stdout when `--json` is set, so stdout stays parseable — safe to pipe into
+`jq` or capture directly in a CI step. `outcome` mirrors the exit code
+(`conformant` / `non-conformant` / `no-verdict`) but is readable without
+looking one up, and is the exact same shape the MCP server returns as
+`structuredContent` for the same run — both front ends call the same
+`toStructuredRun()` in `@wasit-dev/core`, so they can never disagree about how
+one is reported.

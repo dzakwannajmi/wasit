@@ -1,5 +1,21 @@
-export { checkStatus, errored, skipped, skippedDestructive, summarize } from "./check.js";
-export type { CheckResult, CheckStatus, RunSummary } from "./check.js";
+export {
+  checkStatus,
+  errored,
+  skipped,
+  skippedDestructive,
+  summarize,
+  toStructuredRun,
+} from "./check.js";
+export type {
+  CheckResult,
+  CheckStatus,
+  RunSummary,
+  StructuredCheckResult,
+  StructuredRun,
+} from "./check.js";
+
+export { CHECK_CATALOGUE, PROTOCOL_IDS } from "./catalogue.js";
+export type { CheckCatalogueEntry, ProtocolId } from "./catalogue.js";
 
 export * from "./errors.js";
 

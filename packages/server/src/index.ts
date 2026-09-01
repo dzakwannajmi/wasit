@@ -26,6 +26,7 @@ import {
   runX402PaymentChecks,
   runX402ReadChecks,
   summarize,
+  toStructuredRun,
   type CheckResult,
 } from "@wasit-dev/core";
 import { z } from "zod";
@@ -80,12 +81,7 @@ function present(results: CheckResult[]): {
   structuredContent: Record<string, unknown>;
 } {
   const counts = summarize(results);
-  const outcome =
-    counts.exitCode === 0
-      ? "conformant"
-      : counts.exitCode === 1
-        ? "non-conformant"
-        : "no-verdict";
+  const structured = toStructuredRun(results);
 
   const lines = results.map((result) => {
     const flag = result.destructive === true ? " [destructive]" : "";
@@ -103,23 +99,16 @@ function present(results: CheckResult[]): {
         "conformance, and must not be reported as one."
       : "";
 
+  // structuredContent is `toStructuredRun()` verbatim — the same reshape
+  // the CLI's `--json` output calls — so the two front ends can never
+  // report the same run two different ways.
   return {
     content: [{ type: "text", text: `${lines.join("\n\n")}\n\n${summaryLine}${caveat}` }],
-    structuredContent: {
-      outcome,
-      passed: counts.passed,
-      failed: counts.failed,
-      errored: counts.errored,
-      skipped: counts.skipped,
-      results: results.map((result) => ({
-        id: result.id,
-        name: result.name,
-        status: checkStatus(result),
-        detail: result.detail,
-        destructive: result.destructive === true,
-        ...(result.error ? { errorKind: result.error.kind } : {}),
-      })),
-    },
+    // toStructuredRun() returns a precisely-typed StructuredRun, which has
+    // no index signature and so is not directly assignable to the SDK's
+    // looser Record<string, unknown>. It is still a plain JSON-serializable
+    // object — this cast widens the type, it does not change the value.
+    structuredContent: structured as unknown as Record<string, unknown>,
   };
 }
 

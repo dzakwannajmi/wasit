@@ -122,7 +122,7 @@ arguments, so an agent never handles them.
 
 **Revision note (Week 2, corrected):** `MPP-11`/`MPP-12` pass criteria were first written as "server rejects", then briefly revised to "zero balance delta / silent no-op" after reading only the `stellar-experimental/one-way-channel` on-chain contract source (which is genuinely a silent no-op for stale `settle`/`close` calls). That revision was corrected after reading the `@stellar/mpp` channel server implementation directly: the HTTP-facing server — the actual artifact Wasit tests — rejects stale/replayed commitments explicitly via `ChannelVerificationError`, before the on-chain contract is ever invoked. The contract's own no-op behavior only applies if the contract is called directly, bypassing the server, which is out of scope for Wasit.
 
-**Status note (Week 2).** All twelve checks in this catalogue are implemented
+**Status note (Week 2, corrected).** All thirteen checks in this catalogue are implemented
 and reachable from both front ends. `X402-02` deliberately accepts either header
 name because Stellar's own official documentation is not yet internally
 consistent (`PAYMENT-REQUIRED` vs `X-Payment`); that divergence is a

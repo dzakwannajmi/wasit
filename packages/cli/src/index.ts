@@ -2,14 +2,25 @@
 import "dotenv/config";
 import { Command } from "commander";
 import {
+  CHECK_CATALOGUE,
+  PROTOCOL_IDS,
   checkStatus,
   runMppChannelSuite,
   runMppChargeSuite,
   runX402PaymentChecks,
   runX402ReadChecks,
   summarize,
+  toStructuredRun,
   type CheckResult,
+  type ProtocolId,
 } from "@wasit-dev/core";
+
+/** Which wasit subcommand runs each protocol's checks — for `wasit checks` output. */
+const COMMAND_BY_PROTOCOL: Record<ProtocolId, string> = {
+  x402: "test",
+  "mpp-charge": "mpp-charge",
+  "mpp-channel": "mpp-channel",
+};
 
 /**
  * Accumulates repeated --header flags into one object.
@@ -42,14 +53,30 @@ program
     "after",
     `
 Examples:
+  $ wasit checks
   $ wasit test --target https://api.example.com/paid-endpoint --read-only
   $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S...
   $ wasit mpp-channel --target https://api.example.com/paid-endpoint
 
 Run "wasit <command> --help" for that command's own options and cost notes.
+Add --json to test/mpp-charge/mpp-channel for machine-readable output.
 Full check catalogue (every check ID, spec reference, pass criteria):
   https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md`,
   );
+
+/**
+ * Prints an advisory/status line meant for a human watching the terminal —
+ * never part of the run's actual result. Routed to stderr when --json is
+ * set, so stdout stays parseable JSON and a script piping it (jq, etc.)
+ * never has to skip past prose first.
+ */
+function note(json: boolean, message: string): void {
+  if (json) {
+    console.error(message);
+  } else {
+    console.log(message);
+  }
+}
 
 /**
  * Prints results and returns the process exit code.
@@ -57,15 +84,25 @@ Full check catalogue (every check ID, spec reference, pass criteria):
  * A skipped check carries `pass: false` so it can never be counted as
  * conformance, but it is not a failure and must not fail the run. An errored
  * check produced no verdict at all and is reported separately again.
+ *
+ * `--json` reuses `toStructuredRun()` from core — the same reshape the MCP
+ * server calls for its own structured output — rather than defining a
+ * second JSON shape here that could drift from it.
  */
-function report(results: CheckResult[]): number {
+function report(results: CheckResult[], json: boolean): number {
+  const counts = summarize(results);
+
+  if (json) {
+    console.log(JSON.stringify(toStructuredRun(results), null, 2));
+    return counts.exitCode;
+  }
+
   for (const result of results) {
     const flag = result.destructive ? "  [destructive]" : "";
     console.log(`${checkStatus(result)}  ${result.id}  ${result.name}${flag}`);
     console.log(`      ${result.detail}\n`);
   }
 
-  const counts = summarize(results);
   const line = [`${counts.passed} passed`];
   if (counts.failed > 0) line.push(`${counts.failed} failed`);
   if (counts.errored > 0) line.push(`${counts.errored} could not run`);
@@ -81,6 +118,60 @@ function report(results: CheckResult[]): number {
 
   return counts.exitCode;
 }
+
+program
+  .command("checks")
+  .description("List the check catalogue: every check wasit can run, by ID")
+  .option(
+    "--protocol <name>",
+    `Filter to one protocol (${PROTOCOL_IDS.join(", ")}) — matches the wasit subcommand that runs it`,
+  )
+  .option("--json", "Print as JSON instead of a formatted list", false)
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ wasit checks
+  $ wasit checks --protocol mpp-channel
+  $ wasit checks --json
+
+Full pass-criteria prose, spec citations, and revision notes for every check
+live in docs/CHECKS.md — this command is a quick reference, not a
+replacement for it.`,
+  )
+  .action((opts) => {
+    const protocol: string | undefined = opts.protocol;
+    if (protocol !== undefined && !PROTOCOL_IDS.includes(protocol as ProtocolId)) {
+      console.error(`Unknown --protocol "${protocol}". Expected one of: ${PROTOCOL_IDS.join(", ")}.`);
+      process.exit(2);
+    }
+
+    const entries = CHECK_CATALOGUE.filter(
+      (entry) => protocol === undefined || entry.protocol === protocol,
+    );
+
+    if (opts.json === true) {
+      console.log(JSON.stringify(entries, null, 2));
+      return;
+    }
+
+    let currentProtocol: ProtocolId | undefined;
+    for (const entry of entries) {
+      if (entry.protocol !== currentProtocol) {
+        currentProtocol = entry.protocol;
+        console.log(`\n${currentProtocol}  (wasit ${COMMAND_BY_PROTOCOL[currentProtocol]})`);
+      }
+      const flags = [
+        entry.negative ? "negative" : null,
+        entry.destructive ? "destructive" : null,
+        entry.costsFunds ? "costs funds" : null,
+      ].filter((flag): flag is string => flag !== null);
+      const flagText = flags.length > 0 ? `  [${flags.join(", ")}]` : "";
+      console.log(`  ${entry.id}  ${entry.name}${flagText}`);
+      console.log(`      ${entry.summary}`);
+    }
+    console.log(`\n${entries.length} check${entries.length === 1 ? "" : "s"}.`);
+  });
 
 program
   .command("test")
@@ -103,12 +194,14 @@ program
     collectHeader,
   )
   .option("--read-only", "Skip payment checks (X402-06/07)", false)
+  .option("--json", "Print results as JSON instead of formatted text", false)
   .addHelpText(
     "after",
     `
 Examples:
   $ wasit test --target https://api.example.com/paid-endpoint --read-only
   $ wasit test --target https://api.example.com/paid-endpoint --payer-key S...
+  $ wasit test --target https://api.example.com/paid-endpoint --read-only --json
 
 X402-01..05 (challenge/header checks) always run and cost nothing. X402-06/07
 (real payment checks) run only when a payer key is available and --read-only
@@ -116,6 +209,7 @@ is not set: X402-06 settles a payment, X402-07 attempts one with a corrupted
 signature. See docs/CHECKS.md for what each check ID verifies.`,
   )
   .action(async (opts) => {
+    const jsonMode = opts.json === true;
     const shape = {
       ...(opts.method ? { method: opts.method as string } : {}),
       ...(opts.body !== undefined ? { body: opts.body as string } : {}),
@@ -126,13 +220,15 @@ signature. See docs/CHECKS.md for what each check ID verifies.`,
     const payerKey: string | undefined = opts.payerKey ?? process.env.STELLAR_PRIVATE_KEY;
 
     if (opts.readOnly) {
-      console.log("(--read-only set: skipping payment checks)\n");
+      note(jsonMode, "(--read-only set: skipping payment checks)\n");
     } else if (!payerKey) {
-      console.log(
+      note(
+        jsonMode,
         "(no payer key: set STELLAR_PRIVATE_KEY in .env or pass --payer-key — skipping payment checks)\n",
       );
     } else {
-      console.log(
+      note(
+        jsonMode,
         "X402-06 settles a real payment and X402-07 attempts one. Testnet funds will move.\n",
       );
       results.push(
@@ -145,7 +241,7 @@ signature. See docs/CHECKS.md for what each check ID verifies.`,
       );
     }
 
-    process.exit(report(results));
+    process.exit(report(results, jsonMode));
   });
 
 program
@@ -176,12 +272,14 @@ program
     "--destructive-channel <address>",
     "Channel MPP-13 is permitted to close (default: CHANNEL_CONTRACT_DISPOSABLE)",
   )
+  .option("--json", "Print results as JSON instead of formatted text", false)
   .addHelpText(
     "after",
     `
 Examples:
   $ wasit mpp-channel --target https://api.example.com/paid-endpoint
   $ wasit mpp-channel --target https://api.example.com/paid-endpoint --allow-destructive --destructive-channel C...
+  $ wasit mpp-channel --target https://api.example.com/paid-endpoint --json
 
 MPP-10, MPP-11, MPP-12, MPP-14 run by default and are non-destructive.
 MPP-13 (channel close) only runs with --allow-destructive, and only against
@@ -189,6 +287,7 @@ the channel named by --destructive-channel — running it permanently ends
 that channel.`,
   )
   .action(async (opts) => {
+    const jsonMode = opts.json === true;
     const commitmentSecretHex: string | undefined =
       opts.commitmentKey ?? process.env.COMMITMENT_SECRET_HEX;
     if (!commitmentSecretHex) {
@@ -222,7 +321,7 @@ that channel.`,
       },
     });
 
-    process.exit(report(results));
+    process.exit(report(results, jsonMode));
   });
 
 program
@@ -232,23 +331,29 @@ program
   .option("--payer-key <key>", "Payer secret key, S... (default: MPP_PAYER_SECRET)")
   .option("--network <network>", "CAIP-2 network id (default: MPP_STELLAR_NETWORK)")
   .option("--rpc-url <url>", "Override the default Soroban RPC endpoint")
+  .option("--json", "Print results as JSON instead of formatted text", false)
   .addHelpText(
     "after",
     `
 Examples:
   $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S...
+  $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S... --json
 
 Runs MPP-01 only. Not idempotent and has no read-only mode: every run settles
 a real payment and moves testnet funds, because charge mode has no dry run.`,
   )
   .action(async (opts) => {
+    const jsonMode = opts.json === true;
     const payerSecretKey = opts.payerKey ?? process.env.MPP_PAYER_SECRET;
     if (!payerSecretKey) {
       console.error("No payer key. Pass --payer-key or set MPP_PAYER_SECRET in .env.");
       process.exit(2);
     }
 
-    console.log("MPP-01 settles a real payment. If the target is reachable, testnet funds will move.\n");
+    note(
+      jsonMode,
+      "MPP-01 settles a real payment. If the target is reachable, testnet funds will move.\n",
+    );
 
     const results = await runMppChargeSuite({
       target: opts.target,
@@ -257,7 +362,7 @@ a real payment and moves testnet funds, because charge mode has no dry run.`,
       ...(opts.rpcUrl ? { rpcUrl: opts.rpcUrl } : {}),
     });
 
-    process.exit(report(results));
+    process.exit(report(results, jsonMode));
   });
 
 program.parse();

@@ -149,3 +149,61 @@ export function skipped(id: string, name: string, reason: string): CheckResult {
     detail: `Skipped: ${reason}`,
   };
 }
+
+/** One check's result, reshaped for a machine-readable front end (CLI --json, MCP). */
+export interface StructuredCheckResult {
+  readonly id: string;
+  readonly name: string;
+  readonly status: CheckStatus;
+  readonly detail: string;
+  readonly destructive: boolean;
+  /** Present only when `status` is "ERROR": unreachable | configuration | harness. */
+  readonly errorKind?: string;
+}
+
+/** A full run, reshaped for a machine-readable front end (CLI --json, MCP). */
+export interface StructuredRun {
+  /**
+   * Named rather than left as a numeric exit code: an exit code means
+   * nothing outside a shell, and "no-verdict" must never be read as
+   * "compliant" by whatever consumes this — a script or an agent alike.
+   */
+  readonly outcome: "conformant" | "non-conformant" | "no-verdict";
+  readonly passed: number;
+  readonly failed: number;
+  readonly errored: number;
+  readonly skipped: number;
+  readonly results: readonly StructuredCheckResult[];
+}
+
+/**
+ * Reshapes a run into the one JSON shape every machine-readable front end
+ * uses — the CLI's `--json` output and the MCP server's `structuredContent`
+ * both call this rather than each rolling their own mapping, so the two
+ * can never drift into reporting the same run two different ways.
+ */
+export function toStructuredRun(results: CheckResult[]): StructuredRun {
+  const counts = summarize(results);
+  const outcome =
+    counts.exitCode === 0
+      ? "conformant"
+      : counts.exitCode === 1
+        ? "non-conformant"
+        : "no-verdict";
+
+  return {
+    outcome,
+    passed: counts.passed,
+    failed: counts.failed,
+    errored: counts.errored,
+    skipped: counts.skipped,
+    results: results.map((result) => ({
+      id: result.id,
+      name: result.name,
+      status: checkStatus(result),
+      detail: result.detail,
+      destructive: result.destructive === true,
+      ...(result.error ? { errorKind: result.error.kind } : {}),
+    })),
+  };
+}
