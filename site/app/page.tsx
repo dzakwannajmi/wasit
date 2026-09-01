@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -7,30 +8,68 @@ import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url>";
 const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
 
-const FEATURES: { title: string; body: string }[] = [
+// Pixel grid for the closing CTA headline's hover reveal (see
+// .cta-swap in globals.css) — inspired by
+// reactbits.dev/animations/pixel-swap, rebuilt in plain CSS/no new
+// dependency rather than pulled from there, since that component is
+// part of React Bits' paid Pro collection. (i * 17) % count is a
+// fixed, deterministic shuffle (17 and 30 share no common factor, so
+// it visits every index exactly once) — not Math.random(), which
+// would make the server-rendered stagger order differ from the
+// client's and fail hydration.
+const CTA_PIXEL_COLS = 10;
+const CTA_PIXEL_ROWS = 3;
+const CTA_PIXEL_COUNT = CTA_PIXEL_COLS * CTA_PIXEL_ROWS;
+const CTA_PIXEL_ORDER = Array.from({ length: CTA_PIXEL_COUNT }, (_, i) => (i * 17) % CTA_PIXEL_COUNT);
+
+type CompareRow = { without: string; with: string };
+
+// Same three ideas the old Features grid made in isolation, reframed
+// side by side — "before" is the failure mode Wasit exists to catch,
+// "after" is the specific mechanism that catches it. No new claims,
+// just the existing facts (on-chain settlement read, the check
+// catalogue, the two-interface split) paired up instead of listed flat.
+const COMPARE_ROWS: CompareRow[] = [
   {
-    title: "On-chain settlement",
-    body: "Reads the token contract's own transfer event via Stellar RPC. A response that only claims success does not pass.",
+    without: "A 200 OK is the whole signal — nothing confirms the payment actually settled.",
+    with: "Settlement is read from the token contract's own transfer event via Stellar RPC.",
   },
   {
-    title: "Traceable checks",
-    body: "Every check in the catalogue maps to a spec clause and the SDK version it was verified against.",
+    without: "Payment and channel bugs surface in production, the first time a real payer hits them.",
+    with: "The same flow runs ahead of time, including the cases a service is supposed to reject.",
   },
   {
-    title: "One core, two interfaces",
-    body: "The CLI and the MCP server run identical check code, so a terminal run and an agent run can never disagree.",
+    without: "“It works” means someone tried it once and it didn't error.",
+    with: "Every result traces to a specific check and spec clause in the Check Catalogue.",
+  },
+];
+
+type FaqItem = { q: string; a: string };
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    q: "Does it cost anything to run?",
+    a: "Read-only checks are free. Checks that spend or mutate state are opt-in and clearly flagged before they run.",
   },
   {
-    title: "Free by default",
-    body: "Read-only checks cost nothing to run. Checks that spend or mutate state are opt-in and clearly flagged.",
+    q: "Is this safe to point at a service I don't control?",
+    a: "Destructive checks require an explicit flag and only run against a channel you name as disposable. Wasit is built for Stellar testnet.",
   },
   {
-    title: "Testnet-only by design",
-    body: "Destructive checks require an explicit flag and only run against a channel you name as disposable.",
+    q: "What's the difference between the CLI and the MCP server?",
+    a: "Same core, two interfaces. The CLI runs from your terminal or a CI job; the MCP server exposes the same checks as tools an agent like Claude Code can call directly.",
   },
   {
-    title: "Open source",
-    body: "Apache-2.0, full source and Check Catalogue on GitHub — nothing about how a check works is hidden.",
+    q: "Do I need to sign up or configure anything first?",
+    a: "No signup. Run the install command directly with npx — a private key is only needed for checks that touch a payment or channel.",
+  },
+  {
+    q: "Where can I see exactly what each check verifies?",
+    a: "The Check Catalogue in the docs lists every check, what it asserts, and which spec or SDK version it was verified against.",
+  },
+  {
+    q: "Is the source available?",
+    a: "Yes — Apache-2.0, full source and Check Catalogue on GitHub.",
   },
 ];
 
@@ -46,48 +85,81 @@ export default function Home() {
           one section instead of an arbitrary position. */}
       <div className="landing-scroll">
         <div className="hero">
-          <div className="wrap">
-            <h1 className="wordmark">WASIT</h1>
-            <p className="tagline">
-              Independent conformance testing for <b>x402</b> and{" "}
-              <b>MPP</b> on Stellar. Wasit runs the real payment flow against
-              your service and verifies the on-chain settlement itself, not
-              just whether the response looks right.
-            </p>
-
-            <div className="label">Try it now</div>
-            <div className="terminal">
-              <div className="terminal-bar">
-                <span className="terminal-dot terminal-dot-red" />
-                <span className="terminal-dot terminal-dot-yellow" />
-                <span className="terminal-dot terminal-dot-green" />
+          <div className="wrap hero-grid">
+            <div className="hero-copy">
+              <div className="label hero-kicker">x402 / MPP conformance testing</div>
+              <h1 className="hero-heading">
+                Independent conformance testing for <b>x402</b> and{" "}
+                <b>MPP</b> on Stellar.
+              </h1>
+              <p className="tagline">
+                Wasit runs the real payment flow against your service and
+                verifies the on-chain settlement itself, not just whether the
+                response looks right.
+              </p>
+              <div className="hero-cta-row">
+                <Link href="/docs/get-started/quick-start" className="cta-primary">
+                  Get started
+                </Link>
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="cta-secondary"
+                >
+                  View on GitHub
+                </a>
               </div>
-              <div className="cmdbox">
-                <code className="mono">$ {INSTALL_CMD}</code>
-                <CopyButton text={INSTALL_CMD} />
+              <div className="hero-trust">
+                Open source · Testnet only · No signup required ·{" "}
+                <Link href="/why">Why we built this</Link>
               </div>
             </div>
-            <div className="hero-trust">
-              Open source · Testnet only · No signup required ·{" "}
-              <Link href="/why">Why we built this</Link>
+
+            {/* .terminal/.terminal-bar/.cmdbox keep their existing look
+                untouched — only their position in the layout changed,
+                from stacked under the copy to its own column beside it. */}
+            <div className="hero-visual">
+              <div className="label">Try it now</div>
+              <div className="terminal">
+                <div className="terminal-bar">
+                  <span className="terminal-dot terminal-dot-red" />
+                  <span className="terminal-dot terminal-dot-yellow" />
+                  <span className="terminal-dot terminal-dot-green" />
+                </div>
+                <div className="cmdbox">
+                  <code className="mono">$ {INSTALL_CMD}</code>
+                  <CopyButton text={INSTALL_CMD} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <section id="features">
+        {/* Replaces the old flat "Features" grid — same underlying
+            facts, framed as what changes when Wasit is in the loop
+            instead of a list read in isolation. */}
+        <section id="comparison">
           <div className="wrap">
-            <h2>Features</h2>
-            <p className="section-lead">
-              Independent, traceable, and free by default — how Wasit is
-              built, not just what it checks.
-            </p>
-            <div className="features-grid">
-              {FEATURES.map((f) => (
-                <div className="feature-card" key={f.title}>
-                  <h3>{f.title}</h3>
-                  <p>{f.body}</p>
-                </div>
-              ))}
+            <h2>What changes with Wasit</h2>
+            <p className="section-lead">The same request, checked two different ways.</p>
+            <div className="compare-grid">
+              <div className="compare-col compare-col--without">
+                <h3>Without Wasit</h3>
+                <ul>
+                  {COMPARE_ROWS.map((row) => (
+                    <li key={row.without}>{row.without}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="compare-col compare-col--with">
+                <h3>With Wasit</h3>
+                <ul>
+                  {COMPARE_ROWS.map((row) => (
+                    <li key={row.with}>{row.with}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -139,26 +211,78 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="faq">
+          <div className="wrap">
+            <h2>Frequently asked questions</h2>
+            <p className="section-lead">The things people usually ask before running it.</p>
+            <div className="faq-list">
+              {FAQ_ITEMS.map((item) => (
+                <details className="faq-item" key={item.q}>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="get-started" className="cta-section">
           <div className="wrap cta-wrap">
-            <h2>Ready to test your x402 or MPP integration?</h2>
-            <p className="section-lead">
-              Point it at your service and get a pass/fail report backed by
-              on-chain verification. No signup, no config file required to
-              start.
-            </p>
-            <div className="cta-actions">
-              <Link href="/docs/get-started/quick-start" className="cta-primary">
-                Read the quick start
+            <div className="cta-card">
+              {/* Hover reveal on the headline only: the two text faces
+                  cross-fade while a grid of small squares wipes across
+                  in between (.cta-pixels), purple, in the site's own
+                  accent — see the CSS comment on .cta-swap for why this
+                  uses `transition`, not `animation`, on every moving
+                  piece. Scoped to just the headline (not the button or
+                  the code snippet below) so both stay clickable at all
+                  times. */}
+              <div className="cta-swap">
+                <div className="cta-swap-face">
+                  <h2>Ready to test your x402 or MPP integration?</h2>
+                </div>
+
+                <div className="cta-pixels" aria-hidden="true">
+                  {CTA_PIXEL_ORDER.map((delayRank, i) => (
+                    <span
+                      key={i}
+                      className="cta-pixel"
+                      style={{ "--i": delayRank } as unknown as CSSProperties}
+                    />
+                  ))}
+                </div>
+
+                <div className="cta-swap-hover">
+                  <span className="cta-swap-hover-eyebrow">One command. Verified on-chain.</span>
+                </div>
+              </div>
+
+              <p className="section-lead cta-card-lead">
+                Point it at your service and get a pass/fail report backed by
+                on-chain verification. No signup, no config file required to
+                start.
+              </p>
+
+              {/* Same .terminal/.terminal-bar/.cmdbox chrome as the hero
+                  — reused as-is, not a lookalike, so the two stay
+                  pixel-identical by construction. */}
+              <div className="terminal cta-terminal">
+                <div className="terminal-bar">
+                  <span className="terminal-dot terminal-dot-red" />
+                  <span className="terminal-dot terminal-dot-yellow" />
+                  <span className="terminal-dot terminal-dot-green" />
+                </div>
+                <div className="cmdbox">
+                  <code className="mono">$ {INSTALL_CMD}</code>
+                  <CopyButton text={INSTALL_CMD} />
+                </div>
+              </div>
+
+              <Link href="/docs/get-started/quick-start" className="cta-primary cta-card-button">
+                Start testing <span aria-hidden="true">→</span>
               </Link>
-              <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="cta-secondary"
-              >
-                View on GitHub
-              </a>
+
+              <p className="cta-card-caption">Open source · Testnet only · No signup required</p>
             </div>
           </div>
         </section>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
@@ -60,12 +61,14 @@ export function Footer() {
     <footer>
       <div className="wrap footer-top">
         <div className="footer-brand-block">
-          <p className="footer-statement">
-            VERIFY THE
-            <br />
-            SETTLEMENT
-          </p>
-          <span className="footer-wordmark">wasit</span>
+          <Image
+            src="/W-White.png"
+            alt="Wasit"
+            width={380}
+            height={100}
+            className="footer-wordmark-img"
+          />
+          <p className="footer-statement">VERIFY THE SETTLEMENT</p>
         </div>
 
         <div className="footer-columns">

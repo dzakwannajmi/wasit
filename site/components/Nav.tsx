@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { DocsSearch } from "./DocsSearch"
 
@@ -23,21 +24,23 @@ function GitHubIcon() {
  * center on anything wider than a laptop screen.
  *
  * Link labels mirror the landing page's own section ids/headings
- * one-to-one (see app/page.tsx) — keep the two in sync when either
- * changes.
+ * (see app/page.tsx) — keep the two in sync when either changes. Not
+ * every landing-page section gets a nav link (e.g. #get-started is
+ * reached via the CTA buttons themselves, not the nav).
  */
 export function Nav() {
   return (
     <header className="site-header">
       <div className="navbar">
         <div className="navbar-left">
-          <Link href="/" className="brand">
-            wasit
+          <Link href="/" className="brand" aria-label="Wasit">
+            <Image src="/W-White.png" alt="Wasit" width={380} height={100} className="brand-logo" priority />
           </Link>
           <nav className="navlinks">
-            <Link href="/#features">Features</Link>
+            <Link href="/#comparison">Why Wasit</Link>
             <Link href="/#how-it-works">How it works</Link>
             <Link href="/#quick-start">Quick start</Link>
+            <Link href="/#faq">FAQ</Link>
           </nav>
         </div>
 

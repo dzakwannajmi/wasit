@@ -290,11 +290,79 @@
    already the app's "one step up from the page" surface (used for the
    sidebar's own hover state), reused here so a block reads as a
    distinct panel instead of floating text. Unlayered so it beats
-   typeset's own @layer components rule regardless of import order. */
+   typeset's own @layer components rule regardless of import order.
+   Kept as a fallback for any bare <pre> — every actual fenced block
+   renders through .doc-code below instead (components/code-block.tsx),
+   which owns its own card chrome. */
 .typeset-docs pre {
   background: var(--accent-bg);
   border: 1px solid var(--border-strong);
 }
+
+/* Fenced code blocks render as a small macOS-terminal-style window —
+   traffic-light dots (.terminal-dot*, the same classes the homepage
+   hero terminal uses, defined in ../globals.css), the fence's language,
+   and a copy button in one title bar. .doc-code owns the card's border/
+   radius/background; the inner <pre> resets everything the fallback
+   rule above would otherwise stack on top of it, so there's exactly
+   one border, not two nested ones. */
+.doc-code {
+  margin: 1.3em 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 30px 70px -35px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+.doc-code-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: color-mix(in oklab, var(--surface) 85%, white 6%);
+  border-bottom: 1px solid var(--border);
+}
+.doc-code-lang {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.doc-code-copy {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.doc-code-copy:hover { color: var(--accent); border-color: var(--accent); }
+.doc-code-copy.is-copied { color: var(--fg); border-color: var(--fg); }
+.doc-code pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.9em 1.1em;
+  font-size: 0.85em;
+}
+
+/* Dependency-free syntax coloring (lib/code-highlight.ts tags tokens
+   with these classes — not a real per-language grammar, just enough to
+   make commands/flags/strings/comments easy to scan at a glance). */
+.tok-comment { color: var(--muted); font-style: italic; }
+.tok-string { color: #8fd19e; }
+.tok-number { color: #e0af68; }
+.tok-flag { color: color-mix(in oklab, var(--accent), white 20%); }
+.tok-keyword { color: color-mix(in oklab, var(--accent), white 20%); font-weight: 600; }
+.tok-command { color: #7dcfff; font-weight: 600; }
 
 /* Headings inside an article, fully re-declared and left UNLAYERED —
    same reasoning as the table/pre rules above, but the bug it dodges is

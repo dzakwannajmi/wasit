@@ -16,7 +16,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -58,7 +57,17 @@ export function DocsSidebar(props: React.ComponentProps<typeof Sidebar>) {
     return initial
   })
 
-  React.useEffect(() => {
+  // Tracks the pathname openGroups was last adjusted for. When the
+  // route changes (navigating to a different docs page), this differs
+  // from the fresh `pathname` on the very next render — React's
+  // documented pattern for "adjust state when a prop changes" is to
+  // compare and setState during render itself
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes),
+  // not inside a useEffect, which needs an extra commit/re-render pass
+  // and can cascade.
+  const [lastPathname, setLastPathname] = React.useState(pathname)
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
     setOpenGroups((prev) => {
       let changed = false
       const next = { ...prev }
@@ -74,28 +83,14 @@ export function DocsSidebar(props: React.ComponentProps<typeof Sidebar>) {
       }
       return changed ? next : prev
     })
-  }, [pathname])
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <span className="flex size-8 items-center justify-center rounded-md border border-sidebar-border text-xs">
-                  W
-                </span>
-                <span className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">wasit</span>
-                  <span className="text-xs text-sidebar-foreground/60">docs</span>
-                </span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
+      {/* No sidebar-header brand button — the site-wide Nav (rendered
+          above this sidebar in app/docs/layout.tsx) already carries the
+          Wasit logo and a link back to "/", so this would only have
+          duplicated it. */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Docs</SidebarGroupLabel>
