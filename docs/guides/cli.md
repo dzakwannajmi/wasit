@@ -4,11 +4,16 @@ The `wasit` binary is a thin adapter over `@wasit-dev/core`. Every check it runs
 the same code the MCP server runs, so the two cannot disagree about the same
 target.
 
-Until the package is published, invoke it directly:
+Install and run it directly with npx (no local install needed), or install
+globally for a shorter `wasit` command:
 
 ```bash
-node packages/cli/dist/index.js <subcommand> [options]
+npx @wasit-dev/cli <subcommand> [options]
+# or: npm install -g @wasit-dev/cli && wasit <subcommand> [options]
 ```
+
+Every subcommand also has its own `--help`, with worked examples and cost
+notes: `wasit <subcommand> --help`.
 
 ## Exit codes
 
@@ -25,7 +30,7 @@ neither a pass nor a defect.
 ## x402 (Test)
 
 ```bash
-node packages/cli/dist/index.js test --target <url> [options]
+wasit test --target <url> [options]
 ```
 
 | Option | Default | Notes |
@@ -42,7 +47,7 @@ posture costs nothing. When they do run, **`X402-06` settles a real payment and
 ## MPP Charge Mode
 
 ```bash
-node packages/cli/dist/index.js mpp-charge --target <url> [options]
+wasit mpp-charge --target <url> [options]
 ```
 
 | Option | Default | Notes |
@@ -59,7 +64,7 @@ on-chain.
 ## MPP Channel Mode
 
 ```bash
-node packages/cli/dist/index.js mpp-channel --target <url> [options]
+wasit mpp-channel --target <url> [options]
 ```
 
 | Option | Default | Notes |

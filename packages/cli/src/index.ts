@@ -37,7 +37,19 @@ const program = new Command();
 program
   .name("wasit")
   .description("Protocol-compliance testing for x402 / MPP on Stellar")
-  .version("0.1.0");
+  .version("0.1.0")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ wasit test --target https://api.example.com/paid-endpoint --read-only
+  $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S...
+  $ wasit mpp-channel --target https://api.example.com/paid-endpoint
+
+Run "wasit <command> --help" for that command's own options and cost notes.
+Full check catalogue (every check ID, spec reference, pass criteria):
+  https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md`,
+  );
 
 /**
  * Prints results and returns the process exit code.
@@ -91,6 +103,18 @@ program
     collectHeader,
   )
   .option("--read-only", "Skip payment checks (X402-06/07)", false)
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ wasit test --target https://api.example.com/paid-endpoint --read-only
+  $ wasit test --target https://api.example.com/paid-endpoint --payer-key S...
+
+X402-01..05 (challenge/header checks) always run and cost nothing. X402-06/07
+(real payment checks) run only when a payer key is available and --read-only
+is not set: X402-06 settles a payment, X402-07 attempts one with a corrupted
+signature. See docs/CHECKS.md for what each check ID verifies.`,
+  )
   .action(async (opts) => {
     const shape = {
       ...(opts.method ? { method: opts.method as string } : {}),
@@ -152,6 +176,18 @@ program
     "--destructive-channel <address>",
     "Channel MPP-13 is permitted to close (default: CHANNEL_CONTRACT_DISPOSABLE)",
   )
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ wasit mpp-channel --target https://api.example.com/paid-endpoint
+  $ wasit mpp-channel --target https://api.example.com/paid-endpoint --allow-destructive --destructive-channel C...
+
+MPP-10, MPP-11, MPP-12, MPP-14 run by default and are non-destructive.
+MPP-13 (channel close) only runs with --allow-destructive, and only against
+the channel named by --destructive-channel — running it permanently ends
+that channel.`,
+  )
   .action(async (opts) => {
     const commitmentSecretHex: string | undefined =
       opts.commitmentKey ?? process.env.COMMITMENT_SECRET_HEX;
@@ -196,6 +232,15 @@ program
   .option("--payer-key <key>", "Payer secret key, S... (default: MPP_PAYER_SECRET)")
   .option("--network <network>", "CAIP-2 network id (default: MPP_STELLAR_NETWORK)")
   .option("--rpc-url <url>", "Override the default Soroban RPC endpoint")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S...
+
+Runs MPP-01 only. Not idempotent and has no read-only mode: every run settles
+a real payment and moves testnet funds, because charge mode has no dry run.`,
+  )
   .action(async (opts) => {
     const payerSecretKey = opts.payerKey ?? process.env.MPP_PAYER_SECRET;
     if (!payerSecretKey) {
