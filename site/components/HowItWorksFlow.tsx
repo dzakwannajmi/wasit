@@ -1,6 +1,7 @@
 "use client"
 
-import type { CSSProperties } from "react"
+import Image from "next/image"
+import type { CSSProperties, ReactNode } from "react"
 import {
   Background,
   BackgroundVariant,
@@ -28,6 +29,7 @@ type ActorData = {
   sublabel: string
   variant: "actor" | "chain"
   handles: HandleSpec[]
+  logo?: ReactNode
 }
 
 // One lane per edge (four lanes, not two) — each of the four HTTP
@@ -42,6 +44,23 @@ function lane(prefix: string, kind: "source" | "target", position: Position, top
 
 const LANE_TOP = ["18%", "39%", "61%", "82%"] as const
 
+// Stellar's mark, inlined as raw SVG rather than a rasterized asset so
+// it can pick up the diagram's accent tint via CSS `fill` (see
+// .flow-actor-logo--stellar in HowItWorksFlow.css) instead of shipping
+// a second pre-colored image asset.
+function StellarMark() {
+  return (
+    <svg
+      viewBox="0 0 236.36 200"
+      className="flow-actor-logo flow-actor-logo--stellar"
+      aria-hidden="true"
+    >
+      <path d="M203,26.16l-28.46,14.5-137.43,70a82.49,82.49,0,0,1-.7-10.69A81.87,81.87,0,0,1,158.2,28.6l16.29-8.3,2.43-1.24A100,100,0,0,0,18.18,100q0,3.82.29,7.61a18.19,18.19,0,0,1-9.88,17.58L0,129.57V150l25.29-12.89,0,0,8.19-4.18,8.07-4.11v0L186.43,55l16.28-8.29,33.65-17.15V9.14Z" />
+      <path d="M236.36,50,49.78,145,33.5,153.31,0,170.38v20.41l33.27-16.95,28.46-14.5L199.3,89.24A83.45,83.45,0,0,1,200,100,81.87,81.87,0,0,1,78.09,171.36l-1,.53-17.66,9A100,100,0,0,0,218.18,100c0-2.57-.1-5.14-.29-7.68a18.2,18.2,0,0,1,9.87-17.58l8.6-4.38Z" />
+    </svg>
+  )
+}
+
 const nodes: Node<ActorData>[] = [
   {
     id: "wasit",
@@ -51,6 +70,7 @@ const nodes: Node<ActorData>[] = [
       label: "WASIT",
       sublabel: "the checker",
       variant: "actor",
+      logo: <Image src="/W-White1.png" alt="" width={54} height={36} className="flow-actor-logo" />,
       handles: [
         lane("lane-1", "source", Position.Right, LANE_TOP[0]),
         lane("lane-2", "target", Position.Right, LANE_TOP[1]),
@@ -84,6 +104,7 @@ const nodes: Node<ActorData>[] = [
       label: "STELLAR",
       sublabel: "the source of truth",
       variant: "chain",
+      logo: <StellarMark />,
       handles: [{ id: "top-target", kind: "target", position: Position.Top }],
     },
   },
@@ -163,6 +184,7 @@ function ActorNode({ data }: NodeProps<Node<ActorData>>) {
       {data.handles.map((h) => (
         <Handle key={h.id} id={h.id} type={h.kind} position={h.position} style={h.style} />
       ))}
+      {data.logo}
       <span className="flow-actor-label mono">{data.label}</span>
       <span className="flow-actor-sub">{data.sublabel}</span>
     </div>

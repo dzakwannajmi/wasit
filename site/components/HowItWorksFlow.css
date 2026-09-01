@@ -57,6 +57,16 @@
 .flow-actor--chain .flow-actor-label { color: color-mix(in oklab, var(--accent), white 25%); }
 .flow-actor-sub { font-size: 11px; color: var(--muted); }
 
+.flow-actor-logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 2px;
+}
+.flow-actor-logo--stellar {
+  fill: color-mix(in oklab, var(--accent), white 25%);
+}
+
 /* Connection anchors are structural, not something a visitor is meant
    to notice or drag from (nodesConnectable is off) — keep them small
    and quiet rather than the library's bright default dots. */
