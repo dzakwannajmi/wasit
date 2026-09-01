@@ -135,7 +135,7 @@ Wasit exists so these are found by a tool, before they are found by a user.
 | Error taxonomy and exit codes | Done |
 | Testing against third-party services | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet |
 | Upstream reports to SDK maintainers | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67) |
-| Published to npm | No |
+| Published to npm | Yes — `@wasit-dev/core`, `@wasit-dev/cli`, `@wasit-dev/server` |
 | Mainnet | Out of scope — see [Design Notes](#design-notes) |
 
 Thirteen checks are implemented and reachable from both front ends. Every one is
@@ -265,7 +265,6 @@ users actually experience. The revision notes in
 
 - Run the suite against a third-party service with the operator's explicit
   authorization — the existing evidence runs don't qualify, see Status above
-- Publish `@wasit-dev/cli` and `@wasit-dev/server` to npm
 - Expand the catalogue as the x402 and MPP specs stabilise
 - Evidence documents under `docs/evidence/` for each verified run
 

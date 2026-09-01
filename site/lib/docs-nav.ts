@@ -1,4 +1,5 @@
 import {
+  Info,
   Rocket,
   SquareTerminal,
   Cable,
@@ -51,6 +52,12 @@ export type DocNavLink = {
 export type DocNavEntry = DocNavGroup | DocNavLink
 
 export const DOCS_NAV: DocNavEntry[] = [
+  {
+    kind: "link",
+    title: "What Is Wasit",
+    icon: Info,
+    page: { title: "What Is Wasit", slug: ["about", "overview"] },
+  },
   {
     kind: "group",
     title: "Get Started",
@@ -144,6 +151,43 @@ export const DOCS_NAV: DocNavEntry[] = [
     ],
   },
 ]
+
+/**
+ * Every page in DOCS_NAV, in reading order, flattened out of its groups
+ * — this is the "book order" a reader moves through with next/prev
+ * controls. A `kind: "link"` entry (e.g. "What Is Wasit") contributes
+ * its one page with no group label; a `kind: "group"` entry contributes
+ * each of its pages tagged with that group's title, so the pager can
+ * show "Get Started" as context above "Quick Start" the way a book
+ * shows its chapter name above the page title.
+ */
+export type FlatDocPage = { page: DocNavPage; groupTitle?: string }
+
+export function flatDocPages(): FlatDocPage[] {
+  return DOCS_NAV.flatMap((entry) =>
+    entry.kind === "link"
+      ? [{ page: entry.page }]
+      : entry.pages.map((page) => ({ page, groupTitle: entry.title }))
+  )
+}
+
+/**
+ * The previous/next page relative to `slug`, in the same flattened
+ * reading order — powers the pager rendered at the bottom of every docs
+ * article (components/docs-pager.tsx). Returns undefined on either end
+ * for the first/last page in the whole nav, and for a slug that isn't
+ * in DOCS_NAV at all (defensive; callers already 404 in that case).
+ */
+export function getAdjacentDocPages(slug: string[]): {
+  prev?: FlatDocPage
+  next?: FlatDocPage
+} {
+  const flat = flatDocPages()
+  const key = slug.join("/")
+  const index = flat.findIndex((entry) => entry.page.slug.join("/") === key)
+  if (index === -1) return {}
+  return { prev: flat[index - 1], next: flat[index + 1] }
+}
 
 export function findNavPage(slug: string[]): { page: DocNavPage; group?: DocNavGroup } | undefined {
   const key = slug.join("/")

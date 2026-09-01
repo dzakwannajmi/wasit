@@ -22,5 +22,5 @@ export default async function DocsSlugPage({ params }: Params) {
   const { slug } = await params
   const resolved = resolveDocMarkdown(slug)
   if (!resolved) notFound()
-  return <DocsArticle markdown={resolved.markdown} />
+  return <DocsArticle markdown={resolved.markdown} slug={slug} />
 }

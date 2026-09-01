@@ -315,11 +315,101 @@ export function getWhyItExistsMarkdown(): string {
 `;
 }
 
+/**
+ * "What Is Wasit" — the docs sidebar's own orientation page (see the
+ * "about" link entry in lib/docs-nav.ts), for someone who opened /docs
+ * without having read the README first. Reuses README.md's own opening
+ * tagline (hand-copied here, since it sits before any "##" heading and
+ * so can't be pulled with extractSection) plus its real "## Status"
+ * table verbatim, the same way getWhyItExistsMarkdown() reuses "## The
+ * Problem" — so the status this page shows can never say something the
+ * README itself doesn't also say.
+ *
+ * The tagline paragraph is intentionally NOT hand-expanded beyond what
+ * the README already claims — this page orients and links onward
+ * (Quick Start, Why Wasit Exists, the Check Catalogue) rather than
+ * re-explaining any of those in full, so there is exactly one place
+ * each of those explanations lives.
+ */
+export function getAboutMarkdown(): string {
+  const readme = readRepoDoc("README.md");
+  const statusSection = extractSection(readme, "Status");
+  if (!statusSection) {
+    throw new Error(
+      'docs: README.md has no "## Status" section anymore — update getAboutMarkdown() in lib/content.ts.'
+    );
+  }
+
+  const status = statusSection
+    .replace(
+      /\(docs\/evidence\/([^)]+)\)/g,
+      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/evidence/$1)"
+    )
+    .replace(/\(#design-notes\)/g, "(https://github.com/dzakwannajmi/wasit#design-notes)")
+    .replace(/\[docs\/CHECKS\.md\]\(docs\/CHECKS\.md\)/g, "[Check Catalogue](/docs/checks/overview)")
+    .replace(/\n+---\s*$/, "")
+    .trim();
+
+  return `Wasit is an independent conformance tester for two agentic-payment
+protocols on Stellar: **x402** and **MPP**. It runs the real payment flow
+against a live service and verifies the settlement itself — by reading
+Stellar RPC and the token contract's own transfer event — rather than
+trusting whatever the service's response claims happened.
+
+It is not a schema validator. A response can have every field in the right
+place and still take money without settling it; that gap is exactly what
+Wasit checks for.
+
+## Why it exists
+
+x402 and MPP ship an official SDK. Neither ships an independent way to check
+that a service actually implements it — nothing plays the role
+\`stellar-anchor-tests\` plays for the anchor ecosystem. "We support x402" is
+currently a claim nobody can check from the outside.
+
+[Why Wasit Exists](/why) has the full story, including three concrete
+divergences between documentation and shipped SDK behavior that turned up
+while building this tool.
+
+## What you get
+
+One check suite, two ways to run it:
+
+- **[\`@wasit-dev/cli\`](https://www.npmjs.com/package/@wasit-dev/cli)** — the
+  \`wasit\` terminal command, for a local run or a CI job.
+- **[\`@wasit-dev/server\`](https://www.npmjs.com/package/@wasit-dev/server)**
+  — the same checks as MCP tools, for Claude Code, Claude Desktop, or any
+  other MCP-compatible agent.
+
+Both are thin adapters over
+[\`@wasit-dev/core\`](https://www.npmjs.com/package/@wasit-dev/core) — there is
+only one implementation of each check, so a CLI run and an agent's run can
+never disagree about the same target.
+
+Thirteen checks across x402 and MPP are implemented, each traced to a written
+spec clause in the [Check Catalogue](/docs/checks/overview).
+
+${status}
+
+## Where to go next
+
+- **[Quick Start](/docs/get-started/quick-start)** — run your first check
+- **[Why Wasit Exists](/why)** — the full motivation, including what was
+  found wrong upstream
+- **[Check Catalogue](/docs/checks/overview)** — every check's pass criteria
+  and spec reference
+`;
+}
+
 export function resolveDocMarkdown(slug: string[]): { title: string; markdown: string } | null {
   if (slug.length !== 2) return null;
 
   const [groupKey, pageSlug] = slug;
 
+  if (groupKey === "about") {
+    if (pageSlug === "overview") return { title: "What Is Wasit", markdown: getAboutMarkdown() };
+    return null;
+  }
   if (groupKey === "get-started") {
     if (pageSlug === "install") return { title: "Install", markdown: INSTALL_MD };
     if (pageSlug === "quick-start") return { title: "Quick Start", markdown: QUICK_START_MD };

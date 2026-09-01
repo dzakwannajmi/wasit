@@ -283,6 +283,89 @@
   transform: translate(0, 0);
 }
 
+/* Bottom-of-article prev/next pager (components/docs-pager.tsx) — two
+   cards side by side, mirroring .docs-home-card's look (surface bg,
+   1px border, accent on hover) so the pager reads as part of the same
+   card language rather than a new one. Grid instead of flex: with only
+   one card present (first/last page in the whole nav) `justify-self`
+   on the child puts it on the correct side without extra markup. */
+.docs-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85em;
+  margin: 2.5em 0 0.5em;
+  padding-top: 1.75em;
+  border-top: 1px solid var(--border);
+}
+.docs-pager-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85em;
+  padding: 1em 1.2em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  min-width: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.docs-pager-card:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--surface) 82%, var(--accent) 10%);
+}
+.docs-pager-card[data-direction="next"] {
+  grid-column: 2;
+  justify-self: end;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.docs-pager-arrow {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.docs-pager-card:hover .docs-pager-arrow {
+  color: var(--accent);
+}
+.docs-pager-card[data-direction="prev"]:hover .docs-pager-arrow {
+  transform: translateX(-2px);
+}
+.docs-pager-card[data-direction="next"]:hover .docs-pager-arrow {
+  transform: translateX(2px);
+}
+.docs-pager-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-width: 0;
+}
+.docs-pager-label {
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.docs-pager-title {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .docs-pager {
+    grid-template-columns: 1fr;
+  }
+  .docs-pager-card[data-direction="next"] {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+}
+
 /* Fenced code blocks: typeset's own default background resolves to
    --color-muted -> --surface (#0a0a0a), which reads as almost the same
    color as the page background (#000000) — a code block was basically
