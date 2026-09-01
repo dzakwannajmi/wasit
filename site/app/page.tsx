@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -11,12 +12,17 @@ const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
 // .cta-swap in globals.css) — inspired by
 // reactbits.dev/animations/pixel-swap, rebuilt in plain CSS/no new
 // dependency rather than pulled from there, since that component is
-// part of React Bits' paid Pro collection. Every cell switches state
-// at once (no per-cell stagger) — see .cta-pixel in globals.css — so
-// this is just a fixed cell count, not a shuffled order.
+// part of React Bits' paid Pro collection. (i * 7) % count is a fixed,
+// deterministic shuffle (7 and 50 share no common factor, so it
+// visits every index exactly once) — not Math.random(), which would
+// make the server-rendered stagger order differ from the client's and
+// fail hydration. Tuned to a short ~340ms total sweep (see .cta-pixel
+// in globals.css) so a normal hover always lands on full coverage
+// rather than getting caught mid-wipe.
 const CTA_PIXEL_COLS = 10;
-const CTA_PIXEL_ROWS = 4;
+const CTA_PIXEL_ROWS = 5;
 const CTA_PIXEL_COUNT = CTA_PIXEL_COLS * CTA_PIXEL_ROWS;
+const CTA_PIXEL_ORDER = Array.from({ length: CTA_PIXEL_COUNT }, (_, i) => (i * 7) % CTA_PIXEL_COUNT);
 
 type CompareRow = { without: string; with: string };
 
@@ -179,34 +185,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="quick-start">
-          <div className="wrap">
-            <h2>Quick start</h2>
-
-            <div className="quickstart-block">
-              <div className="qs-label">CLI</div>
-              <pre className="codeblock mono">
-                <span className="cm"># run once, no install</span>
-                {"\n"}npx @wasit-dev/cli test --target https://your-service.example.com
-                {"\n\n"}
-                <span className="cm"># or install globally</span>
-                {"\n"}npm install -g @wasit-dev/cli
-                {"\n"}wasit test --target https://your-service.example.com
-              </pre>
-            </div>
-
-            <div className="quickstart-block">
-              <div className="qs-label">Claude Code (MCP)</div>
-              <pre className="codeblock mono">
-                claude mcp add --transport stdio wasit \{"\n"}
-                {"  "}--env MPP_STELLAR_NETWORK=stellar:testnet \{"\n"}
-                {"  "}--env STELLAR_PRIVATE_KEY=S... \{"\n"}
-                {"  "}-- npx -y @wasit-dev/server
-              </pre>
-            </div>
-          </div>
-        </section>
-
         <section id="faq">
           <div className="wrap">
             <h2>Frequently asked questions</h2>
@@ -246,8 +224,12 @@ export default function Home() {
                 </div>
 
                 <div className="cta-pixels" aria-hidden="true">
-                  {Array.from({ length: CTA_PIXEL_COUNT }, (_, i) => (
-                    <span key={i} className="cta-pixel" />
+                  {CTA_PIXEL_ORDER.map((delayRank, i) => (
+                    <span
+                      key={i}
+                      className="cta-pixel"
+                      style={{ "--i": delayRank } as unknown as CSSProperties}
+                    />
                   ))}
                 </div>
 

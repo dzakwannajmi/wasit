@@ -633,12 +633,13 @@ h2 {
    there — that component lives in React Bits' paid Pro collection, and
    this needed no new dependency anyway.
 
-   Instant, not staggered: every square appears at once with no
-   transition-delay and a near-zero duration, so the fill always reads
-   as one solid purple block, never a wipe caught mid-sweep (a longer,
-   staggered version looked like an unfinished, stepped shape on any
-   hover shorter than its full sweep time — which is most real
-   hovers). */
+   Staggered, but short: each square pops in on its own delay (--i,
+   the shuffle from page.tsx) for the same lively ripple-in feel as
+   the reference, but the total sweep is capped around 340ms (50 tiles
+   * 6ms max stagger + 150ms transition) — short enough that a normal
+   hover always plays all the way through to full, gapless coverage
+   instead of getting caught mid-wipe with part of the box still bare
+   (what a slower ~1s sweep looked like earlier). */
 .cta-swap {
   position: relative;
   overflow: hidden;
@@ -654,22 +655,24 @@ h2 {
   align-items: center;
   gap: 14px;
   padding: 8px;
-  transition: opacity 40ms linear;
+  transition: opacity 150ms ease;
 }
-.cta-swap:hover .cta-swap-face { opacity: 0; }
+.cta-swap:hover .cta-swap-face { opacity: 0; transition-duration: 100ms; }
 
-/* The mosaic layer: a grid of small squares, scaled to 0 and
-   transparent at rest, all switching to full size/opacity together
-   (no --i-based stagger) — see the comment above for why. 10x4 covers
-   the headline + subtext block (no longer the taller headline +
-   subtext + terminal block from the previous version). */
+/* The mosaic layer: a grid of small squares, each scaled to 0 and
+   transparent at rest. --i (set inline per pixel in page.tsx, a fixed
+   deterministic shuffle rather than reading order) staggers when each
+   one grows in, so the wipe reads as scattered rather than a uniform
+   sweep — same idea as the reference's tiled reveal. 10x5 covers the
+   headline + subtext block (no longer the taller headline + subtext +
+   terminal block from an earlier version). */
 .cta-pixels {
   position: absolute;
   inset: 0;
   z-index: 2;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
   pointer-events: none;
 }
 .cta-pixel {
@@ -677,13 +680,15 @@ h2 {
   border-radius: 3px;
   transform: scale(0);
   opacity: 0;
-  transition: transform 60ms linear, opacity 60ms linear;
+  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;
+  transition-delay: calc(var(--i) * 6ms);
 }
 .cta-swap:hover .cta-pixel { transform: scale(1); opacity: 1; }
 
-/* Second face: white on the purple mosaic — "font kontras" — appears
-   right behind the pixels, no separate wait for a sweep to finish
-   since there no longer is one. */
+/* Second face: white on the purple mosaic — "font kontras" — timed
+   to land just after the sweep's own worst-case cover time (49 * 6ms
+   stagger + 150ms ~= 440ms), so the reveal text only appears once the
+   wipe has actually finished covering the block. */
 .cta-swap-hover {
   position: absolute;
   inset: 0;
@@ -696,10 +701,10 @@ h2 {
   padding: 8px;
   text-align: center;
   opacity: 0;
-  transition: opacity 60ms linear;
+  transition: opacity 150ms ease;
   pointer-events: none;
 }
-.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 40ms; }
+.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 340ms; }
 .cta-swap-hover-eyebrow {
   font-size: clamp(20px, 3vw, 26px);
   font-weight: 700;
@@ -737,16 +742,6 @@ h2 {
   transition: border-color 160ms ease, color 160ms ease;
 }
 .cta-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Quick start */
-.quickstart-block { margin-bottom: 28px; }
-.quickstart-block:last-child { margin-bottom: 0; }
-.quickstart-block .qs-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-pre.codeblock {
-  font-family: var(--font-fira-mono), monospace; font-size: 13px; line-height: 1.7; color: var(--fg);
-  background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; overflow-x: auto; margin: 0;
-}
-pre.codeblock .cm { color: var(--muted); }
 
 /* Footer — a big brand statement beside four real link columns, then
    a logo/CTA row, then a thin utility bar. Same dark/hairline-border/

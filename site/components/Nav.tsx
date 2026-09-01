@@ -23,10 +23,13 @@ function GitHubIcon() {
  * that column would otherwise bunch brand+links+actions toward the
  * center on anything wider than a laptop screen.
  *
- * Link labels mirror the landing page's own section ids/headings
- * (see app/page.tsx) — keep the two in sync when either changes. Not
- * every landing-page section gets a nav link (e.g. #get-started is
- * reached via the CTA buttons themselves, not the nav).
+ * Link labels mostly mirror the landing page's own section ids/
+ * headings (see app/page.tsx) — keep the two in sync when either
+ * changes. Two exceptions: #get-started has no nav link (it's reached
+ * via the CTA buttons themselves), and "Quick start" points straight
+ * at the docs page rather than an on-page section — the landing page
+ * no longer has its own Quick Start block, since it just duplicated
+ * that docs page.
  */
 export function Nav() {
   return (
@@ -39,8 +42,8 @@ export function Nav() {
           <nav className="navlinks">
             <Link href="/#comparison">Why Wasit</Link>
             <Link href="/#how-it-works">How it works</Link>
-            <Link href="/#quick-start">Quick start</Link>
             <Link href="/#faq">FAQ</Link>
+            <Link href="/docs/get-started/quick-start">Quick start</Link>
           </nav>
         </div>
 
