@@ -25,6 +25,13 @@ export function DocsToc({ contentSelector, className }: { contentSelector: strin
       .filter((h) => h.id)
       .map((h) => ({ id: h.id, text: h.textContent ?? "", level: h.tagName === "H2" ? 2 : 3 }))
 
+    // react-hooks/set-state-in-effect false positive: `found` can only be
+    // known by reading the DOM (contentSelector's actual rendered h2/h3s),
+    // which doesn't exist until after this component mounts — there is no
+    // render-time value to derive it from, so this is exactly the
+    // "reading from the DOM" exception the rule's own docs describe
+    // (react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHeadings(found)
     setActiveId(found[0]?.id ?? null)
 

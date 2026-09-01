@@ -17,6 +17,13 @@ export function MermaidDiagram({ source }: { source: string }) {
 
   React.useEffect(() => {
     let cancelled = false
+    // react-hooks/set-state-in-effect false positive: this reset has to
+    // happen here, not during render — it's clearing the *previous*
+    // render's error right before this effect kicks off a new async
+    // import+render attempt for the new `source`, the same "starting a
+    // new async operation" case the rule's own docs list as an
+    // exception (react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null)
 
     import("mermaid").then(async ({ default: mermaid }) => {
