@@ -16,7 +16,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Wasit — x402 / MPP conformance testing for Stellar",
+  title: "Wasit",
   description:
     "Independent conformance tester for x402 and MPP on Stellar. Runs the real payment flow and verifies on-chain settlement, not just response shape.",
 };

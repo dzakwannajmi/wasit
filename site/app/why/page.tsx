@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer"
 import { getWhyItExistsMarkdown } from "@/lib/content"
 
 export const metadata: Metadata = {
-  title: "Why Wasit Exists - Wasit",
+  title: "Wasit",
   description:
     "x402 and MPP ship an SDK but no independent way to check a service actually implements it. Three real divergences that turned up while building Wasit.",
 }

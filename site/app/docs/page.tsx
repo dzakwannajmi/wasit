@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { DocsHome } from "@/components/docs-home"
 
 export const metadata: Metadata = {
-  title: "Wasit Docs",
+  title: "Wasit",
   description:
     "Install Wasit, run your first x402 or MPP conformance check, and browse every guide and reference page.",
 }
