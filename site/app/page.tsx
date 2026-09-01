@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CopyButton } from "@/components/CopyButton";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
+import { CliDemo } from "@/components/CliDemo";
 
 const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url>";
 const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
@@ -120,7 +121,14 @@ export default function Home() {
 
             {/* .terminal/.terminal-bar/.cmdbox keep their existing look
                 untouched — only their position in the layout changed,
-                from stacked under the copy to its own column beside it. */}
+                from stacked under the copy to its own column beside it.
+                CliDemo is new: it continues below .cmdbox, inside the
+                same terminal frame, streaming what a real `wasit test`
+                run actually prints (see CliDemo.tsx for why the text
+                itself is pulled from the real checks rather than
+                invented). The CTA section's terminal further down
+                deliberately does NOT get this — it stays the plain
+                copy-paste install command only. */}
             <div className="hero-visual">
               <div className="label">Try it now</div>
               <div className="terminal">
@@ -133,6 +141,7 @@ export default function Home() {
                   <code className="mono">$ {INSTALL_CMD}</code>
                   <CopyButton text={INSTALL_CMD} />
                 </div>
+                <CliDemo />
               </div>
             </div>
           </div>

@@ -1,0 +1,75 @@
+/* Terminal output panel for CliDemo.tsx — sits directly below the
+   hero's existing .cmdbox (untouched) inside the same .terminal frame,
+   as the "and here's what running it looks like" continuation of the
+   copy-pasteable install command above it. */
+
+.cli-demo {
+  border-top: 1px solid var(--border);
+  padding: 14px 16px 16px;
+}
+
+.cli-demo-prompt {
+  font-size: 13px;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0 0 10px;
+}
+.cli-demo-prompt-glyph { color: var(--accent); margin-right: 4px; }
+
+/* Reuses the @keyframes cursor-blink already defined in globals.css
+   for .cmdbox's own prompt cursor, so the two stay visually identical. */
+.cli-demo-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 2px;
+  background: var(--accent);
+  vertical-align: -2px;
+  animation: cursor-blink 1s steps(1, jump-none) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cli-demo-cursor { animation: none; }
+}
+
+/* Fixed height + hidden overflow + a bottom fade so streamed lines
+   scroll off the top like a real terminal filling up, rather than the
+   box growing taller with every check — the height stays constant
+   whether 1 line or all of them are showing. */
+.cli-demo-output {
+  height: 232px;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.7;
+  mask-image: linear-gradient(to bottom, black 0, black calc(100% - 10px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 10px), transparent 100%);
+}
+
+.cli-demo-status { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cli-demo-badge { font-weight: 700; font-size: 11px; letter-spacing: 0.5px; }
+.cli-demo-badge--pass { color: #28c840; }
+.cli-demo-badge--fail { color: #ff5f57; }
+.cli-demo-badge--skip { color: var(--muted); }
+.cli-demo-badge--error { color: #febc2e; }
+.cli-demo-id { color: var(--muted); }
+.cli-demo-name { color: var(--fg); }
+
+/* Callout for the one negative check in the script (X402-07) — it
+   PASSES because the target correctly rejected a corrupted signature,
+   which reads as an ordinary pass unless it's visually flagged as the
+   "this is supposed to reject" case. */
+.cli-demo-negative {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--accent), white 25%);
+  border: 1px solid color-mix(in oklab, var(--accent), transparent 45%);
+  border-radius: 999px;
+  padding: 1px 7px;
+  line-height: 1.5;
+}
+
+.cli-demo-detail { color: var(--muted); }
+.cli-demo-blank { height: 11px; }
+.cli-demo-summary { color: var(--fg); font-weight: 600; padding-top: 2px; }
