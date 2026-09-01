@@ -607,7 +607,7 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 28px;
   padding: 44px 36px;
   border: 1px solid var(--border-strong);
   border-radius: 16px;
@@ -624,10 +624,12 @@ h2 {
 .cta-card-button:hover span { transform: translateX(3px); }
 .cta-card-caption { margin: 0; color: var(--muted); font-size: 12px; }
 
-/* Pixel-swap hover, scoped to the headline only (not the whole card) —
-   see .cta-card above for why: the code snippet and the CTA button
-   must stay visible and clickable at all times, so only this small
-   zone cross-fades. Inspired by the "Pixel Swap" effect at
+/* Pixel-swap hover — covers the whole informational block: headline,
+   subtext, and the code snippet all cross-fade together and the mosaic
+   wipes across the full box, not just one line of text. The final CTA
+   button and caption below are deliberately kept outside .cta-swap
+   (see the JSX) so the actual call to action is never covered or
+   hidden mid-hover. Inspired by the "Pixel Swap" effect at
    reactbits.dev/animations/pixel-swap, rebuilt here in plain CSS
    against this site's own dark/purple palette rather than pulled from
    there — that component lives in React Bits' paid Pro collection, and
@@ -641,11 +643,16 @@ h2 {
   overflow: hidden;
   isolation: isolate;
   width: 100%;
+  border-radius: 12px;
 }
 .cta-swap-face {
   position: relative;
   z-index: 1;
-  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px;
   transition: opacity 200ms ease;
 }
 .cta-swap:hover .cta-swap-face { opacity: 0; transition-duration: 120ms; }
@@ -654,15 +661,15 @@ h2 {
    transparent at rest. --i (set inline per pixel in page.tsx, a fixed
    deterministic shuffle rather than reading order) staggers when each
    one grows in, so the wipe reads as scattered rather than a uniform
-   sweep. Grid is 10x3 here (was 14x5) — it now only has to cover the
-   headline's own height, not the old card's full padded interior. */
+   sweep. 12x8 so it comfortably covers the taller block (headline +
+   subtext + terminal) rather than just a single line. */
 .cta-pixels {
   position: absolute;
   inset: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
   pointer-events: none;
 }
 .cta-pixel {
@@ -670,33 +677,40 @@ h2 {
   border-radius: 3px;
   transform: scale(0);
   opacity: 0;
-  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 380ms ease;
-  transition-delay: calc(var(--i) * 8ms);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+  transition-delay: calc(var(--i) * 2ms);
 }
 .cta-swap:hover .cta-pixel { transform: scale(1); opacity: 1; }
 
-/* Second face: white on the purple mosaic — "font kontras" — delayed
-   past the pixels' own worst-case cover time (29 * 8ms stagger + 380ms
-   ~= 610ms) so the reveal text only appears once the wipe has actually
-   finished covering the headline. */
+/* Second face: white on the purple mosaic — "font kontras" — fills the
+   entire box now instead of one small badge, delayed past the pixels'
+   own worst-case cover time (95 * 2ms stagger + 220ms ~= 410ms) so the
+   reveal text only appears once the wipe has actually finished
+   covering the block. Kept fast on purpose: a normal, brief hover must
+   be enough to see the box fully covered — the old ~950ms sweep meant
+   most real hovers never got past a half-filled, stepped-looking
+   mid-animation state before the mouse moved on. */
 .cta-swap-hover {
   position: absolute;
   inset: 0;
   z-index: 3;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6px 0;
+  gap: 6px;
+  padding: 8px;
   text-align: center;
   opacity: 0;
   transition: opacity 220ms ease;
   pointer-events: none;
 }
-.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 320ms; }
+.cta-swap:hover .cta-swap-hover { opacity: 1; transition-delay: 400ms; }
 .cta-swap-hover-eyebrow {
-  font-size: 15px;
+  font-size: clamp(20px, 3vw, 26px);
   font-weight: 700;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
   color: #fff;
 }
 

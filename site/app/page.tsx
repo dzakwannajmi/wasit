@@ -229,17 +229,38 @@ export default function Home() {
         <section id="get-started" className="cta-section">
           <div className="wrap cta-wrap">
             <div className="cta-card">
-              {/* Hover reveal on the headline only: the two text faces
-                  cross-fade while a grid of small squares wipes across
-                  in between (.cta-pixels), purple, in the site's own
+              {/* Hover reveal across the whole informational block —
+                  headline, subtext, and the code snippet all cross-fade
+                  together while a grid of small squares wipes across in
+                  between (.cta-pixels), purple, in the site's own
                   accent — see the CSS comment on .cta-swap for why this
                   uses `transition`, not `animation`, on every moving
-                  piece. Scoped to just the headline (not the button or
-                  the code snippet below) so both stay clickable at all
-                  times. */}
+                  piece. The final CTA button and caption sit outside
+                  this zone (below) so the actual call to action is
+                  never covered or hidden mid-hover. */}
               <div className="cta-swap">
                 <div className="cta-swap-face">
                   <h2>Ready to test your x402 or MPP integration?</h2>
+                  <p className="section-lead cta-card-lead">
+                    Point it at your service and get a pass/fail report
+                    backed by on-chain verification. No signup, no config
+                    file required to start.
+                  </p>
+
+                  {/* Same .terminal/.terminal-bar/.cmdbox chrome as the
+                      hero — reused as-is, not a lookalike, so the two
+                      stay pixel-identical by construction. */}
+                  <div className="terminal cta-terminal">
+                    <div className="terminal-bar">
+                      <span className="terminal-dot terminal-dot-red" />
+                      <span className="terminal-dot terminal-dot-yellow" />
+                      <span className="terminal-dot terminal-dot-green" />
+                    </div>
+                    <div className="cmdbox">
+                      <code className="mono">$ {INSTALL_CMD}</code>
+                      <CopyButton text={INSTALL_CMD} />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="cta-pixels" aria-hidden="true">
@@ -253,28 +274,8 @@ export default function Home() {
                 </div>
 
                 <div className="cta-swap-hover">
-                  <span className="cta-swap-hover-eyebrow">One command. Verified on-chain.</span>
-                </div>
-              </div>
-
-              <p className="section-lead cta-card-lead">
-                Point it at your service and get a pass/fail report backed by
-                on-chain verification. No signup, no config file required to
-                start.
-              </p>
-
-              {/* Same .terminal/.terminal-bar/.cmdbox chrome as the hero
-                  — reused as-is, not a lookalike, so the two stay
-                  pixel-identical by construction. */}
-              <div className="terminal cta-terminal">
-                <div className="terminal-bar">
-                  <span className="terminal-dot terminal-dot-red" />
-                  <span className="terminal-dot terminal-dot-yellow" />
-                  <span className="terminal-dot terminal-dot-green" />
-                </div>
-                <div className="cmdbox">
-                  <code className="mono">$ {INSTALL_CMD}</code>
-                  <CopyButton text={INSTALL_CMD} />
+                  <span className="cta-swap-hover-eyebrow">One command.</span>
+                  <span className="cta-swap-hover-eyebrow">Verified on-chain.</span>
                 </div>
               </div>
 
