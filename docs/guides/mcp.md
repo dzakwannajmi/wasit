@@ -4,37 +4,86 @@ The MCP server exposes the same check suites as the CLI over the Model Context
 Protocol, so an agent can run a conformance check and read the result as
 structured data.
 
-Transport is stdio. The binary is `wasit-mcp`; until it is published, clients
-launch `packages/server/dist/index.js` directly.
+Transport is stdio. As of `@wasit-dev/server@0.1.0` the package is published on
+npm, so no local checkout is required to run it — `npx @wasit-dev/server`
+downloads and runs the binary on demand. A local checkout still works the same
+way (`node packages/server/dist/index.js`) and is only needed if you're
+developing Wasit itself.
 
-## Client configuration
+## Claude Code
+
+Add the server with `claude mcp add`, passing your Stellar testnet credentials
+as environment variables:
+
+```bash
+claude mcp add --transport stdio wasit \
+  --env MPP_STELLAR_NETWORK=stellar:testnet \
+  --env STELLAR_PRIVATE_KEY=S... \
+  --env MPP_PAYER_SECRET=S... \
+  --env COMMITMENT_SECRET_HEX=... \
+  -- npx -y @wasit-dev/server
+```
+
+This registers the server at `local` scope (current project only). Add
+`--scope user` instead if you want it available in every project, or
+`--scope project` to commit a shared `.mcp.json` for a team. Verify it
+connected with `claude mcp list`, then ask Claude Code directly, for example
+"run wasit_x402_test against https://my-service.example.com".
+
+To remove it later: `claude mcp remove wasit`.
+
+## Claude Desktop
+
+Open Settings, go to the Developer tab, and click "Edit Config". This opens
+(or creates) the config file at:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add a `wasit` entry under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
     "wasit": {
-      "command": "node",
-      "args": ["/absolute/path/to/wasit/packages/server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@wasit-dev/server"],
       "env": {
         "MPP_STELLAR_NETWORK": "stellar:testnet",
         "STELLAR_PRIVATE_KEY": "S...",
         "MPP_PAYER_SECRET": "S...",
-        "COMMITMENT_SECRET_HEX": "...",
-        "WASIT_CHECKS_PATH": "/absolute/path/to/wasit/docs/CHECKS.md"
+        "COMMITMENT_SECRET_HEX": "..."
       }
     }
   }
 }
 ```
 
-Use absolute paths throughout. An MCP client launches the server from a working
-directory you do not control.
+Save the file and fully quit and restart Claude Desktop (not just close the
+window — use the Claude menu, Quit). The wasit tools then appear under the
+connectors indicator in the message box. If the server doesn't show up, check
+`~/Library/Logs/Claude/mcp-server-wasit.log` (macOS) or
+`%APPDATA%\Claude\logs\mcp-server-wasit.log` (Windows) for the stderr output.
 
-`WASIT_CHECKS_PATH` is not optional in practice. The server locates the check
-catalogue by walking up from its own file, which works from a shell in the repo
-and often fails when a client launches it from elsewhere. Without it the
-catalogue resource is silently absent — the server still runs, but an agent
-loses the ability to read what a check actually asserts.
+## Manual / other clients
+
+Any MCP client that supports stdio works the same way — point `command` at
+`npx`, `args` at `["-y", "@wasit-dev/server"]`, and set the environment
+variables above. Use absolute paths for `node packages/server/dist/index.js`
+if launching from a local checkout instead of npx, since a client launches the
+server from a working directory you don't control.
+
+## Known limitation: the checks resource needs a local checkout
+
+`wasit://checks` (below) currently locates `docs/CHECKS.md` by walking up from
+the server's own installed file. That works when Wasit is run from a git
+checkout, but an `npx @wasit-dev/server` install has no `docs/` directory
+alongside it — the resource is silently absent in that case, no error, just
+missing. The four test tools themselves are unaffected; only the check
+catalogue resource is. Until this is fixed (tracked: bundling `CHECKS.md` into
+the published `server` package), set `WASIT_CHECKS_PATH` to a local copy, for
+example after cloning the repo once just for this file, or downloading
+`docs/CHECKS.md` from GitHub directly.
 
 ## Tools
 
@@ -47,13 +96,15 @@ loses the ability to read what a check actually asserts.
 
 The fourth is registered **only** when the server is started with
 `WASIT_ALLOW_DESTRUCTIVE=1` or `--allow-destructive`. Without that opt-in it
-does not appear in `tools/list` at all.
+does not appear in `tools/list` at all. Set it as an extra `--env
+WASIT_ALLOW_DESTRUCTIVE=1` (Claude Code) or `"env"` entry (Claude Desktop) if
+you intend to use it — otherwise leave it out, which is the safer default.
 
 Verify which tools a configuration exposes:
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
-  | node packages/server/dist/index.js \
+  | npx -y @wasit-dev/server \
   | python3 -c "import sys,json; print([t['name'] for t in json.load(sys.stdin)['result']['tools']])"
 ```
 
@@ -61,7 +112,8 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
 
 `wasit://checks` serves `docs/CHECKS.md` — the authority on what each check
 asserts. An agent should read it before interpreting a result rather than
-inferring pass criteria from a check's name.
+inferring pass criteria from a check's name. See the known limitation above
+for npm-only installs.
 
 ## Secrets are never tool arguments
 
