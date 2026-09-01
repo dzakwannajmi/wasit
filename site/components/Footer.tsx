@@ -12,6 +12,7 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: "Quick Start", href: "/docs/get-started/quick-start" },
       { label: "CLI Guide", href: "/docs/cli/overview" },
       { label: "MCP Guide", href: "/docs/mcp/overview" },
+      { label: "Core Guide", href: "/docs/core/overview" },
     ],
   },
   {

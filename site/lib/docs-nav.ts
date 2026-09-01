@@ -2,6 +2,7 @@ import {
   Rocket,
   SquareTerminal,
   Cable,
+  Package,
   Settings2,
   ListChecks,
   ShieldCheck,
@@ -86,6 +87,20 @@ export const DOCS_NAV: DocNavEntry[] = [
       { title: "Secrets are never tool arguments", slug: ["mcp", "secrets"] },
       { title: "Results", slug: ["mcp", "results"] },
       { title: "Why the destructive tool is a separate tool", slug: ["mcp", "destructive-tool"] },
+    ],
+  },
+  {
+    kind: "group",
+    title: "Core Guide",
+    icon: Package,
+    pages: [
+      { title: "Overview", slug: ["core", "overview"] },
+      { title: "Install & usage", slug: ["core", "usage"] },
+      { title: "x402 checks", slug: ["core", "x402"] },
+      { title: "MPP charge mode", slug: ["core", "mpp-charge"] },
+      { title: "MPP channel mode", slug: ["core", "mpp-channel"] },
+      { title: "Reporting & result shapes", slug: ["core", "reporting"] },
+      { title: "Design notes", slug: ["core", "design"] },
     ],
   },
   {

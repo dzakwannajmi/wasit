@@ -99,6 +99,29 @@ export function plainText(markdown: string): string {
 }
 
 /**
+ * Reduces a markdown string to plain search-index text: drops fenced
+ * code blocks entirely (code tokens are noisy, low-signal matches for a
+ * prose search box), strips heading hashes/list bullets/table pipes,
+ * and reuses plainText()'s inline-markdown stripping for the rest. Used
+ * only by lib/search-index.ts to build the docs search index — never
+ * for anything rendered, so it doesn't need to preserve structure.
+ */
+export function markdownToPlainText(markdown: string): string {
+  return markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/\|/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\n{2,}/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+}
+
+/**
  * Pulls one named "##" section out of an arbitrary markdown file — heading
  * line through (not including) the next "##" or end of file. Unlike
  * splitDoc, this doesn't assume the file's own title sits on line 1
@@ -142,11 +165,11 @@ Two ways to run Wasit, depending on whether a person or an agent is driving.
 
 \`\`\`bash
 # run once, no install
-npx @wasit-dev/cli test https://your-service.example.com
+npx @wasit-dev/cli test --target https://your-service.example.com
 
 # or install globally
 npm install -g @wasit-dev/cli
-wasit test https://your-service.example.com
+wasit test --target https://your-service.example.com
 \`\`\`
 
 \`test\` runs the x402 checks. \`mpp-charge\` and \`mpp-channel\` run the MPP
@@ -178,7 +201,7 @@ Wasit ships as three npm packages — install only the ones you need.
 
 \`\`\`bash
 # run once, no install
-npx @wasit-dev/cli test https://your-service.example.com
+npx @wasit-dev/cli test --target https://your-service.example.com
 
 # or install globally
 npm install -g @wasit-dev/cli
@@ -193,6 +216,7 @@ npm install -g @wasit-dev/cli
 const GROUP_SOURCE_FILES: Record<string, string> = {
   cli: "docs/guides/cli.md",
   mcp: "docs/guides/mcp.md",
+  core: "docs/guides/core.md",
   configuration: "docs/guides/configuration.md",
   checks: "docs/CHECKS.md",
   security: "SECURITY.md",
