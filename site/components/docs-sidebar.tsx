@@ -160,7 +160,7 @@ export function DocsSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="GitHub">
-              <a href="https://github.com/dzakwannajmi/wasit" target="_blank" rel="noreferrer">
+              <a href="https://github.com/wasit-dev/wasit" target="_blank" rel="noreferrer">
                 <ExternalLink />
                 <span>GitHub</span>
               </a>

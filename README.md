@@ -8,7 +8,7 @@ Wasit runs the real payment flow against a live service and verifies settlement
 on-chain. It is not a schema validator: a response can have every field in the
 right place and still take money without settling it.
 
-[![CI](https://github.com/dzakwannajmi/wasit/actions/workflows/ci.yml/badge.svg)](https://github.com/dzakwannajmi/wasit/actions/workflows/ci.yml)
+[![CI](https://github.com/wasit-dev/wasit/actions/workflows/ci.yml/badge.svg)](https://github.com/wasit-dev/wasit/actions/workflows/ci.yml)
 [![Stellar](https://img.shields.io/badge/Stellar-Testnet-7c3aed)](https://stellar.org)
 [![x402](https://img.shields.io/badge/Protocol-x402%20v2-0891b2)](https://x402.org)
 [![MPP](https://img.shields.io/badge/Protocol-MPP-111827)](https://paymentauth.org)

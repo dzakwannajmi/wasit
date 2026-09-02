@@ -131,14 +131,14 @@ All keys are **testnet only**. `wasit` also reads a `.env` file in the current w
 
 ## What's checked
 
-Thirteen checks across x402 and MPP, each traced to a written spec clause — the full catalogue, with pass criteria and spec references, is in [`docs/CHECKS.md`](https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md).
+Thirteen checks across x402 and MPP, each traced to a written spec clause — the full catalogue, with pass criteria and spec references, is in [`docs/CHECKS.md`](https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md).
 
 ## Related
 
 - [`@wasit-dev/core`](https://www.npmjs.com/package/@wasit-dev/core) — the check suite this CLI runs, if you're building your own tooling on top
 - [`@wasit-dev/server`](https://www.npmjs.com/package/@wasit-dev/server) — the same checks as MCP tools, for Claude Code and other agents
-- [Full documentation](https://github.com/dzakwannajmi/wasit) — CLI guide, MCP guide, configuration, design notes
+- [Full documentation](https://github.com/wasit-dev/wasit) — CLI guide, MCP guide, configuration, design notes
 
 ## License
 
-Apache-2.0 — see [LICENSE](https://github.com/dzakwannajmi/wasit/blob/main/LICENSE).
+Apache-2.0 — see [LICENSE](https://github.com/wasit-dev/wasit/blob/main/LICENSE).

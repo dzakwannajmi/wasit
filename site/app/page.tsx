@@ -7,7 +7,7 @@ import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { CliDemo } from "@/components/CliDemo";
 
 const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url>";
-const GITHUB_URL = "https://github.com/dzakwannajmi/wasit";
+const GITHUB_URL = "https://github.com/wasit-dev/wasit";
 
 // Pixel grid for the closing CTA headline's hover reveal (see
 // .cta-swap in globals.css) — inspired by

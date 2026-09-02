@@ -70,7 +70,7 @@ export default function PrivacyPage() {
             <h2 id="contact">6. Contact</h2>
             <p>
               Questions can be raised as an issue on{" "}
-              <a href="https://github.com/dzakwannajmi/wasit" target="_blank" rel="noreferrer noopener">
+              <a href="https://github.com/wasit-dev/wasit" target="_blank" rel="noreferrer noopener">
                 GitHub
               </a>{" "}
               or via{" "}

@@ -78,7 +78,7 @@ Every check function returns `Promise<CheckResult[]>` and never rejects for a ta
 | `skipped(id, name, reason)` | Builds a non-destructive `SKIP` result |
 | `skippedDestructive(id, name, reason)` | Builds a `SKIP` result for a destructive check not opted into |
 
-The full check catalogue — every check's exact pass criteria and spec reference — is in [`docs/CHECKS.md`](https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md).
+The full check catalogue — every check's exact pass criteria and spec reference — is in [`docs/CHECKS.md`](https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md).
 
 ## Design
 
@@ -90,8 +90,8 @@ The full check catalogue — every check's exact pass criteria and spec referenc
 
 - [`@wasit-dev/cli`](https://www.npmjs.com/package/@wasit-dev/cli) — terminal front end
 - [`@wasit-dev/server`](https://www.npmjs.com/package/@wasit-dev/server) — MCP front end, for Claude Code and other agents
-- [Full documentation](https://github.com/dzakwannajmi/wasit)
+- [Full documentation](https://github.com/wasit-dev/wasit)
 
 ## License
 
-Apache-2.0 — see [LICENSE](https://github.com/dzakwannajmi/wasit/blob/main/LICENSE).
+Apache-2.0 — see [LICENSE](https://github.com/wasit-dev/wasit/blob/main/LICENSE).

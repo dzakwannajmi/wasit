@@ -22,8 +22,8 @@ was modeled on.
 
 | Evidence (per SOW) | Proof |
 |---|---|
-| Public GitHub repo | https://github.com/dzakwannajmi/wasit |
-| Published CHECKS.md | https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md |
+| Public GitHub repo | https://github.com/wasit-dev/wasit |
+| Published CHECKS.md | https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md |
 | npm package | https://www.npmjs.com/package/@wasit-dev/cli |
 | Terminal recording / GIF | _pending — Job 03_ |
 
@@ -40,7 +40,7 @@ was modeled on.
 | Evidence (per SOW) | Proof |
 |---|---|
 | npm package | https://www.npmjs.com/package/@wasit-dev/server |
-| MCP config | https://github.com/dzakwannajmi/wasit/blob/main/docs/guides/mcp.md |
+| MCP config | https://github.com/wasit-dev/wasit/blob/main/docs/guides/mcp.md |
 | Screen recording (check triggered from Claude Code via MCP) | _pending — Job 03_ |
 
 ### Overall

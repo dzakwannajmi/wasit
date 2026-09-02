@@ -2,7 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { DocsSearch } from "./DocsSearch"
 
-const GITHUB_URL = "https://github.com/dzakwannajmi/wasit"
+const GITHUB_URL = "https://github.com/wasit-dev/wasit"
 
 function GitHubIcon() {
   return (

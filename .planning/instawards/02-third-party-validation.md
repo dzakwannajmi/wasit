@@ -22,18 +22,14 @@ authorization for every candidate found.
 
 ## Contacted
 
-| Candidate | What they run | Link | Status as of 2026-09-01 |
+| Candidate | What they run | Link | Status as of 2026-09-02 |
 |---|---|---|---|
 | RouteDock (winsznx/routedock) | MPP Charge (provider-a) and MPP Channel (provider-b), live on Cloudflare Workers | github.com/winsznx/routedock/issues/206 | Comment asking explicit permission for non-destructive checks posted; no reply. Note: issue #206 itself is a separate, earlier upstream-SDK bug report (fixed by PR #241) — evidence for the upstream findings, not for this job |
-| yripper/stellarpay | x402 + MPP charge + MPP channel in one SDK, live demo on Railway | github.com/yripper/stellarpay | Self-test outreach issue sent; confirmed sent, issue number and reply status not re-verified this session |
-| Stellar-Light/stellar-pay | x402 + MPP charge, live sandbox on Fly.io | github.com/Stellar-Light/stellar-pay/issues/3 | Self-test outreach issue sent, confirmed open, no reply yet |
-
-## Candidates identified, not yet contacted
-
-| Candidate | Why it's a fit | Link |
-|---|---|---|
-| Blockchain-Oracle/xlmtools | Stellar-native MCP server, 21 pay-per-call tools, uses `@stellar/mpp` + `mppx` in production, hosted live at api.xlmtools.com | github.com/Blockchain-Oracle/xlmtools |
-| TKCollective/x402-research-skill | Stellar path already built, not yet mounted to a live route | github.com/TKCollective/x402-research-skill |
+| yripper/stellarpay | x402 + MPP charge + MPP channel in one SDK, live demo on Railway | github.com/yripper/stellarpay#1 | Self-test outreach issue sent (2026-08-31); re-verified open 2026-09-02, no reply yet |
+| Stellar-Light/stellar-pay | x402 + MPP charge, live sandbox on Fly.io | github.com/Stellar-Light/stellar-pay/issues/3 | Self-test outreach issue sent (2026-08-31); re-verified open 2026-09-02, no reply yet |
+| Blockchain-Oracle/xlmtools | Stellar-native MCP server (`@xlmtools/cli`/`@xlmtools/mcp`), 21 pay-per-call tools, uses `@stellar/mpp` + `mppx` in production on Stellar testnet | github.com/Blockchain-Oracle/xlmtools/issues | Self-test outreach issue opened 2026-09-02. Attempted our own read-only Wasit run first (`wasit test --target https://api.xlmtools.com/search?q=stellar&count=1 --read-only`) to see the shape of their challenge ahead of time: both `api.xlmtools.com` and the root `xlmtools.com` are returning Cloudflare 522 (origin unreachable) as of 2026-09-02, confirmed via curl against the bare domain too — their whole service is down, not just this endpoint. X402-01 correctly FAILed on that basis (got 522, not 402); X402-02..05 SKIPped since no challenge was issued. Not a Wasit or spec finding — just their backend being unreachable right now. Did not proceed to the paid run (X402-06/07) since it would fail regardless while the origin is down. Retry once the outage clears |
+| TKCollective/x402-research-skill (the project is "AgentOracle") | AI-agent claim-verification API with an x402 paid tier; live at agentoracle.co | github.com/TKCollective/x402-research-skill/issues | Self-test outreach issue opened 2026-09-02. Read-only Wasit runs confirm the guess in that issue: `/evaluate` returns 200 (still in free beta, `meta.price` literally says "$0.00 (beta; $0.09 USDC per call at GA)"), and `/research` DOES issue a real, well-formed x402 challenge (X402-01..04 all PASS) but its `accepts` network is `eip155:8453` (Base mainnet) only — no Stellar network offered at all, so X402-05 fails on that basis, not a Wasit or spec defect. **Conclusion: AgentOracle cannot currently serve as Stellar third-party evidence** — there is no live Stellar payment option to test against, so no real USDC should be spent testing it. Posted a follow-up comment on the issue with these concrete findings, closing the loop on the question asked in the original post. Revisit only if they reply confirming Stellar support is live/returning |
+| fxjrin/defi-copilot | MCP server + REST API selling pay-per-decision DeFi intelligence (best-yield, best-swap) on Stellar via x402, $0.001 USDC per call; testnet-by-default in the published `defi-copilot-mcp` client, mainnet configurable server-side | github.com/fxjrin/defi-copilot | Very strong conceptual fit (same protocol, same network family, same challenge/settle flow Wasit checks) but not testable yet: a read-only Wasit run against `https://api.fxjrin.com/defi/yield/best` fails at the TLS layer (`ERR_TLS_CERT_ALTNAME_INVALID`) — confirmed via `openssl s_client`, the cert served there has no hostname in its SAN, only a bare IP (76.13.192.216), so no HTTPS client can reach the API at all right now. The marketing site (deficopilot.fxjrin.com, on Vercel) is unaffected and loads fine — this is specifically the backend API host being unreachable over TLS. Also worth re-checking once reachable: the package source names its x402 network values `"stellar-testnet"`/`"stellar"` rather than the CAIP-2 `stellar:testnet`/`stellar:pubnet` format X402-05 expects, which may turn out to be a real conformance finding once we can actually see a live challenge. Outreach issue drafted, not yet confirmed sent |
 
 ## Deprioritized (checked, not a good fit)
 
@@ -55,6 +51,12 @@ authorization — not as strong as independent third-party validation, but it
 satisfies the letter of the requirement and keeps the timeline moving.
 
 ## Next action
-Send outreach to the two not-yet-contacted candidates above; re-check the
-three open threads before Job 04 starts; if none has converted by then,
-trigger the fallback.
+Five candidates still open with no reply (RouteDock, yripper/stellarpay,
+Stellar-Light/stellar-pay, xlmtools, fxjrin/defi-copilot). Two of those
+are currently blocked on the target's own infrastructure rather than
+waiting on a reply: xlmtools by its 522 outage, defi-copilot by its API
+host's TLS cert not covering its own hostname — retry both once fixed.
+AgentOracle is effectively resolved as a non-candidate for now (no live
+Stellar payment option to test) unless they reply saying otherwise.
+Re-check the five live threads before Job 04 starts; if none has
+converted by then, trigger the fallback.

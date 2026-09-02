@@ -41,7 +41,7 @@ export default function TermsPage() {
             <h2 id="open-source-license">2. Open-source license</h2>
             <p>
               The Wasit source code is licensed under the{" "}
-              <a href="https://github.com/dzakwannajmi/wasit/blob/main/LICENSE" target="_blank" rel="noreferrer noopener">
+              <a href="https://github.com/wasit-dev/wasit/blob/main/LICENSE" target="_blank" rel="noreferrer noopener">
                 Apache License 2.0
               </a>. That license, not this page, governs your rights to
               use, modify, and redistribute the code. If the two ever
@@ -89,7 +89,7 @@ export default function TermsPage() {
             <h2 id="contact">7. Contact</h2>
             <p>
               Questions about these terms can be raised as an issue on{" "}
-              <a href="https://github.com/dzakwannajmi/wasit" target="_blank" rel="noreferrer noopener">
+              <a href="https://github.com/wasit-dev/wasit" target="_blank" rel="noreferrer noopener">
                 GitHub
               </a>{" "}
               or via{" "}

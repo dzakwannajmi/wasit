@@ -61,7 +61,7 @@ Examples:
 Run "wasit <command> --help" for that command's own options and cost notes.
 Add --json to test/mpp-charge/mpp-channel for machine-readable output.
 Full check catalogue (every check ID, spec reference, pass criteria):
-  https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md`,
+  https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md`,
   );
 
 /**

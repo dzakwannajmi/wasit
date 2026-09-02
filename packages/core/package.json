@@ -10,12 +10,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dzakwannajmi/wasit.git",
+    "url": "git+https://github.com/wasit-dev/wasit.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/dzakwannajmi/wasit#readme",
+  "homepage": "https://github.com/wasit-dev/wasit#readme",
   "bugs": {
-    "url": "https://github.com/dzakwannajmi/wasit/issues"
+    "url": "https://github.com/wasit-dev/wasit/issues"
   },
   "keywords": [
     "stellar",

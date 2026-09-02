@@ -30,7 +30,7 @@ table below.
 |---|---|
 | Builder | Muhammad Dzakwan Najmi (repmoonasci@gmail.com) |
 | Ambassador Chapter | Stellar Chapter Ambassador Indonesia — Lead: Kenny Rivaldi |
-| GitHub repo | https://github.com/dzakwannajmi/wasit (public) |
+| GitHub repo | https://github.com/wasit-dev/wasit (public) |
 | SOW submitted / sprint start (draft text) | 29 Jul 2026 / 1 Aug 2026 — actual effective date is 28 Aug 2026 (funds received), day-count runs from there |
 | npm org | `@wasit-dev` (created this engagement; `wasit` alone was unavailable) |
 | Published packages | `@wasit-dev/core@0.1.0`, `@wasit-dev/cli@0.1.0`, `@wasit-dev/server@0.1.1` |

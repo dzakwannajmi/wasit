@@ -1,6 +1,6 @@
 # @wasit-dev/server
 
-MCP server exposing [Wasit](https://github.com/dzakwannajmi/wasit)'s **x402** / **MPP** conformance checks as tools, for Claude Code, Claude Desktop, and any other MCP-compatible agent.
+MCP server exposing [Wasit](https://github.com/wasit-dev/wasit)'s **x402** / **MPP** conformance checks as tools, for Claude Code, Claude Desktop, and any other MCP-compatible agent.
 
 The suite logic isn't reimplemented here — this is a thin adapter over [`@wasit-dev/core`](https://www.npmjs.com/package/@wasit-dev/core), the same package [`@wasit-dev/cli`](https://www.npmjs.com/package/@wasit-dev/cli) runs. An agent's run and a CLI run against the same target can never disagree.
 
@@ -105,8 +105,8 @@ Every tool returns both prose and `structuredContent`:
 
 - [`@wasit-dev/cli`](https://www.npmjs.com/package/@wasit-dev/cli) — the same checks, from a terminal
 - [`@wasit-dev/core`](https://www.npmjs.com/package/@wasit-dev/core) — the underlying check suite
-- [Full MCP guide](https://github.com/dzakwannajmi/wasit/blob/main/docs/guides/mcp.md) — Claude Desktop logs, other clients, the destructive-tool design rationale in full
+- [Full MCP guide](https://github.com/wasit-dev/wasit/blob/main/docs/guides/mcp.md) — Claude Desktop logs, other clients, the destructive-tool design rationale in full
 
 ## License
 
-Apache-2.0 — see [LICENSE](https://github.com/dzakwannajmi/wasit/blob/main/LICENSE).
+Apache-2.0 — see [LICENSE](https://github.com/wasit-dev/wasit/blob/main/LICENSE).

@@ -297,11 +297,11 @@ export function getWhyItExistsMarkdown(): string {
     .replace(/^##\s+The Problem\s*\n+/, "")
     .replace(
       /\(docs\/CHECKS\.md(#[^)]*)?\)/g,
-      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/CHECKS.md$1)"
+      "(https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md$1)"
     )
     .replace(
       /\(docs\/findings\/upstream-sdk\.md\)/g,
-      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/findings/upstream-sdk.md)"
+      "(https://github.com/wasit-dev/wasit/blob/main/docs/findings/upstream-sdk.md)"
     )
     .trim();
 
@@ -343,9 +343,9 @@ export function getAboutMarkdown(): string {
   const status = statusSection
     .replace(
       /\(docs\/evidence\/([^)]+)\)/g,
-      "(https://github.com/dzakwannajmi/wasit/blob/main/docs/evidence/$1)"
+      "(https://github.com/wasit-dev/wasit/blob/main/docs/evidence/$1)"
     )
-    .replace(/\(#design-notes\)/g, "(https://github.com/dzakwannajmi/wasit#design-notes)")
+    .replace(/\(#design-notes\)/g, "(https://github.com/wasit-dev/wasit#design-notes)")
     .replace(/\[docs\/CHECKS\.md\]\(docs\/CHECKS\.md\)/g, "[Check Catalogue](/docs/checks/overview)")
     .replace(/\n+---\s*$/, "")
     .trim();
