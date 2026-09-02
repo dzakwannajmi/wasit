@@ -475,6 +475,12 @@ h2 {
   border-top: 1px solid var(--border);
   margin: 40px 0;
 }
+/* Terms of Service / Privacy Policy: tighter heading rhythm than the
+   default typeset h2 spacing, scoped so /why's longer-form article
+   keeps its own spacing untouched. */
+.legal-typeset h2 {
+  margin: 10px 0 10px;
+}
 
 /* Section intros — every section now opens with a real sentence before
    its table/grid/list, instead of a bare heading dropped straight onto

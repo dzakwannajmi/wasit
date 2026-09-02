@@ -18,7 +18,7 @@ export default function TermsPage() {
     <>
       <Nav />
       <div className="wrap article-wrap">
-        <article className="typeset">
+        <article className="typeset legal-typeset">
           <h1>Terms of Service</h1>
           <p><em>Last updated: September 2026.</em></p>
 
