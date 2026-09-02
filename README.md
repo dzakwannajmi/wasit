@@ -15,6 +15,7 @@ right place and still take money without settling it.
 [![MCP](https://img.shields.io/badge/Interface-CLI%20%2B%20MCP-16a34a)](https://modelcontextprotocol.io)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](https://www.typescriptlang.org)
 
+[Website](https://usewasit.dev) ·
 [Check Catalogue](docs/CHECKS.md) ·
 [CLI Guide](docs/guides/cli.md) ·
 [MCP Guide](docs/guides/mcp.md) ·
