@@ -482,6 +482,20 @@ h2 {
   margin: 10px 0 10px;
 }
 
+/* /legal/terms and /legal/privacy: the same .article-wrap prose column
+   as /why, now paired with a sticky Line Sidebar-style table of
+   contents (components/docs-toc.tsx) in a two-column row. The wider
+   max-width is scoped to .wrap.legal-page-wrap specifically (two
+   classes beats plain .wrap on specificity) so no other .wrap page is
+   affected. */
+.wrap.legal-page-wrap { max-width: 1040px; }
+.legal-page-row { display: flex; align-items: flex-start; justify-content: center; gap: 56px; }
+.legal-toc { position: sticky; top: 96px; width: 200px; flex-shrink: 0; padding-top: 64px; }
+
+@media (max-width: 1180px) {
+  .legal-toc { display: none; }
+}
+
 /* Section intros — every section now opens with a real sentence before
    its table/grid/list, instead of a bare heading dropped straight onto
    the data. Keeps the page reading like prose that happens to include

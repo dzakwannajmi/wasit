@@ -1,0 +1,74 @@
+/* Wasit's own take on reactbits.dev's Line Sidebar, wired to the
+   scroll-spy table of contents in components/docs-toc.tsx. Plain CSS
+   (no Tailwind, no framer-motion) so it renders identically under
+   /docs (where Tailwind is additionally loaded) and on plain-CSS pages
+   like /legal/terms and /legal/privacy. --effect (0..1) is written per
+   item by the component's own rAF loop; every rule below just reads
+   that one value, so pointer-proximity and the active-item state never
+   animate out of step with each other. */
+.line-toc {
+  --marker-length: 16px;
+  --marker-gap: 10px;
+  --max-shift: 6px;
+  --item-gap: 11px;
+}
+
+.line-toc__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.75;
+  margin: 0 0 14px;
+}
+
+.line-toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 calc(var(--marker-length) + var(--marker-gap));
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+}
+
+.line-toc__item {
+  position: relative;
+}
+
+.line-toc__item--sub {
+  margin-left: 14px;
+}
+
+/* Widen the pointer target so an item reacts a touch before the cursor
+   actually reaches its text or marker. */
+.line-toc__item::before {
+  content: "";
+  position: absolute;
+  inset: -4px -12px;
+}
+
+.line-toc__link {
+  position: relative;
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
+  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
+}
+
+.line-toc__item[aria-current="true"] .line-toc__link {
+  font-weight: 600;
+}
+
+.line-toc__marker {
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  height: 1px;
+  width: var(--marker-length);
+  background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(calc(0.55 + var(--effect, 0) * 0.6));
+}
