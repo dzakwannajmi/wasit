@@ -26,7 +26,7 @@ export default function TermsPage() {
             <h1>Terms of Service</h1>
             <p><em>Last updated: September 2026.</em></p>
 
-            <h2>1. What Wasit is</h2>
+            <h2 id="what-wasit-is">1. What Wasit is</h2>
             <p>
               Wasit is an open-source conformance tester for the x402 and MPP
               (Machine Payments Protocol) payment protocols on Stellar. It
@@ -38,7 +38,7 @@ export default function TermsPage() {
               an account-based service, or a custodian of funds.
             </p>
 
-            <h2>2. Open-source license</h2>
+            <h2 id="open-source-license">2. Open-source license</h2>
             <p>
               The Wasit source code is licensed under the{" "}
               <a href="https://github.com/dzakwannajmi/wasit/blob/main/LICENSE" target="_blank" rel="noreferrer noopener">
@@ -49,7 +49,7 @@ export default function TermsPage() {
               the repository controls.
             </p>
 
-            <h2>3. No warranty</h2>
+            <h2 id="no-warranty">3. No warranty</h2>
             <p>
               Wasit is provided &ldquo;as is,&rdquo; without warranty of
               any kind, as stated in the Apache 2.0 license. It is a
@@ -63,7 +63,7 @@ export default function TermsPage() {
               arising from its use.
             </p>
 
-            <h2>4. Using this website</h2>
+            <h2 id="using-this-website">4. Using this website</h2>
             <p>
               You’re free to browse and link to this site. Please don’t
               attempt to disrupt it (scraping at abusive rates, attempting
@@ -71,7 +71,7 @@ export default function TermsPage() {
               malware or misleading claims about the project.
             </p>
 
-            <h2>5. Third-party services</h2>
+            <h2 id="third-party-services">5. Third-party services</h2>
             <p>
               This site is hosted on Vercel and its source is on GitHub;
               the published packages are distributed via npm. Your use of
@@ -79,14 +79,14 @@ export default function TermsPage() {
               page.
             </p>
 
-            <h2>6. Changes</h2>
+            <h2 id="changes">6. Changes</h2>
             <p>
               These terms may be updated as the project evolves. Material
               changes will be reflected by updating the date at the top of
               this page.
             </p>
 
-            <h2>7. Contact</h2>
+            <h2 id="contact">7. Contact</h2>
             <p>
               Questions about these terms can be raised as an issue on{" "}
               <a href="https://github.com/dzakwannajmi/wasit" target="_blank" rel="noreferrer noopener">

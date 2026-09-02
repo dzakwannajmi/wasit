@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             <h1>Privacy Policy</h1>
             <p><em>Last updated: September 2026.</em></p>
 
-            <h2>1. Scope</h2>
+            <h2 id="scope">1. Scope</h2>
             <p>
               This policy covers two things: this documentation website
               (wasit.dev and its subpages), and the Wasit CLI, MCP server,
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
               collect.
             </p>
 
-            <h2>2. This website</h2>
+            <h2 id="this-website">2. This website</h2>
             <p>
               This site does not run analytics, does not set tracking
               cookies, and does not have user accounts or forms that
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
               for details on that layer.
             </p>
 
-            <h2>3. The CLI, MCP server, and core library</h2>
+            <h2 id="cli-mcp-server-core-library">3. The CLI, MCP server, and core library</h2>
             <p>
               Wasit runs on your own machine or infrastructure. It does not
               phone home, does not send telemetry to the maintainer, and
@@ -54,20 +54,20 @@ export default function PrivacyPage() {
               them, not through Wasit’s maintainer.
             </p>
 
-            <h2>4. Third-party links</h2>
+            <h2 id="third-party-links">4. Third-party links</h2>
             <p>
               Pages here link out to GitHub, npm, X, and Stellar
               documentation. Once you follow one of those links, that
               site’s own privacy policy applies.
             </p>
 
-            <h2>5. Changes</h2>
+            <h2 id="changes">5. Changes</h2>
             <p>
               If this policy changes in a way that matters, the date at
               the top of this page will be updated.
             </p>
 
-            <h2>6. Contact</h2>
+            <h2 id="contact">6. Contact</h2>
             <p>
               Questions can be raised as an issue on{" "}
               <a href="https://github.com/dzakwannajmi/wasit" target="_blank" rel="noreferrer noopener">
