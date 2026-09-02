@@ -767,11 +767,12 @@ footer { padding: 88px 0 0; border-top: 1px solid var(--border); }
 }
 .footer-statement {
   font-weight: 500;
-  font-size: clamp(12px, 1.3vw, 14px);
-  letter-spacing: 1.6px;
+  font-size: clamp(9px, 1vw, 10px);
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0;
+  margin: 6px 0 0;
+  opacity: 0.75;
 }
 .footer-columns { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 32px; flex: 1; max-width: 480px; }
 .footer-col h3 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 16px; }
@@ -779,16 +780,6 @@ footer { padding: 88px 0 0; border-top: 1px solid var(--border); }
 .footer-col a { color: var(--fg); font-size: 14px; }
 .footer-col a:hover { color: var(--accent); }
 
-/* Just the social icons now — the wordmark moved up into
-   .footer-brand-block, so this row no longer needs to split space
-   with a left-hand brand mark. */
-.footer-mid { display: flex; align-items: center; justify-content: flex-end; gap: 20px; flex-wrap: wrap; padding: 28px 0; border-top: 1px solid var(--border); }
-
-/* Pure logo marks — no button chrome, just the glyph with a hover fade. */
-.footer-actions { display: flex; align-items: center; gap: 18px; }
-.footer-icon-link { display: flex; color: var(--muted); }
-.footer-icon-link:hover { color: var(--accent); }
-.footer-icon-link svg { width: 18px; height: 18px; }
 
 .footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 0 40px; }
 .fine { color: var(--muted); font-size: 12px; }
@@ -797,5 +788,4 @@ footer { padding: 88px 0 0; border-top: 1px solid var(--border); }
   .compare-grid { grid-template-columns: 1fr; }
   .links-grid { grid-template-columns: 1fr; }
   .footer-columns { grid-template-columns: repeat(2, 1fr); max-width: none; }
-  .footer-mid { flex-direction: row; }
 }
