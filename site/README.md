@@ -1,5 +1,7 @@
 # wasit — landing + docs site
 
+Live at [usewasit.dev](https://usewasit.dev).
+
 The marketing/traction page for [Wasit](../README.md), deployed separately
 from the CLI/server/core npm workspaces. Next.js (App Router) + TypeScript,
 no Tailwind — styling is hand-written CSS custom properties in

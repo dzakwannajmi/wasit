@@ -88,6 +88,7 @@ The full check catalogue — every check's exact pass criteria and spec referenc
 
 ## Related
 
+- [Website](https://usewasit.dev)
 - [`@wasit-dev/cli`](https://www.npmjs.com/package/@wasit-dev/cli) — terminal front end
 - [`@wasit-dev/server`](https://www.npmjs.com/package/@wasit-dev/server) — MCP front end, for Claude Code and other agents
 - [Full documentation](https://github.com/wasit-dev/wasit)

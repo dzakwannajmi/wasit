@@ -135,6 +135,7 @@ Thirteen checks across x402 and MPP, each traced to a written spec clause — th
 
 ## Related
 
+- [Website](https://usewasit.dev)
 - [`@wasit-dev/core`](https://www.npmjs.com/package/@wasit-dev/core) — the check suite this CLI runs, if you're building your own tooling on top
 - [`@wasit-dev/server`](https://www.npmjs.com/package/@wasit-dev/server) — the same checks as MCP tools, for Claude Code and other agents
 - [Full documentation](https://github.com/wasit-dev/wasit) — CLI guide, MCP guide, configuration, design notes

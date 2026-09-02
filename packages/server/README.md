@@ -103,6 +103,7 @@ Every tool returns both prose and `structuredContent`:
 
 ## Related
 
+- [Website](https://usewasit.dev)
 - [`@wasit-dev/cli`](https://www.npmjs.com/package/@wasit-dev/cli) — the same checks, from a terminal
 - [`@wasit-dev/core`](https://www.npmjs.com/package/@wasit-dev/core) — the underlying check suite
 - [Full MCP guide](https://github.com/wasit-dev/wasit/blob/main/docs/guides/mcp.md) — Claude Desktop logs, other clients, the destructive-tool design rationale in full

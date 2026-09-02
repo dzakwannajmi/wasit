@@ -47,6 +47,7 @@ was modeled on.
 
 | Evidence (per SOW) | Proof |
 |---|---|
+| Live website | https://usewasit.dev |
 | One-page completion summary | _pending — write once Jobs 1–3 are closed_ |
 | Two-minute walkthrough video | _pending — Job 03_ |
 
