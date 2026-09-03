@@ -76,7 +76,15 @@ const nodes: Node<ActorData>[] = [
         lane("lane-2", "target", Position.Right, LANE_TOP[1]),
         lane("lane-3", "source", Position.Right, LANE_TOP[2]),
         lane("lane-4", "target", Position.Right, LANE_TOP[3]),
-        { id: "down-source", kind: "source", position: Position.Bottom },
+        // Two offset handles rather than one, for the same reason the
+        // four HTTP lanes above are offset from each other: the RPC
+        // call down to Stellar and the verified-transfer response
+        // back up are two distinct edges, not one line reused in both
+        // directions. Spread wide (15%/85%) rather than close together,
+        // so the longer "CAP-46 transfer verified" label has room next
+        // to "RPC: getTransaction" instead of the two colliding.
+        { id: "down-source", kind: "source", position: Position.Bottom, style: { left: "15%" } },
+        { id: "down-target", kind: "target", position: Position.Bottom, style: { left: "85%" } },
       ],
     },
   },
@@ -105,7 +113,10 @@ const nodes: Node<ActorData>[] = [
       sublabel: "the source of truth",
       variant: "chain",
       logo: <StellarMark />,
-      handles: [{ id: "top-target", kind: "target", position: Position.Top }],
+      handles: [
+        { id: "top-target", kind: "target", position: Position.Top, style: { left: "15%" } },
+        { id: "top-source", kind: "source", position: Position.Top, style: { left: "85%" } },
+      ],
     },
   },
 ]
@@ -170,7 +181,19 @@ const edges: Edge[] = [
     sourceHandle: "down-source",
     target: "stellar",
     targetHandle: "top-target",
-    label: "⑤ verify transfer event",
+    label: "⑤ RPC: getTransaction",
+    animated: true,
+    className: "flow-edge-accent",
+    markerEnd: { type: MarkerType.ArrowClosed, color: "var(--accent)" },
+    ...labelProps,
+  },
+  {
+    id: "e6",
+    source: "stellar",
+    sourceHandle: "top-source",
+    target: "wasit",
+    targetHandle: "down-target",
+    label: "⑥ CAP-46 transfer verified",
     animated: true,
     className: "flow-edge-accent",
     markerEnd: { type: MarkerType.ArrowClosed, color: "var(--accent)" },
@@ -198,10 +221,16 @@ const nodeTypes = { actor: ActorNode }
  * actual sequence diagram instead of a numbered list — Wasit and Your
  * Service trade the HTTP round trip (steps ①–④, each on its own lane
  * so the rows never overlap), then Wasit breaks out of that exchange
- * entirely to check Stellar directly (⑤, the accent edge). That last
- * edge going somewhere neither of the other two nodes touch is the
- * whole point of the section: a receipt only proves your service
- * CLAIMS to have been paid, the chain proves it actually happened.
+ * entirely to check Stellar directly: ⑤ calls RPC `getTransaction`,
+ * ⑥ confirms the CAP-46 transfer event it returns (both the accent
+ * edges, offset from each other the same way the HTTP lanes are, so
+ * the call down and the confirmation back up don't draw on top of one
+ * another). Splitting the old single "verify transfer event" edge
+ * into these two is what makes the diagram concrete rather than
+ * hand-wavy about what "verify" means. Going somewhere neither of the
+ * other two nodes touch is the whole point of the section: a receipt
+ * only proves your service CLAIMS to have been paid, the chain proves
+ * it actually happened.
  *
  * Nodes are draggable and the canvas pans/pinch-zooms (zoomOnScroll is
  * off on purpose — a marketing page shouldn't hijack the mouse wheel
@@ -210,7 +239,7 @@ const nodeTypes = { actor: ActorNode }
  */
 export function HowItWorksFlow() {
   return (
-    <div className="flow-canvas" role="img" aria-label="Sequence diagram: Wasit and your service exchange an HTTP payment challenge and payment, then Wasit independently verifies the transfer on Stellar rather than trusting your service's receipt.">
+    <div className="flow-canvas" role="img" aria-label="Sequence diagram: Wasit and your service exchange an HTTP payment challenge and payment, then Wasit independently calls Stellar RPC and confirms the CAP-46 transfer event, rather than trusting your service's receipt.">
       <ReactFlow
         nodes={nodes}
         edges={edges}

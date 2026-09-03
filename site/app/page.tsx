@@ -185,8 +185,9 @@ export default function Home() {
             </p>
             <HowItWorksFlow />
             <p className="section-body">
-              Step 5 is the point of the tool. A receipt only proves a service
-              claims to have been paid; the chain proves it actually happened.{" "}
+              Steps 5 and 6 are the point of the tool: Wasit calls Stellar RPC
+              directly and checks the transfer event itself, instead of
+              trusting your service&apos;s receipt about what happened on chain.{" "}
               <Link href="/docs/get-started/how-it-works">
                 Full flow in the docs →
               </Link>

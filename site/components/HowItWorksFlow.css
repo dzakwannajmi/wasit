@@ -53,7 +53,7 @@
   background: color-mix(in oklab, var(--accent), #111 88%);
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent), transparent 70%);
 }
-.flow-actor-label { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; color: var(--fg); }
+.flow-actor-label { font-size: 13px; font-weight: 600; letter-spacing: 0.5px; color: var(--fg); }
 .flow-actor--chain .flow-actor-label { color: color-mix(in oklab, var(--accent), white 25%); }
 .flow-actor-sub { font-size: 11px; color: var(--muted); }
 
