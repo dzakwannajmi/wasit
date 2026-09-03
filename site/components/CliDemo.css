@@ -8,6 +8,36 @@
   padding: 14px 16px 16px;
 }
 
+/* Protocol switcher (x402 / MPP) added above the terminal — a plain
+   two-button toggle rather than a full ARIA tablist, since the content
+   it switches (.cli-demo-terminal below) is a single aria-hidden,
+   role="img" animation described by one aria-label, not a set of
+   separately-readable tabpanels a tablist pattern would imply. */
+.cli-demo-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.cli-demo-tab {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 3px 11px;
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+.cli-demo-tab:hover { color: var(--fg); border-color: var(--accent); }
+.cli-demo-tab--active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .cli-demo-prompt {
   font-size: 13px;
   color: var(--fg);
