@@ -8,7 +8,7 @@ dist/
 /out/
 /build
 
-# Next.js (site/) — generated at dev/build time, never hand-edited.
+# Next.js (frontend/) — generated at dev/build time, never hand-edited.
 # AGENTS.md is re-written by `next dev` itself (see the file's own
 # header) — removing it from git only re-creates it as an untracked
 # file on the next `npm run dev`, so it stays ignored rather than
@@ -16,8 +16,8 @@ dist/
 .next/
 next-env.d.ts
 *.tsbuildinfo
-site/AGENTS.md
-site/CLAUDE.md
+frontend/AGENTS.md
+frontend/CLAUDE.md
 
 # Generated at publish time by packages/server's prepack script — copy of the
 # root docs/CHECKS.md bundled into the published package, never hand-edited

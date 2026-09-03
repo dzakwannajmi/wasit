@@ -1,7 +1,7 @@
 name: CI
 
 # Runs on every push to main and every pull request targeting main. The
-# two jobs below are independent (packages/ and site/ are separate npm
+# two jobs below are independent (packages/ and frontend/ are separate npm
 # projects with their own lockfiles — see each job's comment), so they
 # run in parallel; both must pass for the workflow to succeed.
 on:
@@ -46,16 +46,16 @@ jobs:
       - name: Build @wasit-dev/server
         run: npm run build -w packages/server
 
-  site:
-    name: Build site (Next.js)
+  frontend:
+    name: Build frontend (Next.js)
     runs-on: ubuntu-latest
-    # site/ is a standalone npm project (its own package-lock.json, not
+    # frontend/ is a standalone npm project (its own package-lock.json, not
     # part of the root "packages/*" workspaces array), so every step
-    # below runs with site/ as its working directory rather than using
+    # below runs with frontend/ as its working directory rather than using
     # npm's -w flag.
     defaults:
       run:
-        working-directory: site
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
