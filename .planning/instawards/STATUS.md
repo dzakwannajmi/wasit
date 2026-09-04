@@ -3,9 +3,9 @@
 > **READ THIS FIRST** at the start of every chat about the Instaward. Single
 > source of truth for the engagement. Update it at the END of every chat.
 
-Last updated: 2026-09-01 (npm publish done for all three packages; server
-patched to 0.1.1 to fix the checks resource on npm-only installs; MCP setup
-docs written; this job board created)
+Last updated: 2026-09-04 (repo audited against what a reviewer actually does;
+dependencies corrected and 0.2.0 released for all three packages; first
+automated test suite landed and wired into CI; third upstream finding filed)
 
 ---
 
@@ -34,7 +34,9 @@ table below.
 | GitHub repo | https://github.com/wasit-dev/wasit (public) |
 | SOW submitted / sprint start (draft text) | 29 Jul 2026 / 1 Aug 2026 — actual effective date is 28 Aug 2026 (funds received), day-count runs from there |
 | npm org | `@wasit-dev` (created this engagement; `wasit` alone was unavailable) |
-| Published packages | `@wasit-dev/core@0.1.0`, `@wasit-dev/cli@0.1.0`, `@wasit-dev/server@0.1.1` |
+| Published packages | `@wasit-dev/core@0.2.0`, `@wasit-dev/cli@0.2.0`, `@wasit-dev/server@0.2.0` — all tagged and released on GitHub |
+| Upstream findings filed | [#66](https://github.com/stellar/stellar-mpp-sdk/issues/66) channel error taxonomy · [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67) `feePayer.envelopeSigner` naming · [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) stale peer ranges. Canonical write-up: `docs/findings/upstream-sdk.md` |
+| Tests | 70, offline (no keys, no target, no network). `npm test` and `npm run typecheck -w packages/core` both run in CI |
 | Network | Stellar Testnet only (mainnet out of scope) |
 | Repo layout | `packages/core` (check suites) · `packages/cli` (`wasit` command) · `packages/server` (`wasit-mcp` / MCP tools) |
 
@@ -54,10 +56,12 @@ table below.
 | # | Job | File | Status | Depends on |
 |---|---|---|---|---|
 | 0 | Repo foundation — CLI, CHECKS.md, MPP suite, MCP server, upstream SDK reports | `00-foundation.md` | ✅ **DONE** | — |
-| 1 | Publish npm packages under `@wasit-dev` | `01-npm-publish.md` | ✅ **DONE** (core/cli 0.1.0, server 0.1.1) | #0 |
+| 1 | Publish npm packages under `@wasit-dev` | `01-npm-publish.md` | ✅ **DONE** — first published 0.1.x, now at 0.2.0 (see #5) | #0 |
 | 2 | Third-party validation (D2's open evidence item) | `02-third-party-validation.md` | 🟡 **IN PROGRESS** — outreach sent, no confirmed run yet | #0 |
 | 3 | Recordings — D1 terminal GIF, D3 MCP screen recording, overall walkthrough video | `03-recordings.md` | ⬜ **TODO** | #1 |
 | 4 | Evidence submission package | `04-evidence-submission.md` | ⬜ **TODO** (template ready, most links already fillable) | #1, #2, #3 |
+| 5 | Repo audit + 0.2.0 release | `05-repo-audit-and-release.md` | ✅ **DONE** — npm was a feature behind `main`; also produced upstream finding #70 | #1 |
+| 6 | Automated test suite | `06-test-suite.md` | ✅ **DONE** — 70 offline tests, mutation-checked, type-check + tests in CI | #0 |
 
 Recommended order from here: **3 (recordings) → 2 keeps running in the background (depends on someone else replying) → 4 (evidence) once 3 is done and 2 has either converted or been substituted with a self-hosted run.**
 
@@ -74,4 +78,6 @@ Recommended order from here: **3 (recordings) → 2 keeps running in the backgro
 
 | Date | Chat focus | Outcome |
 |---|---|---|
+| 2026-09-03 | Repo audit against reviewer expectations | Audited the repo the way a Chapter Lead or SCF reviewer would use it. Headline: **npm was a full feature behind `main` with no version bump** — published `cli@0.1.1` had no `checks` subcommand and no `--json`, published `core@0.1.1` shipped no catalogue, while `docs/guides/cli.md` (served on usewasit.dev) documented all three, so following the docs from an npm install produced `unknown command`. Also found dependencies declared but never imported in both `core` and `cli`, `express` imported by a fixture but declared nowhere, two stale build artifacts tracked at the repo root still referencing the pre-rename `@wasit/` scope, and a stale scope reference in `SECURITY.md`. One suspected finding was withdrawn after reading the source: `PREFLIGHT`'s absence from the catalogue is deliberate and documented. Fixing the dependencies broke the lockfile (npm pruned `commander` and never reinstalled it, leaving a state `npm ci` rejects); reproduced in an isolated tree and confirmed a second `npm install` reconciles it before touching the real repo. Shipped 0.2.0 for all three packages. See `05-repo-audit-and-release.md`. |
+| 2026-09-04 | Test suite, parser split, third upstream finding | Wasit had no tests of its own — no package declared a `test` script, so the root `npm test` passed without running anything, and CI only built. Landed **70 offline tests** across five files covering the error taxonomy, the 0/1/2 exit-code contract, network resolution (including that pubnet has no default RPC endpoint), the catalogue's agreement with `docs/CHECKS.md`, and both MPP challenge parsers — the last of which needed the parsers split away from their HTTP calls first, a refactor that changed no rule and no message. Every assertion mutation-checked; the one surviving mutation is an equivalent mutant. Wiring up the long-dormant `test/tsconfig.json` surfaced seven pre-existing type errors, none from the new tests, including a manual script that could no longer have run and was deleted. Filed the third upstream finding as [stellar-mpp-sdk#70](https://github.com/stellar/stellar-mpp-sdk/issues/70): stale peer ranges mean a clean consumer install resolves two Stellar SDKs and two `mppx` copies, with objects crossing between the two `mppx` instances at runtime. See `06-test-suite.md`. |
 | 2026-09-01 | npm publish + planning folder setup | Full npm-publish troubleshooting chain resolved (missing install, build order, 2FA, org scope, stale symlinks) — all three packages published live under `@wasit-dev`. Wrote `CHANGELOG.md`, rewrote `docs/guides/mcp.md` with concrete Claude Code (`claude mcp add`) and Claude Desktop (`claude_desktop_config.json`) steps verified against current docs. Found `wasit://checks` silently fails to resolve on an `npx`-only install (no local `docs/` present) — fixed by bundling `docs/CHECKS.md` into `packages/server` via a `prepack` script, published as `@wasit-dev/server@0.1.1`. Restructured this folder from a flat checklist into the job-board format below, modeled on a reference layout the user pointed to (orbit-protocol's `.planning/instawards/`). |
