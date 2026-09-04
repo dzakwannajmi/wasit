@@ -170,10 +170,16 @@ npx @wasit-dev/cli test --target https://your-service.example.com
 # or install globally
 npm install -g @wasit-dev/cli
 wasit test --target https://your-service.example.com
+
+# list every check without running one
+wasit checks
 \`\`\`
 
-\`test\` runs the x402 checks. \`mpp-charge\` and \`mpp-channel\` run the MPP
-checks — see the CLI Guide for every subcommand and flag.
+\`test\` runs the x402 checks, \`mpp-charge\` and \`mpp-channel\` the MPP ones,
+and \`checks\` lists the whole catalogue without contacting anything. Add
+\`--json\` to any of them for machine-readable output — advisory lines go to
+stderr so stdout stays parseable in CI. See the CLI Guide for every subcommand
+and flag.
 
 ## From Claude Code (MCP)
 
@@ -249,6 +255,23 @@ function assertDocsInSync(): void {
           `pages for "${group.title}" — update DOCS_NAV to match.`
       );
     }
+
+    // Counts alone are not enough. resolveDocMarkdown matches a nav page to a
+    // section BY POSITION, so swapping two "##" sections in a source file
+    // keeps the count identical and serves the wrong body under the wrong
+    // sidebar label, with the build still green. Comparing the titles turns
+    // that silent mis-render into a build failure, and catches a merely stale
+    // label on the way.
+    group.pages.slice(1).forEach((page, index) => {
+      const sectionTitle = plainText(sections[index].heading);
+      if (page.title !== sectionTitle) {
+        throw new Error(
+          `docs: section ${index + 1} of ${sourceFile} is "${sectionTitle}", but lib/docs-nav.ts ` +
+            `calls that page "${page.title}". Pages and sections are matched by position, so this ` +
+            `is either a stale label or a reordered section — update DOCS_NAV to match.`
+        );
+      }
+    });
   }
 }
 

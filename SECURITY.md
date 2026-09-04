@@ -145,14 +145,20 @@ does and does not mean.
 ## Findings in upstream SDKs
 
 Defects found in the official SDKs during development are documented in
-[findings/upstream-sdk.md](docs/findings/upstream-sdk.md) and prepared for reporting to their maintainers. Those are protocol and developer-experience defects rather than
-exploitable vulnerabilities; anything exploitable would go to the maintainers
-privately and would not appear in that file until it was resolved.
+[findings/upstream-sdk.md](docs/findings/upstream-sdk.md) and reported to their
+maintainers — three so far, filed as
+[stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66),
+[#67](https://github.com/stellar/stellar-mpp-sdk/issues/67) and
+[#70](https://github.com/stellar/stellar-mpp-sdk/issues/70). Those are protocol,
+packaging and developer-experience defects rather than exploitable
+vulnerabilities; anything exploitable would go to the maintainers privately and
+would not appear in that file until it was resolved.
 
 ## Supported versions
 
-Wasit is pre-1.0 and unpublished. Only `main` is supported. There are no
-backports, and check behaviour may change as the x402 and MPP specifications
-stabilise — which is why every check in [CHECKS.md](docs/CHECKS.md) records the
-specification and SDK version it was verified against, and why every report
-should record the same.
+Wasit is pre-1.0 and published on npm as `@wasit-dev/core`, `@wasit-dev/cli`
+and `@wasit-dev/server`. Only the latest published version and `main` are
+supported. There are no backports, and check behaviour may change as the x402
+and MPP specifications stabilise — which is why every check in
+[CHECKS.md](docs/CHECKS.md) records the specification and SDK version it was
+verified against, and why every report should record the same.

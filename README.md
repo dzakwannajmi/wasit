@@ -136,8 +136,9 @@ Wasit exists so these are found by a tool, before they are found by a user.
 | CLI | Done, three subcommands |
 | MCP server | Done, three tools + one behind an opt-in |
 | Error taxonomy and exit codes | Done |
+| Wasit's own test suite | Done — 70 tests, offline; type-check and tests both run in CI |
 | Testing against third-party services | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet |
-| Upstream reports to SDK maintainers | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67) |
+| Upstream reports to SDK maintainers | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67), [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) |
 | Published to npm | Yes — `@wasit-dev/core`, `@wasit-dev/cli`, `@wasit-dev/server` |
 | Mainnet | Out of scope — see [Design Notes](#design-notes) |
 
