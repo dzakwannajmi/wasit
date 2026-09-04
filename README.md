@@ -243,8 +243,6 @@ SKIP  X402-02  Payment Header Present
 0 passed, 1 failed, 4 skipped.
 ```
 
-For the MCP server, see [docs/guides/mcp.md](docs/guides/mcp.md).
-
 ---
 
 ## Design Notes

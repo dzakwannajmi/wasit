@@ -2,6 +2,58 @@
 
 All notable changes to Wasit are recorded here. Versions follow [Semantic Versioning](https://semver.org/): patch releases are fixes, minor releases add checks or features without breaking existing usage, major releases break something.
 
+## [0.2.0] — 2026-09-04
+
+All three packages. Adds a machine-readable surface to every check runner, and
+brings each package's declared dependencies in line with what its code actually
+imports.
+
+| Package | Version |
+|---|---|
+| `@wasit-dev/core` | 0.1.1 → 0.2.0 |
+| `@wasit-dev/cli` | 0.1.1 → 0.2.0 |
+| `@wasit-dev/server` | 0.1.2 → 0.2.0 |
+
+**Added — `wasit checks`.** Lists every check the tool can run, grouped by
+protocol and annotated with the subcommand that runs it, plus flags for
+negative, destructive and funds-spending checks. `--protocol` narrows it to one
+suite. The catalogue behind it is exported from core as `CHECK_CATALOGUE` and
+stays a short-form companion to `docs/CHECKS.md`, which remains the source of
+truth for pass criteria and spec citations.
+
+**Added — `--json` on every check runner.** `test`, `mpp-charge`, `mpp-channel`
+and `checks` all take it. A run emits `outcome`, per-status counts, and a
+`results` array carrying each check's id, name, status, detail, destructive
+flag and — when a check could not run — its `errorKind`. Human-readable output
+goes to stderr when `--json` is set, so stdout stays parseable.
+
+**Changed — MCP `structuredContent` is now the same reshape as `--json`.**
+`@wasit-dev/server` builds it from core's `toStructuredRun()` verbatim instead
+of assembling its own object, so the CLI and an agent can no longer report the
+same run in two different shapes. Anything parsing the old `structuredContent`
+should re-read it: the field set is close, but it is no longer hand-built here.
+
+**Changed — dependencies now match imports.** `@wasit-dev/core` dropped
+`@x402/core`, `@x402/express`, `commander` and `dotenv` from its runtime
+dependencies; none are imported by its source, and the first two are only used
+by the bundled fixtures, which are not published. `express` moved in as a
+devDependency — the x402 fixture imports it directly but it had never been
+declared anywhere, resolving only because npm happened to hoist it from a
+deeper transitive dependency. `@wasit-dev/cli` dropped `@stellar/mpp`,
+`@stellar/stellar-sdk` and `mppx`, which it never imports, and its `commander`
+and `dotenv` ranges now name the versions the code is actually built and
+verified against rather than two majors behind.
+
+**Known issue — a clean install still resolves two Stellar SDKs.**
+`@stellar/mpp@0.7.1` declares the peers `@stellar/stellar-sdk@^15.1.0` and
+`mppx@^0.6.29`; Wasit uses `^16.1.0` and `^0.8.14`, outside both ranges. A
+fresh `npm install` satisfies that peer by nesting an older SDK alongside the
+one Wasit uses, and that older SDK carries open axios advisories with no fix
+available upstream. A repository checkout dedupes to a single SDK instead, so
+`npm audit` reports differently depending on which tree you are in — meaning
+the configuration Wasit is developed against is not the one its users get.
+Being reported upstream; nothing in this release changes that chain.
+
 ## 2026-09-01 — READMEs
 
 README only, no code changes. Each package now ships a `README.md`
