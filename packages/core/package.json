@@ -34,7 +34,9 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test \"test/unit/**/*.test.ts\"",
+    "typecheck": "tsc -p test/tsconfig.json"
   },
   "dependencies": {
     "@stellar/mpp": "^0.7.1",
@@ -44,6 +46,7 @@
     "mppx": "^0.8.14"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
     "@x402/core": "^2.19.0",
     "@x402/express": "^2.19.0",

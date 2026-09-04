@@ -5,6 +5,8 @@
  * Run: npx tsx packages/core/test/fixtures/mpp-channel-server.ts
  */
 import "dotenv/config";
+
+import { assertMppNetwork } from "../../src/mpp/network.js";
 import http from "node:http";
 import { Mppx, Store, stellar } from "@stellar/mpp/channel/server";
 import { StrKey } from "@stellar/stellar-sdk";
@@ -53,7 +55,7 @@ const mppx = Mppx.create({
         warn: (msg: string, ...args: unknown[]) => console.warn("[warn ]", msg, ...args),
         error: (msg: string, ...args: unknown[]) => console.error("[error]", msg, ...args),
       },
-      network: network as `${string}:${string}`,
+      network: assertMppNetwork(network),
       recipient,
       currency: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
     }),

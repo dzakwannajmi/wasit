@@ -11,6 +11,8 @@
  * Run: npx tsx packages/core/test/fixtures/mpp-charge-server.ts
  */
 import "dotenv/config";
+
+import { assertMppNetwork } from "../../src/mpp/network.js";
 import http from "node:http";
 import { Mppx, Store, charge } from "@stellar/mpp/charge/server";
 import { USDC_TESTNET_ADDRESS } from "@x402/stellar";
@@ -33,7 +35,7 @@ const mppx = Mppx.create({
     charge({
       recipient,
       currency: USDC_TESTNET_ADDRESS, // SAC contract address (C...), not classic asset code
-      network: network as `${string}:${string}`,
+      network: assertMppNetwork(network),
       // Store.memory() is dev-only: single-process, non-persistent.
       // Do NOT use in production — see @stellar/mpp Charge.Parameters.store docs.
       store: Store.memory(),

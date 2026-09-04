@@ -46,6 +46,19 @@ jobs:
       - name: Build @wasit-dev/server
         run: npm run build -w packages/server
 
+      # packages/core/test/tsconfig.json type-checks the tests together
+      # with the source they exercise; the build config only covers src/,
+      # so without this step a type error in a test would never surface.
+      - name: Type-check @wasit-dev/core tests
+        run: npm run typecheck -w packages/core
+
+      # The check suite now has checks of its own: the error taxonomy, the
+      # 0/1/2 exit-code contract, network resolution, and the catalogue's
+      # agreement with docs/CHECKS.md. All of it runs offline — no testnet
+      # account, no target service, no network.
+      - name: Test @wasit-dev/core
+        run: npm run test -w packages/core
+
   frontend:
     name: Build frontend (Next.js)
     runs-on: ubuntu-latest
