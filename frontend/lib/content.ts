@@ -4,14 +4,19 @@ import { DOCS_NAV, type DocNavGroup } from "./docs-nav";
 
 /**
  * Reads a markdown file from the repo root (one level up from this Next.js
- * project, since `site/` is a separate Vercel project rooted inside the
- * monorepo). Requires Vercel's "Include source files outside of the Root
- * Directory" setting to be on for this to resolve at build time — see
- * .planning/landing-page.md for the deploy checklist.
+ * project, since `frontend/` is a separate Vercel project rooted inside the
+ * monorepo).
  *
  * This keeps the docs pages reading the SAME files the CLI/MCP guides and
  * SECURITY.md already are, rather than a hand-copied duplicate that can
- * drift out of sync.
+ * drift out of sync. The cost is two Vercel settings this build depends on,
+ * recorded here because nothing else in the repo records them:
+ *
+ *   - Root Directory must be `frontend` (it was `site` until the directory
+ *     was renamed; a stale value fails the deploy before any build output).
+ *   - "Include source files outside of the Root Directory" must be ON, or
+ *     every path below resolves to ENOENT at module load — a failure whose
+ *     message never mentions the setting that caused it.
  */
 export function readRepoDoc(relativePath: string): string {
   const fullPath = join(process.cwd(), "..", relativePath);
