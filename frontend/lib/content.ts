@@ -414,9 +414,6 @@ Both are thin adapters over
 only one implementation of each check, so a CLI run and an agent's run can
 never disagree about the same target.
 
-Thirteen checks across x402 and MPP are implemented, each traced to a written
-spec clause in the [Check Catalogue](/docs/checks/overview).
-
 ${status}
 
 ## Where to go next

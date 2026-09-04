@@ -105,7 +105,7 @@ not reuse a key that has any other purpose.
 
 Report privately first. Do not open a public issue for a security problem.
 
-Email **repmoonasci@gmail.com** with:
+Email **[contact@usewasit.dev](mailto:contact@usewasit.dev?subject=Wasit%20security%20report)** with:
 
 - What the problem is and what an attacker could do with it
 - Steps to reproduce, ideally against the bundled fixture servers
