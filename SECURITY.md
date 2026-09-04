@@ -109,7 +109,7 @@ Email **repmoonasci@gmail.com** with:
 
 - What the problem is and what an attacker could do with it
 - Steps to reproduce, ideally against the bundled fixture servers
-- The versions involved (`@wasit/core`, Node, and the relevant SDK versions)
+- The versions involved (`@wasit-dev/core`, Node, and the relevant SDK versions)
 
 You should get an acknowledgement within 72 hours. If a fix is warranted, it
 will be released before public discussion of the details, and you will be

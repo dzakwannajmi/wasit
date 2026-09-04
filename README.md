@@ -31,7 +31,8 @@ right place and still take money without settling it.
 - [How It Works](#how-it-works)
 - [The Problem](#the-problem)
 - [Status](#status)
-- [Running Locally](#running-locally)
+- [Install](#install)
+- [Building from source](#building-from-source)
 - [Trying It](#trying-it)
 - [Design Notes](#design-notes)
 - [Roadmap](#roadmap)
@@ -146,28 +147,41 @@ cannot be traced is out of scope by construction.
 
 ---
 
-## Running Locally
+## Install
 
-Requires Node.js with npm workspaces support. Developed and verified on
-**v24.18.0**.
+Requires Node.js `>=24`.
 
 ```bash
-git clone <repo-url> wasit
+# run it once, no install
+npx @wasit-dev/cli test --target https://your-service.example/paid --read-only
+
+# or keep it around
+npm install -g @wasit-dev/cli
+wasit test --target https://your-service.example/paid --read-only
+```
+
+That runs `X402-01` through `X402-05` against your own service. It costs
+nothing, needs no keys, and settles no transaction. `wasit checks` lists every
+check the tool can run, and `--json` on any run gives machine-readable output.
+
+The checks that settle a real testnet payment — `X402-06`, `X402-07`, `MPP-01`,
+and the channel suite — need a funded testnet account.
+[docs/guides/configuration.md](docs/guides/configuration.md) explains each value
+and where to get it. For the MCP server, see
+[docs/guides/mcp.md](docs/guides/mcp.md).
+
+## Building from source
+
+Only needed to change Wasit itself, or to run the bundled fixture servers below.
+Developed and verified on Node **v24.18.0**.
+
+```bash
+git clone https://github.com/wasit-dev/wasit.git
 cd wasit
 npm install
 npm run build
 cp .env.example .env
 ```
-
-Fill in `.env` — [docs/guides/configuration.md](docs/guides/configuration.md)
-explains what each value is and where to get it. The minimum for a read-only run
-is nothing at all:
-
-```bash
-node packages/cli/dist/index.js test --target https://your-service.example/paid --read-only
-```
-
-That runs `X402-01` through `X402-05`, costs nothing, and needs no keys.
 
 ---
 
