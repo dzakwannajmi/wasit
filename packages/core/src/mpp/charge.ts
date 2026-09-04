@@ -44,7 +44,7 @@ export interface MppChargeCheckOptions {
 }
 
 /** What the target advertised it wants paid, read from its own 402 challenge. */
-interface ChargeChallenge {
+export interface ChargeChallenge {
   readonly amount: bigint;
   readonly currency: string;
   readonly recipient: string;
@@ -99,6 +99,21 @@ async function fetchChargeChallenge(target: string): Promise<ChargeChallenge> {
     );
   }
 
+  return parseChargeChallenge(challenge);
+}
+
+/**
+ * Reads the advertised charge terms out of an already-decoded challenge.
+ *
+ * Separated from the request that produced it so these rules can be exercised
+ * directly, including against the malformed challenges a conforming service
+ * will not produce on demand. Everything it throws is a
+ * {@link MalformedResponseError}, so a bad challenge is reported as a verdict
+ * about the target rather than as a harness failure.
+ */
+export function parseChargeChallenge(
+  challenge: Challenge.Challenge,
+): ChargeChallenge {
   const request = asRecord(challenge.request);
   if (!request) {
     throw new MalformedResponseError("Challenge carries no request object.");

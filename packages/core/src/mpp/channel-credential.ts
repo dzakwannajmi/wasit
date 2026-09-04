@@ -76,6 +76,21 @@ export async function fetchChannelChallenge(target: string): Promise<ChannelChal
     );
   }
 
+  return parseChannelChallenge(challenge);
+}
+
+/**
+ * Reads the channel-specific fields out of an already-decoded challenge.
+ *
+ * Separated from the request that produced it so these rules can be exercised
+ * directly, including against the malformed challenges a conforming service
+ * will not produce on demand. Everything it throws is a
+ * {@link ChannelChallengeError}, so a bad challenge is reported as a verdict
+ * about the target rather than as a harness failure.
+ */
+export function parseChannelChallenge(
+  challenge: Challenge.Challenge,
+): ChannelChallenge {
   const request = asRecord(challenge.request);
   if (!request) {
     throw new ChannelChallengeError("Challenge carries no request object.");
