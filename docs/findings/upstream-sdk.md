@@ -1,12 +1,13 @@
 # Upstream Findings
 
-Two defects found in `@stellar/mpp` while building Wasit's MPP channel-mode
-checks. Both are reproducible against current, published versions. This document
+Three findings in `@stellar/mpp`, all found while building Wasit and all
+reproducible against current, published versions. This document
 is the canonical write-up; the GitHub issues filed against
 [`stellar/stellar-mpp-sdk`](https://github.com/stellar/stellar-mpp-sdk) are
 summaries that link back here.
 
-Neither is a defect in any service under test. Both are in the official SDK.
+None is a defect in any service under test. All three are in the official SDK
+or in the metadata it publishes.
 
 ## Versions
 
@@ -17,8 +18,14 @@ Neither is a defect in any service under test. Both are in the official SDK.
 | `@stellar/stellar-sdk` | 16.1.0 | |
 | Node.js | 24.18.0 | |
 
-Both findings originate in `@stellar/mpp`. `mppx` appears in the first finding
-as the package whose types are unreachable, not as the package at fault.
+The table above records the versions Findings 1 and 2 were tested against.
+Finding 3 was verified later, when `@stellar/stellar-sdk` had reached 17.0.1 and
+`mppx` 0.9.2 while `@stellar/mpp` was still 0.7.1; it states its own resolved
+versions inline.
+
+All three originate in `@stellar/mpp`. `mppx` appears in the first finding as
+the package whose types are unreachable, and in the third as a peer whose
+declared range is stale — in neither case as the package at fault.
 
 ---
 
@@ -167,6 +174,123 @@ Three, roughly independent:
 - Serialise the underlying error rather than string-coercing an object.
 - Fail earlier: the required authoriser is knowable before submission, so a
   mismatch could be caught before a transaction is built.
+
+---
+
+## Finding 3 — Stale peer ranges put a second Stellar SDK in every clean install
+
+**Status:** not filed yet
+**Severity:** moderate — no defect in the SDK's own logic, but it duplicates a
+runtime dependency across a call boundary and leaves consumers holding
+advisories they have no way to resolve
+
+### Summary
+
+`@stellar/mpp@0.7.1` declares peer dependencies on `@stellar/stellar-sdk@^15.1.0`
+and `mppx@^0.6.29`. Both ranges trail the ecosystem by a wide margin:
+`@stellar/stellar-sdk` is published at 17.0.1 and `mppx` at 0.9.2. A consumer on
+current versions falls outside both ranges, and npm settles the conflict by
+installing a second, older copy of each next to the ones the consumer asked for.
+
+### Cause
+
+The ranges are metadata, not code. Nothing observed in `@stellar/mpp` requires
+15.x specifically — see the compatibility note below — but npm cannot infer
+that, so it satisfies the declared range literally by materialising the old
+version.
+
+### Observed behaviour
+
+A clean install of a package depending on `@stellar/mpp@0.7.1` alongside
+`@stellar/stellar-sdk@^16.1.0` and `mppx@^0.8.14`, on npm 10.9.7:
+
+```
+$ npm install @wasit-dev/cli@0.2.0
+added 117 packages, and audited 118 packages
+6 high severity vulnerabilities
+
+$ npm ls @stellar/stellar-sdk
+`-- @wasit-dev/cli@0.2.0
+  `-- @wasit-dev/core@0.2.0
+    +-- @stellar/mpp@0.7.1
+    | `-- @stellar/stellar-sdk@15.1.0
+    +-- @stellar/stellar-sdk@16.3.0
+    `-- @x402/stellar@2.25.0
+      `-- @stellar/stellar-sdk@16.3.0
+
+$ npm ls mppx
+    +-- @stellar/mpp@0.7.1
+    | `-- mppx@0.6.31
+    `-- mppx@0.8.19
+```
+
+Three copies of `@stellar/stellar-sdk` and two of `mppx` land on disk. The
+15.1.0 SDK and the 0.6.31 `mppx` exist only to satisfy these peer ranges.
+
+### Impact
+
+**Two `mppx` instances, with objects crossing between them.** `@stellar/mpp`
+imports `mppx` at runtime — `dist/channel/server/Channel.js`,
+`dist/channel/Methods.js` and `dist/channel/server/index.js` all do. A consumer
+that builds a `Challenge` or a `Credential` from its own `mppx` and hands it to
+`@stellar/mpp` is passing an object from one module instance into code running
+another. It works today because the interop happens to be structural, but
+nothing declares that contract, and any future `instanceof` check, branded type
+or private field would break it silently rather than loudly.
+
+**An advisory chain with no exit.** `npm audit` reports the duplicate SDK as the
+source of six high-severity findings and states that no fix is available:
+
+```
+axios  1.0.0 - 1.17.0
+Severity: high
+No fix available
+  @stellar/stellar-sdk  <=15.1.0
+  Depends on vulnerable versions of axios
+  Depends on vulnerable versions of toml
+    @stellar/mpp  >=0.5.0
+    Depends on vulnerable versions of @stellar/stellar-sdk
+```
+
+Note the range on the third line: every `@stellar/mpp` from 0.5.0 onward is
+affected, so this is the current state of the line rather than one unlucky
+release. A downstream maintainer cannot resolve it, because the only lever is a
+peer range they do not control.
+
+### Compatibility note
+
+This is offered as evidence that the ranges understate what works, not as a
+claim of full compatibility. Wasit exercises `@stellar/mpp@0.7.1` against
+`@stellar/stellar-sdk@16.x` and `mppx@0.8.x` on Stellar testnet across
+charge-mode settlement — verified from the CAP-46 `transfer` event rather than
+the transaction envelope — and the full channel-mode lifecycle of deploy,
+cumulative ordering, challenge replay, commitment replay and on-chain close.
+All pass. 17.x has not been exercised and no claim is made about it.
+
+### Why this may not have surfaced yet
+
+A repository checkout resolves differently from a consumer install. With a
+lockfile in place npm dedupes to a single 16.x SDK and simply marks the peer
+unsatisfied, so `npm ls` reports
+`@stellar/stellar-sdk@16.1.0 invalid: "^15.1.0" from node_modules/@stellar/mpp`
+and exits `ELSPROBLEMS`, while the duplicate never appears. Anyone testing from
+a checkout sees a clean single-SDK tree; only a fresh consumer install produces
+the duplicated one described above.
+
+### Reproduction
+
+The two `npm` commands above, in an empty directory. No account, keys or
+network beyond the registry are required.
+
+### Possible fixes
+
+Widening the peer ranges to the versions actually supported — something in the
+shape of `>=15.1.0 <18` for `@stellar/stellar-sdk` and `>=0.6.29 <0.10` for
+`mppx` — would let a current consumer satisfy them without npm having to
+materialise a second copy. If the intent is instead to track one supported line,
+bumping the ranges to current and saying so explicitly would achieve the same
+thing. Either way, a published range that no current consumer can satisfy makes
+the duplicate unavoidable.
 
 ---
 
