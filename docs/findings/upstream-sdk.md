@@ -11,12 +11,12 @@ or in the metadata it publishes.
 
 ## Versions
 
-| Package | Version | Notes |
-|---|---|---|
-| `@stellar/mpp` | 0.7.1 | Latest published at time of testing |
-| `mppx` | 0.8.14 | Latest published; maintained by [wevm](https://github.com/wevm/mppx) |
-| `@stellar/stellar-sdk` | 16.1.0 | |
-| Node.js | 24.18.0 | |
+| Package                | Version | Notes                                                                |
+| ---------------------- | ------- | -------------------------------------------------------------------- |
+| `@stellar/mpp`         | 0.7.1   | Latest published at time of testing                                  |
+| `mppx`                 | 0.8.14  | Latest published; maintained by [wevm](https://github.com/wevm/mppx) |
+| `@stellar/stellar-sdk` | 16.1.0  |                                                                      |
+| Node.js                | 24.18.0 |                                                                      |
 
 The table above records the versions Findings 1 and 2 were tested against.
 Finding 3 was verified later, when `@stellar/stellar-sdk` had reached 17.0.1 and
@@ -83,7 +83,7 @@ rejection and is discarded before it reaches HTTP.
 
 For conformance testing specifically, it means a tester cannot assert on the
 response type to establish which rule fired. Wasit works around this by
-isolating each rule *by construction* — every check is built so that exactly one
+isolating each rule _by construction_ — every check is built so that exactly one
 rejection path can possibly fire, and the isolation argument is recorded in each
 check's pass criteria. That is a workaround, not a fix, and it constrains what
 any client can diagnose.
@@ -120,7 +120,7 @@ Neither has been implemented or tested by us.
 ### Summary
 
 The parameter named `feePayer.envelopeSigner` supplies the account that
-*authorises* a channel operation, not the account that pays transaction fees.
+_authorises_ a channel operation, not the account that pays transaction fees.
 Different operations require different accounts, and supplying the wrong one
 produces a failure that the SDK renders as `[object Object]`.
 
@@ -128,10 +128,10 @@ produces a failure that the SDK renders as `[object Object]`.
 
 The channel contract's authorisation requirements are asymmetric:
 
-| Operation | Requires |
-|---|---|
-| `close()` | `to.require_auth()` — the **recipient** |
-| `close_start()` | `from.require_auth()` — the **funder** |
+| Operation       | Requires                                |
+| --------------- | --------------------------------------- |
+| `close()`       | `to.require_auth()` — the **recipient** |
+| `close_start()` | `from.require_auth()` — the **funder**  |
 
 The SDK surfaces this as `feePayer.envelopeSigner`. The name reads as fee
 payment, which is a different concern entirely, and it gives no hint that the
@@ -179,7 +179,7 @@ Three, roughly independent:
 
 ## Finding 3 — Stale peer ranges put a second Stellar SDK in every clean install
 
-**Status:** not filed yet
+**Status:** [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70)
 **Severity:** moderate — no defect in the SDK's own logic, but it duplicates a
 runtime dependency across a call boundary and leaves consumers holding
 advisories they have no way to resolve
