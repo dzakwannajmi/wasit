@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DOCS_NAV, type DocNavGroup } from "./docs-nav";
 
@@ -220,6 +220,100 @@ npm install -g @wasit-dev/cli
 `;
 
 /**
+ * Repo-relative markdown links (`../CHECKS.md`, `configuration.md#x`) are
+ * correct on GitHub and meaningless here: the browser resolves them
+ * against the docs URL, so `../CHECKS.md` on /docs/cli/checks asks for
+ * /docs/CHECKS.md and 404s. Every such link is rewritten at render time
+ * by docLinkHref() below — see components/docs-article.tsx, which passes
+ * it to react-markdown as `urlTransform`.
+ */
+const REPO_BLOB_BASE = "https://github.com/wasit-dev/wasit/blob/main/";
+
+/**
+ * Repo files the docs site republishes, and the group key each one is
+ * served under. A link to one of these should land on the site rather
+ * than bounce the reader out to GitHub — anything NOT listed here (the
+ * docs/design/* notes, docs/findings/upstream-sdk.md) has no page here
+ * and is sent to GitHub instead.
+ */
+const SITE_GROUP_BY_REPO_PATH: Record<string, string> = {
+  "docs/guides/cli.md": "cli",
+  "docs/guides/mcp.md": "mcp",
+  "docs/guides/core.md": "core",
+  "docs/guides/configuration.md": "configuration",
+  "docs/CHECKS.md": "checks",
+  "SECURITY.md": "security",
+};
+
+/**
+ * Resolves a repo-relative href against the directory of the file it was
+ * written in, yielding a path from the repo root. Returns null for
+ * anything that is not a repo-relative link — absolute URLs, mailto:,
+ * and pure `#anchor` links all pass through untouched.
+ */
+function resolveRepoPath(href: string, sourceFile: string): { path: string; hash: string } | null {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//") || href.startsWith("#")) {
+    return null;
+  }
+  const [rawPath, ...hashParts] = href.split("#");
+  if (!rawPath) return null;
+
+  const segments = sourceFile.split("/").slice(0, -1);
+  for (const part of rawPath.split("/")) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") segments.pop();
+    else segments.push(part);
+  }
+  return { path: segments.join("/"), hash: hashParts.join("#") };
+}
+
+/**
+ * Mirrors rehype-slug (github-slugger) closely enough to match a heading
+ * anchor an author actually wrote by hand. A hash that does not match
+ * any section simply falls back to the group's Overview page, which is
+ * a real page — this never manufactures a 404.
+ */
+function headingSlug(heading: string): string {
+  return plainText(heading)
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+/**
+ * The href a repo-relative link should point at once rendered here.
+ *
+ * A file the site republishes resolves to its own page — and when the
+ * link carries a heading anchor, to the specific page that heading was
+ * split onto, since each "##" section becomes a standalone page. Every
+ * other repo path resolves to GitHub, which is the only place it exists.
+ */
+export function docLinkHref(href: string, sourceFile: string): string {
+  const resolved = resolveRepoPath(href, sourceFile);
+  if (!resolved) return href;
+
+  const { path, hash } = resolved;
+  const groupKey = SITE_GROUP_BY_REPO_PATH[path];
+  if (!groupKey) {
+    return REPO_BLOB_BASE + path + (hash ? `#${hash}` : "");
+  }
+
+  const group = findGroup(groupKey);
+  if (!group) return REPO_BLOB_BASE + path + (hash ? `#${hash}` : "");
+
+  const overview = `/docs/${group.pages[0].slug.join("/")}`;
+  if (!hash) return overview;
+
+  const { sections } = splitDoc(readRepoDoc(path));
+  const index = sections.findIndex((section) => headingSlug(section.heading) === hash);
+  if (index === -1) return overview;
+
+  const page = group.pages[index + 1];
+  return page ? `/docs/${page.slug.join("/")}` : overview;
+}
+
+/**
  * Which repo file backs each collapsible group in lib/docs-nav.ts, keyed
  * by that group's own first slug segment (e.g. "cli" for the group whose
  * pages all start ["cli", ...]).
@@ -232,6 +326,16 @@ const GROUP_SOURCE_FILES: Record<string, string> = {
   checks: "docs/CHECKS.md",
   security: "SECURITY.md",
 };
+
+/**
+ * The repo file a docs URL is served from, or undefined for the pages
+ * that are hand-authored rather than republished (Get Started, About).
+ * docs-article.tsx needs it to resolve that file's own relative links —
+ * a link is only meaningful relative to the file it was written in.
+ */
+export function docSourceFile(slug: string[]): string | undefined {
+  return GROUP_SOURCE_FILES[slug[0]];
+}
 
 function findGroup(key: string): DocNavGroup | undefined {
   return DOCS_NAV.find(
@@ -277,6 +381,41 @@ function assertDocsInSync(): void {
         );
       }
     });
+
+    assertLinksResolve(sourceFile);
+  }
+}
+
+/**
+ * Fails the build on a repo-relative link that points at a file which
+ * does not exist.
+ *
+ * docLinkHref() rewrites these links so they work on the site, but a
+ * rewrite cannot rescue a target that was wrong to begin with — and
+ * neither GitHub nor Next.js reports one. docs/guides/core.md carried
+ * `(docs/CHECKS.md)` for exactly this reason: written from the repo
+ * root's point of view, it resolved to docs/guides/docs/CHECKS.md and
+ * was quietly broken in both places. Checking the resolved path against
+ * the filesystem turns that into a red build.
+ *
+ * Only the target FILE is verified, never the heading anchor: an
+ * unmatched anchor degrades to the group's Overview page, which is a
+ * real page, so it is not worth failing a build over.
+ */
+function assertLinksResolve(sourceFile: string): void {
+  const markdown = readRepoDoc(sourceFile);
+  const links = markdown.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g);
+
+  for (const link of links) {
+    const resolved = resolveRepoPath(link[1], sourceFile);
+    if (!resolved) continue;
+    if (existsSync(join(process.cwd(), "..", resolved.path))) continue;
+
+    throw new Error(
+      `docs: ${sourceFile} links to "${link[1]}", which resolves to "${resolved.path}" — ` +
+        `no such file in the repo. Repo-relative links are resolved against the linking ` +
+        `file's own directory, on GitHub and here alike.`
+    );
   }
 }
 

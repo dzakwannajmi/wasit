@@ -86,61 +86,32 @@
   }
 }
 
-/* Markdown tables inside docs content, styled explicitly and left
-   UNLAYERED on purpose: typeset.css's own table rules live in
-   `@layer components`, and depending on how that layer ends up ordered
-   against Tailwind's `base` layer (this file's preflight reset zeroes
-   every element's padding and border-width) across the two separate
-   stylesheets a /docs page loads — globals.css site-wide, this file
-   scoped to /docs — components can lose to base. Unlayered rules always
-   beat layered ones regardless of that ordering, so these are
-   guaranteed to apply. globals.css now also declares Tailwind's layer
-   order up front to fix the root cause; this stays as a belt-and-braces
-   rule.
-   Card look (rounded outer frame via .table-scroll, thin dividers
-   between cells instead of a heavy grid, header row one shade lighter
-   than the body) rather than typeset's generic defaults. */
-.table-scroll {
-  overflow-x: auto;
-  margin: 1.3em 0;
-  border: 1px solid var(--border-strong);
-  border-radius: 0.85em;
-  background: var(--accent-bg);
-}
-.typeset-docs table {
-  width: 100%;
-  min-width: max-content;
-  border-collapse: collapse;
-  font-size: 0.9em;
-  line-height: 1.6;
-}
-.typeset-docs thead th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--fg);
-  background: color-mix(in oklab, var(--accent-bg) 80%, white 12%);
-  padding: 0.9em 1.35em;
-  border-bottom: 1px solid var(--border-strong);
-  border-right: 1px solid var(--border);
-}
-.typeset-docs tbody td {
-  padding: 0.9em 1.35em;
-  border-bottom: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  vertical-align: top;
-}
-.typeset-docs thead th:last-child,
-.typeset-docs tbody td:last-child {
-  border-right: none;
-}
-.typeset-docs tbody tr:last-child td {
-  border-bottom: none;
-}
+/* Markdown tables render through shadcn/ui's Table
+   (components/ui/table.tsx), mapped onto the GFM table elements in
+   components/docs-article.tsx — so the styling lives in Tailwind
+   utilities on the components themselves, not here.
+
+   The explicit, UNLAYERED rules that used to sit at this spot are gone
+   with them. They existed to beat typeset.css's own table rules in
+   `@layer components`, which could lose to Tailwind's base preflight
+   depending on layer ordering across the site's two stylesheets. The
+   component's classes are `utilities`, which outranks both `components`
+   and `base` whatever the order ends up being, so the cascade problem
+   that made those rules necessary no longer applies.
+
+   One deliberate behaviour change came with the move: the old rule set
+   `min-width: max-content` on every table, which guaranteed horizontal
+   scrolling on any table wider than the 68ch reading column — including
+   the check catalogue, whose "Pass criteria" cells are paragraphs. Cells
+   now wrap instead, and the component's own overflow-x-auto container
+   remains only as a fallback for content that genuinely cannot wrap. */
+
 /* Inline code inside a table cell (e.g. a "Type" column) reads as a
-   small pill against the cell background instead of typeset's default
-   :not(pre) > code look, which is nearly invisible on the card's own
-   --surface background. table cells never contain a fenced code block
-   here, so a plain "code" selector is enough. */
+   small pill rather than typeset's default :not(pre) > code look, which
+   is nearly invisible against the page background now that the table
+   has no card fill behind it. Table cells never contain a fenced code
+   block here, so a plain "code" selector is enough. Left unlayered so
+   it beats typeset's own code rule. */
 .typeset-docs td code {
   background: var(--border);
   border: 1px solid var(--border-strong);

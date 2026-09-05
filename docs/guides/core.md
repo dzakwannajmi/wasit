@@ -86,7 +86,7 @@ mismatch fails `MPP-10` rather than silently inspecting two contracts.
 | `skippedDestructive(id, name, reason)` | Builds a `SKIP` result for a destructive check not opted into |
 
 Every check's exact pass criteria and spec reference is in the
-[Check Catalogue](docs/CHECKS.md).
+[Check Catalogue](../CHECKS.md).
 
 ## Design notes
 
