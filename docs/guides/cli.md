@@ -15,6 +15,36 @@ npx @wasit-dev/cli <subcommand> [options]
 Every subcommand also has its own `--help`, with worked examples and cost
 notes: `wasit <subcommand> --help`.
 
+## Interactive mode
+
+Running `wasit` with no subcommand at all, in a real terminal, opens a small
+menu instead of printing help:
+
+```bash
+wasit
+```
+
+Pick x402 (read-only checks), MPP channel (non-destructive checks), MPP
+charge, or browse the check catalogue, then type a target URL. Each action
+reuses the same environment-variable defaults as the matching subcommand
+below — a missing key is reported in the menu rather than the run failing
+silently partway through.
+
+This is deliberately narrower than the subcommands themselves: no
+`X402-06`/`07` payment checks, no `--allow-destructive`, no header/method/body
+overrides, no `--json`. Anything past "run the safe default checks and read
+the result" still goes through the direct subcommand — `wasit test
+--payer-key ...`, `wasit mpp-channel --allow-destructive ...`, and so on. MPP
+charge always settles a real payment (it has no read-only mode), so picking it
+asks for an explicit confirmation before anything runs.
+
+Keys: arrows + Enter to move and select, Esc to go back, `q` to quit from any
+screen without a text field, Ctrl+C to quit immediately from anywhere,
+including mid-keystroke while typing a target URL.
+
+Piping `wasit` into something else, or running it in CI, does not open the
+menu — it falls back to printing help, exactly as before this existed.
+
 ## Exit codes
 
 | Code | Meaning |

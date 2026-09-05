@@ -43,6 +43,13 @@ export interface MppChannelSuiteOptions {
   readonly expected?: Partial<ChannelDeployExpectations>;
   readonly allowDestructive?: boolean;
   readonly destructiveChannel?: string;
+  /**
+   * Called once per check as soon as its result is known, in addition to it
+   * being included in the returned array — lets a caller render progress
+   * live instead of waiting for the whole suite to finish. Optional and has
+   * no effect on what is returned.
+   */
+  readonly onResult?: (result: CheckResult) => void;
 }
 
 function missingExpectations(
@@ -168,7 +175,9 @@ export async function runMppChannelSuite(
     assertHttpUrl(target);
     assertMppNetwork(network);
   } catch (error) {
-    return [errored("PREFLIGHT", "Run Preflight", error)];
+    const preflight = errored("PREFLIGHT", "Run Preflight", error);
+    options.onResult?.(preflight);
+    return [preflight];
   }
 
   const shared = {
@@ -190,28 +199,35 @@ export async function runMppChannelSuite(
 
   const results: CheckResult[] = [];
 
-  results.push(
-    ...(await runDeployCheck({
+  // Pushes a batch into the run's results and reports each one to the
+  // caller's live-progress hook, if any, in the same order.
+  const record = (batch: CheckResult[]): void => {
+    results.push(...batch);
+    for (const result of batch) options.onResult?.(result);
+  };
+
+  record(
+    await runDeployCheck({
       network,
       ...(rpcUrl ? { rpcUrl } : {}),
       ...(advertised ? { advertised } : {}),
       ...(advertisedFailure ? { advertisedFailure } : {}),
       ...(channelOverride ? { channelOverride } : {}),
       ...(expected ? { expected } : {}),
-    })),
+    }),
   );
 
-  results.push(...(await runMppChannelOrderingCheck(shared)));
-  results.push(...(await runMppChannelReplayCheck(shared)));
-  results.push(...(await runMppChannelCommitmentReplayCheck(shared)));
+  record(await runMppChannelOrderingCheck(shared));
+  record(await runMppChannelReplayCheck(shared));
+  record(await runMppChannelCommitmentReplayCheck(shared));
 
   // Last: a close is terminal, so nothing may run against the channel after it.
-  results.push(
-    ...(await runMppChannelCloseCheck({
+  record(
+    await runMppChannelCloseCheck({
       ...shared,
       allowDestructive,
       ...(destructiveChannel ? { expectedChannel: destructiveChannel } : {}),
-    })),
+    }),
   );
 
   return results;

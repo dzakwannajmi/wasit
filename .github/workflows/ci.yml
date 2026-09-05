@@ -59,6 +59,16 @@ jobs:
       - name: Test @wasit-dev/core
         run: npm run test -w packages/core
 
+      # Same reasoning as core's typecheck step above, for the CLI's own
+      # tests (the interactive dashboard's React/JSX components included).
+      - name: Type-check @wasit-dev/cli tests
+        run: npm run typecheck -w packages/cli
+
+      # Offline only: the dashboard's env-var guard clauses and one Ink
+      # render smoke test. No target, no network.
+      - name: Test @wasit-dev/cli
+        run: npm run test -w packages/cli
+
   frontend:
     name: Build frontend (Next.js)
     runs-on: ubuntu-latest

@@ -28,6 +28,13 @@ export interface RequestShape {
 
 export interface X402SimulatorOptions extends RequestShape {
   target: string;
+  /**
+   * Called once per check as soon as its result is known, in addition to it
+   * being included in the returned array — lets a caller render progress
+   * live instead of waiting for the whole suite to finish. Optional and has
+   * no effect on what is returned.
+   */
+  readonly onResult?: (result: CheckResult) => void;
 }
 
 const BODYLESS_METHODS = new Set(["GET", "HEAD"]);
@@ -245,6 +252,13 @@ export async function runX402ReadChecks(
 ): Promise<CheckResult[]> {
   const { target } = options;
 
+  // Reports each result to the caller's live-progress hook, if any, then
+  // returns them unchanged — every return in this function goes through here.
+  const emit = (results: CheckResult[]): CheckResult[] => {
+    for (const result of results) options.onResult?.(result);
+    return results;
+  };
+
   // A bad URL or an unusable request shape is wrong for every check, so it is
   // reported once rather than five times over.
   let init: RequestInit;
@@ -252,20 +266,20 @@ export async function runX402ReadChecks(
     assertHttpUrl(target);
     init = buildInit(options);
   } catch (error) {
-    return [errored("PREFLIGHT", "Run Preflight", error)];
+    return emit([errored("PREFLIGHT", "Run Preflight", error)]);
   }
 
   let response: Response;
   try {
     response = await fetchTarget(target, init);
   } catch (error) {
-    return [
+    return emit([
       errored("X402-01", "402 Response Status", error),
       ...skipAfter(
         "X402-01",
         "the target was never reached, so it issued no challenge to inspect.",
       ),
-    ];
+    ]);
   }
 
   const statusPass = response.status === 402;
@@ -279,14 +293,14 @@ export async function runX402ReadChecks(
   };
 
   if (!statusPass) {
-    return [
+    return emit([
       r1,
       ...skipAfter(
         "X402-01",
         `the target answered ${response.status} rather than 402, so it issued ` +
           `no payment challenge to inspect.`,
       ),
-    ];
+    ]);
   }
 
   // Both names are checked because Stellar's own documentation is not yet
@@ -305,7 +319,7 @@ export async function runX402ReadChecks(
   };
 
   if (headerValue === null) {
-    return [
+    return emit([
       r1,
       r2,
       ...skipAfter(
@@ -313,14 +327,14 @@ export async function runX402ReadChecks(
         "the 402 response carried no payment header, so there is no payload " +
           "to decode or inspect.",
       ),
-    ];
+    ]);
   }
 
   let payload: unknown;
   try {
     payload = JSON.parse(Buffer.from(headerValue, "base64").toString("utf-8"));
   } catch (error) {
-    return [
+    return emit([
       r1,
       r2,
       {
@@ -334,7 +348,7 @@ export async function runX402ReadChecks(
         "the payment header did not decode to JSON, so no payload was " +
           "available to inspect.",
       ),
-    ];
+    ]);
   }
 
   const r3: CheckResult = {
@@ -344,10 +358,12 @@ export async function runX402ReadChecks(
     detail: "Header decoded to valid JSON.",
   };
 
-  return [r3, r2, r1].reverse().concat([
-    checkRequiredFields(payload),
-    checkNetworkIdentifier(payload),
-  ]);
+  return emit(
+    [r3, r2, r1].reverse().concat([
+      checkRequiredFields(payload),
+      checkNetworkIdentifier(payload),
+    ]),
+  );
 }
 
 import { x402Client, x402HTTPClient } from "@x402/fetch";
@@ -358,6 +374,8 @@ export interface X402PaymentCheckOptions extends RequestShape {
   readonly target: string;
   readonly network: string;
   readonly payerSecretKey: string;
+  /** See {@link X402SimulatorOptions.onResult} — same contract. */
+  readonly onResult?: (result: CheckResult) => void;
 }
 
 function buildX402Client(network: string, payerSecretKey: string) {
@@ -474,7 +492,9 @@ export async function runX402PaymentChecks(
     assertHttpUrl(options.target);
     buildInit(options);
   } catch (error) {
-    return [errored("PREFLIGHT", "Run Preflight", error)];
+    const preflight = errored("PREFLIGHT", "Run Preflight", error);
+    options.onResult?.(preflight);
+    return [preflight];
   }
 
   const results: CheckResult[] = [];
@@ -486,26 +506,30 @@ export async function runX402PaymentChecks(
     accepted = errored("X402-06", "Signature Resubmit Accepted", error);
   }
   results.push(accepted);
+  options.onResult?.(accepted);
 
   // If the payment flow could not be exercised at all, a corrupted variant of
   // it cannot be either — and must not be reported as a passing rejection.
   if (accepted.error !== undefined) {
-    results.push(
-      skipped(
-        "X402-07",
-        "Invalid Signature Rejected",
-        `the payment flow could not be exercised (${accepted.error.kind}), so ` +
-          `a corrupted signature cannot be tested against it.`,
-      ),
+    const notExercised = skipped(
+      "X402-07",
+      "Invalid Signature Rejected",
+      `the payment flow could not be exercised (${accepted.error.kind}), so ` +
+        `a corrupted signature cannot be tested against it.`,
     );
+    results.push(notExercised);
+    options.onResult?.(notExercised);
     return results;
   }
 
+  let rejected: CheckResult;
   try {
-    results.push(await checkInvalidSignatureRejected(options));
+    rejected = await checkInvalidSignatureRejected(options);
   } catch (error) {
-    results.push(errored("X402-07", "Invalid Signature Rejected", error));
+    rejected = errored("X402-07", "Invalid Signature Rejected", error);
   }
+  results.push(rejected);
+  options.onResult?.(rejected);
 
   return results;
 }

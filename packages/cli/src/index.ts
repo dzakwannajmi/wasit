@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import "dotenv/config";
+import { createElement } from "react";
+import { render } from "ink";
 import { Command } from "commander";
+import { App } from "./dashboard/App.js";
 import {
   CHECK_CATALOGUE,
   PROTOCOL_IDS,
@@ -48,7 +51,7 @@ const program = new Command();
 program
   .name("wasit")
   .description("Protocol-compliance testing for x402 / MPP on Stellar")
-  .version("0.1.0")
+  .version("0.3.0")
   .addHelpText(
     "after",
     `
@@ -365,4 +368,11 @@ a real payment and moves testnet funds, because charge mode has no dry run.`,
     process.exit(report(results, jsonMode));
   });
 
-program.parse();
+const isBareInteractiveInvocation =
+  process.argv.length <= 2 && process.stdout.isTTY === true;
+
+if (isBareInteractiveInvocation) {
+  render(createElement(App));
+} else {
+  program.parse();
+}

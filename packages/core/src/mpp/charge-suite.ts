@@ -10,14 +10,27 @@
 import { errored, type CheckResult } from "../check.js";
 import { runMppChargeChecks, type MppChargeCheckOptions } from "./charge.js";
 
-export type MppChargeSuiteOptions = MppChargeCheckOptions;
+export interface MppChargeSuiteOptions extends MppChargeCheckOptions {
+  /**
+   * Called once per check as soon as its result is known, in addition to it
+   * being included in the returned array — lets a caller render progress
+   * live instead of waiting for the whole suite to finish. Optional and has
+   * no effect on what is returned. MPP-01 is a single check, so this fires
+   * exactly once, but the contract matches the other suites so a caller can
+   * treat all of them the same way.
+   */
+  readonly onResult?: (result: CheckResult) => void;
+}
 
 export async function runMppChargeSuite(
   options: MppChargeSuiteOptions,
 ): Promise<CheckResult[]> {
+  let results: CheckResult[];
   try {
-    return await runMppChargeChecks(options);
+    results = await runMppChargeChecks(options);
   } catch (error) {
-    return [errored("MPP-01", "Charge Settlement On-Chain", error)];
+    results = [errored("MPP-01", "Charge Settlement On-Chain", error)];
   }
+  for (const result of results) options.onResult?.(result);
+  return results;
 }
