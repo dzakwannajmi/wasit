@@ -24,11 +24,14 @@ menu instead of printing help:
 wasit
 ```
 
-Pick x402 (read-only checks), MPP channel (non-destructive checks), MPP
-charge, or browse the check catalogue, then type a target URL. Each action
-reuses the same environment-variable defaults as the matching subcommand
-below — a missing key is reported in the menu rather than the run failing
-silently partway through.
+The menu screen shows which environment variables are already set
+(`STELLAR_PRIVATE_KEY`, `MPP_PAYER_SECRET`, `COMMITMENT_SECRET_HEX`) before
+you pick anything, so a
+missing key is visible up front rather than discovered after typing a
+target URL. Pick x402 (read-only checks), MPP channel (non-destructive
+checks), MPP charge, or browse the check catalogue, then type a target URL.
+Each action reuses the same environment-variable defaults as the matching
+subcommand below.
 
 This is deliberately narrower than the subcommands themselves: no
 `X402-06`/`07` payment checks, no `--allow-destructive`, no header/method/body
@@ -40,10 +43,65 @@ asks for an explicit confirmation before anything runs.
 
 Keys: arrows + Enter to move and select, Esc to go back, `q` to quit from any
 screen without a text field, Ctrl+C to quit immediately from anywhere,
-including mid-keystroke while typing a target URL.
+including mid-keystroke while typing a target URL. Once a run finishes, `s`
+saves its results as JSON (the same shape as `--json` below) to
+`wasit-<protocol>-<timestamp>.json` in the current directory.
+
+A run in progress shows a live elapsed timer next to the spinner; the
+summary line at the end adds the total run time and the average time per
+check. A missing key or an invalid target is reported as its own focused
+error screen rather than a stack trace, since no check ever ran.
+
+"Manage testnet wallets" on the menu opens the same generate/fund flow as
+`wasit wallet` below, but interactively: it shows all three roles' status up
+front, and after generating a key it asks whether to save it straight to
+`.env` (updating the running process's environment immediately, so the menu
+reflects it without restarting `wasit`) or just display it for you to copy.
+The `.env` it writes is the one in the directory `wasit` was started from,
+written atomically and with owner-only permissions (`0600`).
+
+A generated secret is shown on screen in both cases — skip this screen if
+you are recording your terminal.
 
 Piping `wasit` into something else, or running it in CI, does not open the
 menu — it falls back to printing help, exactly as before this existed.
+
+## Wallet setup
+
+```bash
+wasit wallet status [--role x402|mpp-charge] [--json]
+wasit wallet create --role x402|mpp-charge|mpp-channel [--fund]
+wasit wallet fund --role x402|mpp-charge [--asset xlm|usdc] [--amount <n>]
+```
+
+Testnet-only convenience commands for the payer keys the other subcommands
+read from `.env` — none of them take a `--network` flag, since Friendbot, the
+printed USDC issuer, and the whole idea of a disposable generated key only
+make sense on testnet.
+
+`status` shows each configured role's on-chain balances (or "not yet created"
+for a key that has never been funded). `create` generates a new key and
+prints the exact `.env` line(s) to paste — it never writes to `.env` itself,
+so it can never overwrite something already there. `mpp-channel` generates a
+commitment key (a raw hex ed25519 seed that signs off-chain, not a funded
+account — see [Configuration](configuration.md#getting-testnet-keys));
+`x402` and `mpp-charge` generate a funded-account keypair. `status` and
+`fund` reject `--role mpp-channel` outright, since it has no account to
+inspect or fund.
+
+A key that is set but malformed — a truncated paste, a `G...` public key, or
+a hex commitment seed in a Stellar-secret slot — is reported by name ("`X` is
+not a valid Stellar secret key") and exits 2, rather than surfacing as an SDK
+error. `status` reports it against that one role and still checks the other.
+
+`fund --asset xlm` calls Stellar's public Friendbot directly and is fully
+automatic. `fund --asset usdc` creates a trustline to Circle's official
+testnet USDC issuer automatically, but **actually receiving a balance always
+needs a human step**: there is no scriptable, unauthenticated USDC faucet for
+Stellar. Either visit https://faucet.circle.com once yourself (paste the
+public key `wasit wallet fund` prints), or set
+`WASIT_USDC_DISTRIBUTOR_SECRET` in `.env` to an account you already funded
+that way — every run after that sends automatically from it.
 
 ## Exit codes
 

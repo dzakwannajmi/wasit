@@ -88,6 +88,32 @@ wasit mpp-channel --target <url> [options]
 
 `--channel` **asserts**, it does not select: the channel under test is resolved from the target's own 402 challenge, so every check in a run reports on the same contract. When `--channel` differs from what the target advertises, `MPP-10` fails and inspects nothing.
 
+### `wasit checks` — the catalogue
+
+```bash
+wasit checks [--protocol x402|mpp-charge|mpp-channel] [--json]
+```
+
+Lists every check by ID with the subcommand that runs it, and flags the ones that are negative, destructive, or spend funds. No network, no keys.
+
+### `wasit wallet` — testnet keys
+
+```bash
+wasit wallet status [--role x402|mpp-charge] [--json]
+wasit wallet create --role x402|mpp-charge|mpp-channel [--fund]
+wasit wallet fund   --role x402|mpp-charge [--asset xlm|usdc] [--amount <n>]
+```
+
+Testnet-only helpers for the keys the subcommands above read from `.env`. There is deliberately no `--network` flag. `create` prints the exact `.env` lines to paste and never writes the file itself; `fund --asset xlm` uses Stellar's public Friendbot and is fully automatic.
+
+`fund --asset usdc` opens the Circle testnet USDC trustline automatically, but **receiving a balance always needs one human step**: there is no scriptable USDC faucet for Stellar. Visit [faucet.circle.com](https://faucet.circle.com) once, or set `WASIT_USDC_DISTRIBUTOR_SECRET` to an account you funded that way and every later run sends from it automatically.
+
+`create` prints a secret key to stdout — don't run it on a screen you're recording.
+
+### The interactive dashboard
+
+Running `wasit` with no arguments in a terminal opens a menu: the same three check runners, a catalogue browser, and a wallet screen, driven by arrow keys. Piped or in CI it prints help instead, so nothing that scripts Wasit today changes behaviour. See [`docs/guides/cli.md`](https://github.com/wasit-dev/wasit/blob/main/docs/guides/cli.md).
+
 ## Reading output
 
 ```
@@ -126,6 +152,7 @@ A run with both a failure and an error exits `1` — a real finding outranks a m
 | `COMMITMENT_SECRET_HEX` | `mpp-channel` |
 | `CHANNEL_CONTRACT` | `mpp-channel` (optional assertion) |
 | `CHANNEL_CONTRACT_DISPOSABLE` | `mpp-channel --allow-destructive` |
+| `WASIT_USDC_DISTRIBUTOR_SECRET` | `wallet fund --asset usdc` (optional) |
 
 All keys are **testnet only**. `wasit` also reads a `.env` file in the current working directory — pass `--payer-key` / `--commitment-key` directly to override it for a single run.
 

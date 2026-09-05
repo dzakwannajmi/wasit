@@ -135,10 +135,11 @@ Wasit exists so these are found by a tool, before they are found by a user.
 | x402 payment checks (`X402-06`, `07`)  | Done, settles on testnet                                                                                                                                                                                     |
 | MPP charge mode (`MPP-01`)             | Done, settlement verified from contract events                                                                                                                                                               |
 | MPP channel mode (`MPP-10`–`14`)       | Done, including destructive close                                                                                                                                                                            |
-| CLI                                    | Done, three subcommands                                                                                                                                                                                      |
+| CLI                                    | Done — five subcommands plus an interactive dashboard                                                                                                                                                        |
+| Testnet wallet tooling                 | Done — `wasit wallet` create/fund/status, testnet only                                                                                                                                                       |
 | MCP server                             | Done, three tools + one behind an opt-in                                                                                                                                                                     |
 | Error taxonomy and exit codes          | Done                                                                                                                                                                                                         |
-| Wasit's own test suite                 | Done — 70 tests, offline; type-check and tests both run in CI                                                                                                                                                |
+| Wasit's own test suite                 | Done — offline (no keys, no target, no network); type-check and tests both run in CI                                                                                                                          |
 | Testing against third-party services   | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet                |
 | Upstream reports to SDK maintainers    | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67), [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) |
 | Published to npm                       | Yes — `@wasit-dev/core`, `@wasit-dev/cli`, `@wasit-dev/server`                                                                                                                                               |
@@ -166,6 +167,14 @@ wasit test --target https://your-service.example/paid --read-only
 That runs `X402-01` through `X402-05` against your own service. It costs
 nothing, needs no keys, and settles no transaction. `wasit checks` lists every
 check the tool can run, and `--json` on any run gives machine-readable output.
+
+Running `wasit` with no arguments in a terminal opens an interactive dashboard
+— the same checks, plus a check catalogue browser and a testnet wallet screen,
+driven by arrow keys. Piped or in CI it prints help instead, so nothing that
+scripts Wasit today changes behaviour. `wasit wallet create|fund|status`
+is the same wallet tooling as plain subcommands: it generates testnet keys,
+funds them through Friendbot, and opens a USDC trustline. Both are covered in
+[docs/guides/cli.md](docs/guides/cli.md).
 
 The checks that settle a real testnet payment — `X402-06`, `X402-07`, `MPP-01`,
 and the channel suite — need a funded testnet account.
