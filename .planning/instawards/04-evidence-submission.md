@@ -31,9 +31,9 @@ was modeled on.
 
 | Evidence (per SOW) | Proof |
 |---|---|
-| Terminal output, incl. negative conformance results | _pending — capture alongside Job 03's D1 recording, or separately_ |
+| Terminal output, incl. negative conformance results | https://github.com/wasit-dev/wasit/blob/main/docs/evidence/2026-09-05-full-settlement-run.md (self-hosted fixtures, real testnet settlement, incl. X402-07's negative/rejected-signature result) — **link is dead until the commit adding that file is pushed to `main`; verify it resolves before submitting** |
 | Written findings document (aggregate, ≥3 real projects) | _pending — Job 02_ |
-| ≥1 third-party service tested with explicit authorization | _pending — Job 02_ |
+| ≥1 third-party service tested with explicit authorization | _pending — Job 02. Note the SOW's fallback covers "the remainder self-hosted reference services" — the remainder **after** a third-party run, not a replacement for it. The 2026-09-05 self-hosted run demonstrates that fallback works, and does not satisfy this row. If Job 02 does not convert, say so plainly in the completion summary rather than presenting the self-hosted run as meeting this line._ |
 
 ### Deliverable 3 — MCP Server wrapper
 
@@ -57,7 +57,11 @@ was modeled on.
 |---|---|
 | Upstream SDK defect report #1 | https://github.com/stellar/stellar-mpp-sdk/issues/66 |
 | Upstream SDK defect report #2 | https://github.com/stellar/stellar-mpp-sdk/issues/67 |
-| Independent third-party confirmation | RouteDock PR #241 (github.com/winsznx/routedock/pull/241) |
+| Upstream finding independently confirmed by a downstream project | RouteDock PR #241 (github.com/winsznx/routedock/pull/241) — **not** the D2 third-party-authorization item: RouteDock was tested without contacting its operator (see `docs/evidence/2026-08-15-third-party-run.md`) |
 
 ## Result
-Not started — waiting on Jobs 2 and 3.
+Not started — waiting on Jobs 2 and 3. Partial progress 2026-09-05: the D2
+terminal-output evidence item now has a real link (full payment-settlement
+run against self-hosted fixtures, see `docs/evidence/2026-09-05-full-settlement-run.md`).
+The third-party-authorization item is unaffected by this and still depends on
+Job 2.
