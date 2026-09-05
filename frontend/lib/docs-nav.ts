@@ -74,6 +74,8 @@ export const DOCS_NAV: DocNavEntry[] = [
     icon: SquareTerminal,
     pages: [
       { title: "Overview", slug: ["cli", "overview"] },
+      { title: "Interactive mode", slug: ["cli", "interactive"] },
+      { title: "Wallet setup", slug: ["cli", "wallet"] },
       { title: "Exit codes", slug: ["cli", "exit-codes"] },
       { title: "Check Catalogue", slug: ["cli", "checks"] },
       { title: "x402 (Test)", slug: ["cli", "test-x402"] },
