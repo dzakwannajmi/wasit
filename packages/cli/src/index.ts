@@ -4,6 +4,8 @@ import { createElement } from "react";
 import { render } from "ink";
 import { Command } from "commander";
 import { App } from "./dashboard/App.js";
+import { CLI_VERSION } from "./version.js";
+import { registerWalletCommand } from "./wallet-command.js";
 import {
   CHECK_CATALOGUE,
   PROTOCOL_IDS,
@@ -51,7 +53,7 @@ const program = new Command();
 program
   .name("wasit")
   .description("Protocol-compliance testing for x402 / MPP on Stellar")
-  .version("0.3.0")
+  .version(CLI_VERSION)
   .addHelpText(
     "after",
     `
@@ -60,6 +62,7 @@ Examples:
   $ wasit test --target https://api.example.com/paid-endpoint --read-only
   $ wasit mpp-charge --target https://api.example.com/paid-endpoint --payer-key S...
   $ wasit mpp-channel --target https://api.example.com/paid-endpoint
+  $ wasit wallet create --role mpp-charge --fund
 
 Run "wasit <command> --help" for that command's own options and cost notes.
 Add --json to test/mpp-charge/mpp-channel for machine-readable output.
@@ -367,6 +370,8 @@ a real payment and moves testnet funds, because charge mode has no dry run.`,
 
     process.exit(report(results, jsonMode));
   });
+
+registerWalletCommand(program);
 
 const isBareInteractiveInvocation =
   process.argv.length <= 2 && process.stdout.isTTY === true;

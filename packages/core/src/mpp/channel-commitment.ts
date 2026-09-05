@@ -35,7 +35,9 @@ const SIMULATION_FEE = "100";
 
 const DEFAULT_SIMULATION_TIMEOUT_MS = 10_000;
 
-const COMMITMENT_SEED_BYTES = 32;
+// Exported so wallet.ts can generate a correctly-sized seed without
+// restating this number and risking it drifting out of sync.
+export const COMMITMENT_SEED_BYTES = 32;
 const ED25519_SIGNATURE_BYTES = 64;
 
 export class CommitmentSimulationError extends Error {
