@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import type { DashboardAction } from "./App.js";
+import { THEME } from "./theme.js";
 
 interface TargetFormProps {
   readonly action: DashboardAction;
@@ -64,8 +65,8 @@ export function TargetForm({ action, onSubmit, onCancel }: TargetFormProps) {
   });
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={2} paddingY={1}>
-      <Text bold color="cyan">
+    <Box flexDirection="column" borderStyle="round" borderColor={THEME.accent} paddingX={2} paddingY={1}>
+      <Text bold color={THEME.accent}>
         {ACTION_LABEL[action.kind]}
       </Text>
 
@@ -73,14 +74,14 @@ export function TargetForm({ action, onSubmit, onCancel }: TargetFormProps) {
         <Box flexDirection="column" marginTop={1}>
           <Text>Target URL:</Text>
           <TextInput value={target} onChange={setTarget} onSubmit={handleUrlSubmit} />
-          {error !== undefined && <Text color="red">{error}</Text>}
+          {error !== undefined && <Text color={THEME.danger}>{error}</Text>}
           <Text dimColor>Enter to continue · Esc to go back</Text>
         </Box>
       )}
 
       {step === "confirm" && (
         <Box flexDirection="column" marginTop={1}>
-          <Text color="yellow">
+          <Text color={THEME.warning}>
             This settles a real payment on Stellar Testnet against {confirmedTarget}.
           </Text>
           <Text>Continue? (Y/n)</Text>

@@ -1,5 +1,6 @@
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useApp, useInput } from "ink";
 import { CHECK_CATALOGUE, PROTOCOL_IDS, type ProtocolId } from "@wasit-dev/core";
+import { THEME } from "./theme.js";
 
 interface CatalogueViewProps {
   readonly onBack: () => void;
@@ -12,19 +13,21 @@ const COMMAND_BY_PROTOCOL: Record<ProtocolId, string> = {
 };
 
 export function CatalogueView({ onBack }: CatalogueViewProps) {
+  const { exit } = useApp();
+
   // No text field on this screen, so "q" is safe as a bare letter key —
   // distinct from Enter/Esc, which go back to the menu instead of quitting.
   useInput((input, key) => {
     if (input === "q") {
-      process.exit(0);
+      exit();
       return;
     }
     if (key.escape || key.return) onBack();
   });
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={2} paddingY={1}>
-      <Text bold color="cyan">
+    <Box flexDirection="column" borderStyle="round" borderColor={THEME.accent} paddingX={2} paddingY={1}>
+      <Text bold color={THEME.accent}>
         Check catalogue
       </Text>
 

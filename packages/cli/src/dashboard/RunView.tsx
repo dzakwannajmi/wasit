@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { writeFile } from "node:fs/promises";
 import { Box, Text, useApp, useInput } from "ink";
 import {
   CHECK_CATALOGUE,
   checkStatus,
   summarize,
+  toStructuredRun,
   type CheckResult,
   type ProtocolId,
 } from "@wasit-dev/core";
 import type { DashboardAction } from "./App.js";
 import { runAction } from "./runners.js";
+import { THEME } from "./theme.js";
+import { formatDuration } from "./format.js";
+import { useSpinnerFrame } from "./useSpinnerFrame.js";
+import { useElapsedMs } from "./useElapsedMs.js";
 
 interface RunViewProps {
   readonly protocol: ProtocolId;
@@ -24,8 +30,6 @@ interface Entry {
   readonly name: string;
   readonly status: EntryStatus;
 }
-
-const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 function iconFor(status: EntryStatus, spinnerFrame: string): string {
   switch (status) {
@@ -45,15 +49,17 @@ function iconFor(status: EntryStatus, spinnerFrame: string): string {
 function colorFor(status: EntryStatus): string {
   switch (status) {
     case "PASS":
-      return "green";
+      return THEME.success;
     case "FAIL":
-      return "red";
+      return THEME.danger;
     case "ERROR":
-      return "magenta";
+      // Not a conformance failure — the check produced no verdict at all
+      // (network/config), so it gets the brand color rather than red.
+      return THEME.accent;
     case "SKIP":
-      return "yellow";
+      return THEME.warning;
     default:
-      return "gray";
+      return THEME.muted;
   }
 }
 
@@ -83,15 +89,23 @@ export function RunView({ protocol, action, target, onBack }: RunViewProps) {
   const [done, setDone] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [summaryLine, setSummaryLine] = useState<string | undefined>(undefined);
-  const [frameIndex, setFrameIndex] = useState(0);
+  const [finalResults, setFinalResults] = useState<CheckResult[] | undefined>(undefined);
+  const [savedTo, setSavedTo] = useState<string | undefined>(undefined);
+  const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
-  // Advances the spinner shown next to whichever check is currently running.
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFrameIndex((current) => (current + 1) % SPINNER_FRAMES.length);
-    }, 80);
-    return () => clearInterval(timer);
-  }, []);
+  // Timestamps live in refs, not state: they don't need their own re-render,
+  // the spinner hook below already re-renders often enough while the run is
+  // live, and the state updates at completion re-render once more.
+  const startedAtRef = useRef(Date.now());
+  const finishedAtRef = useRef<number | undefined>(undefined);
+
+  // Also what makes the live elapsed timer below tick — it re-renders on
+  // the same interval. Stops once the run is done: nothing left to animate.
+  const spinnerFrame = useSpinnerFrame(!done);
+
+  // Ticks the elapsed counter in state rather than reading the clock while
+  // rendering, and freezes at the run's real total once done flips.
+  const elapsedMs = useElapsedMs(!done, startedAtRef.current);
 
   // Kicks off the run exactly once. Ignored intentionally: initialEntries is
   // derived from `protocol`, which does not change once a run has started.
@@ -117,16 +131,23 @@ export function RunView({ protocol, action, target, onBack }: RunViewProps) {
     runAction(action, target, onResult)
       .then((results) => {
         if (cancelled) return;
+        finishedAtRef.current = Date.now();
+        const totalMs = finishedAtRef.current - startedAtRef.current;
         const summary = summarize(results);
         const parts = [`${summary.passed} passed`];
         if (summary.failed > 0) parts.push(`${summary.failed} failed`);
         if (summary.errored > 0) parts.push(`${summary.errored} could not run`);
         if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
-        setSummaryLine(`${parts.join(", ")}.`);
+        const avgMs = results.length > 0 ? totalMs / results.length : 0;
+        setSummaryLine(
+          `${parts.join(", ")}. ${formatDuration(totalMs)} total · ${formatDuration(avgMs)} avg/check.`,
+        );
+        setFinalResults(results);
         setDone(true);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
+        finishedAtRef.current = Date.now();
         setErrorMessage(error instanceof Error ? error.message : String(error));
         setDone(true);
       });
@@ -136,24 +157,59 @@ export function RunView({ protocol, action, target, onBack }: RunViewProps) {
     };
   }, []);
 
+  const saveResults = (): void => {
+    if (finalResults === undefined) return;
+    const filename = `wasit-${protocol}-${Date.now()}.json`;
+    writeFile(filename, JSON.stringify(toStructuredRun(finalResults), null, 2), "utf8")
+      .then(() => setSavedTo(filename))
+      .catch((error: unknown) => {
+        setSaveError(error instanceof Error ? error.message : String(error));
+      });
+  };
+
   useInput((input, key) => {
     if (input === "q") {
-      process.exit(0);
+      exit();
       return;
     }
     if (!done) return;
+    if (input === "s") {
+      saveResults();
+      return;
+    }
     if (key.return) onBack();
     if (key.escape) exit();
   });
 
+  // A config error (missing key, bad target) means no check ever ran — the
+  // pending checklist below would just be dead weight, so this gets its own
+  // focused screen instead of a red line bolted under it.
+  if (errorMessage !== undefined) {
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor={THEME.danger} paddingX={2} paddingY={1}>
+        <Text bold color={THEME.danger}>
+          Could not run this check
+        </Text>
+        <Box marginTop={1}>
+          <Text>{errorMessage}</Text>
+        </Box>
+        <Box marginTop={1}>
+          <Text dimColor>Enter to go back · q to quit</Text>
+        </Box>
+      </Box>
+    );
+  }
+
   const firstPendingIndex = entries.findIndex((entry) => entry.status === "pending");
-  const spinnerFrame = SPINNER_FRAMES[frameIndex] ?? SPINNER_FRAMES[0];
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={2} paddingY={1}>
-      <Text bold color="cyan">
+    <Box flexDirection="column" borderStyle="round" borderColor={THEME.accent} paddingX={2} paddingY={1}>
+      <Text bold color={THEME.accent}>
         {target}
       </Text>
+      {!done && (
+        <Text dimColor>Running · {formatDuration(elapsedMs)}</Text>
+      )}
 
       <Box flexDirection="column" marginTop={1}>
         {extra.map((entry) => (
@@ -170,7 +226,7 @@ export function RunView({ protocol, action, target, onBack }: RunViewProps) {
           return (
             <Text
               key={entry.id}
-              color={isRunningNow ? "cyan" : colorFor(entry.status)}
+              color={isRunningNow ? THEME.accent : colorFor(entry.status)}
               dimColor={entry.status === "pending" && !isRunningNow}
             >
               {icon} {entry.id}  {entry.name}
@@ -182,14 +238,11 @@ export function RunView({ protocol, action, target, onBack }: RunViewProps) {
       {done && summaryLine !== undefined && (
         <Box marginTop={1} flexDirection="column">
           <Text bold>{summaryLine}</Text>
-          <Text dimColor>Enter to go back · q to quit</Text>
-        </Box>
-      )}
-
-      {done && errorMessage !== undefined && (
-        <Box marginTop={1} flexDirection="column">
-          <Text color="red">Run failed: {errorMessage}</Text>
-          <Text dimColor>Enter to go back · q to quit</Text>
+          {savedTo !== undefined && <Text color={THEME.success}>Saved to {savedTo}</Text>}
+          {saveError !== undefined && (
+            <Text color={THEME.danger}>Could not save results: {saveError}</Text>
+          )}
+          <Text dimColor>Enter to go back · s to save JSON · q to quit</Text>
         </Box>
       )}
     </Box>
