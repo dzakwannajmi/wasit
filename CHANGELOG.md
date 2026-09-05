@@ -2,6 +2,77 @@
 
 All notable changes to Wasit are recorded here. Versions follow [Semantic Versioning](https://semver.org/): patch releases are fixes, minor releases add checks or features without breaking existing usage, major releases break something.
 
+## [0.3.0] — 2026-09-05
+
+All three packages. Adds an interactive dashboard and testnet wallet tooling to
+the CLI, and a wallet layer to core. `@wasit-dev/server` has no code change in
+this release; it is versioned along with the others so all three always resolve
+the same `@wasit-dev/core`, rather than the MCP server quietly running a version
+behind the CLI.
+
+| Package | Version |
+|---|---|
+| `@wasit-dev/core` | 0.2.0 → 0.3.0 |
+| `@wasit-dev/cli` | 0.2.0 → 0.3.0 |
+| `@wasit-dev/server` | 0.2.0 → 0.3.0 |
+
+**Added — an interactive dashboard.** Running `wasit` with no arguments in a
+terminal opens a menu: the three check runners, a catalogue browser, and a
+testnet wallet screen, driven by arrow keys. A run shows a live elapsed timer
+and per-check progress, ends with total and average timing, and can be saved to
+`wasit-<protocol>-<timestamp>.json` with `s` — the same shape as `--json`. A
+misconfigured run gets its own error screen rather than a red line under an
+otherwise-empty checklist. Piped or in CI, `wasit` still prints help, so nothing
+that scripts it today changes behaviour.
+
+**Added — `wasit wallet`.** `status`, `create` and `fund` for the testnet payer
+keys the other subcommands read from `.env`. There is deliberately no
+`--network` flag: Friendbot, the printed USDC issuer and the whole idea of a
+disposable generated key only make sense on testnet. XLM funding via Friendbot
+is fully automatic. USDC is not, and the tool says so rather than pretending
+otherwise: the trustline is created automatically, but a balance needs one
+manual visit to Circle's faucet or a configured
+`WASIT_USDC_DISTRIBUTOR_SECRET`, because no scriptable testnet USDC faucet
+exists for Stellar.
+
+**Changed — core classifies its own wallet failures.** Every wallet function in
+core now throws the taxonomy in `errors.ts` (`ConfigurationError`,
+`TargetUnreachableError`) instead of leaking raw Stellar SDK errors, with
+Horizon's result codes (`op_underfunded`, `op_no_trust`) folded into the
+message. Callers render `error.message` and never inspect an SDK error type,
+which is what stopped the CLI and the dashboard reporting the same failure two
+different ways. Horizon and Friendbot requests are now bounded by a timeout;
+previously a stalled request had no way back.
+
+**Fixed — a malformed key in `.env` no longer kills the process.** A truncated
+paste, a `G...` public key in a secret's slot, or a hex commitment seed in a
+Stellar-secret slot reached `Keypair.fromSecret` unguarded. In the dashboard
+that escaped as an unhandled rejection and terminated the process from under
+Ink's renderer, leaving the wallet screen frozen on its loading spinner; from
+`wasit wallet` it printed an SDK stack trace instead of the CLI's own error
+contract. All three now report the offending variable by name and exit 2, and
+the message never echoes the rejected value.
+
+**Fixed — `wasit wallet status --role mpp-channel` is rejected up front.**
+`COMMITMENT_SECRET_HEX` is a raw hex seed with no on-chain account, which the
+help text and docs already said; the command accepted the role anyway and then
+crashed deriving an address for it.
+
+**Fixed — `.env` written by the dashboard is owner-only and atomic.** The
+confirm-to-save flow wrote with Node's default permissions, which under a
+typical umask produces a world-readable `0644` file holding Stellar secrets. It
+is now written `0600` via a temp file and a rename, so an interrupted write
+cannot truncate the file, and an existing world-readable `.env` is tightened on
+the next write.
+
+**Fixed — Friendbot no longer claims a transfer that did not happen.** A "this
+account already exists" response is treated as success, correctly, but every
+caller reported it as "Funded: 10,000 XLM." regardless.
+
+**Fixed — quitting the dashboard restores the terminal.** `q` called
+`process.exit` directly, skipping Ink's unmount and leaving the cursor hidden.
+Ctrl+C still exits 130 immediately, by design.
+
 ## [0.2.0] — 2026-09-04
 
 All three packages. Adds a machine-readable surface to every check runner, and
