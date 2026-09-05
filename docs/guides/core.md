@@ -57,13 +57,19 @@ config) comes back as an `ERROR` or `SKIP` result, not a thrown error.
 | `runX402ReadChecks({ target, method?, body?, headers? })` | `X402-01`–`05` | Free |
 | `runX402PaymentChecks({ target, network, payerSecretKey, method?, body?, headers? })` | `X402-06`, `07` | Settles a real payment every call |
 
-## MPP charge mode
+## MPP modes
+
+MPP has two payment modes and one entry point each. They share no state, so
+which one you call is decided by how the target bills, not by anything in
+this library.
+
+### Charge mode
 
 | Function | Checks | Cost |
 | --- | --- | --- |
 | `runMppChargeSuite({ target, network, payerSecretKey, rpcUrl? })` | `MPP-01` | Settles a real payment every call |
 
-## MPP channel mode
+### Channel mode
 
 | Function | Checks | Cost |
 | --- | --- | --- |

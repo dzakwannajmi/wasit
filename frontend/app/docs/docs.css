@@ -284,10 +284,14 @@
   border-color: var(--accent);
   background: color-mix(in oklab, var(--surface) 82%, var(--accent) 10%);
 }
+/* The "next" card mirrors the "prev" one: label and title right-aligned,
+   chevron trailing the text rather than leading it. docs-pager.tsx
+   already renders the chevron after the text for this direction — a
+   `flex-direction: row-reverse` here used to flip it back in front,
+   which read as an arrow pointing away from the words it belonged to. */
 .docs-pager-card[data-direction="next"] {
   grid-column: 2;
   justify-self: end;
-  flex-direction: row-reverse;
   text-align: right;
 }
 .docs-pager-arrow {
