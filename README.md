@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="frontend/public/Colorful.png" alt="Wasit logo" width="150" />
+
 # Wasit
 
 **Protocol-compliance testing for x402 and MPP on Stellar.**
@@ -127,20 +129,20 @@ Wasit exists so these are found by a tool, before they are found by a user.
 
 ## Status
 
-| Area | Status |
-|---|---|
-| x402 read-only checks (`X402-01`–`05`) | Done, verified against a real facilitator |
-| x402 payment checks (`X402-06`, `07`) | Done, settles on testnet |
-| MPP charge mode (`MPP-01`) | Done, settlement verified from contract events |
-| MPP channel mode (`MPP-10`–`14`) | Done, including destructive close |
-| CLI | Done, three subcommands |
-| MCP server | Done, three tools + one behind an opt-in |
-| Error taxonomy and exit codes | Done |
-| Wasit's own test suite | Done — 70 tests, offline; type-check and tests both run in CI |
-| Testing against third-party services | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet |
-| Upstream reports to SDK maintainers | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67), [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) |
-| Published to npm | Yes — `@wasit-dev/core`, `@wasit-dev/cli`, `@wasit-dev/server` |
-| Mainnet | Out of scope — see [Design Notes](#design-notes) |
+| Area                                   | Status                                                                                                                                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| x402 read-only checks (`X402-01`–`05`) | Done, verified against a real facilitator                                                                                                                                                                    |
+| x402 payment checks (`X402-06`, `07`)  | Done, settles on testnet                                                                                                                                                                                     |
+| MPP charge mode (`MPP-01`)             | Done, settlement verified from contract events                                                                                                                                                               |
+| MPP channel mode (`MPP-10`–`14`)       | Done, including destructive close                                                                                                                                                                            |
+| CLI                                    | Done, three subcommands                                                                                                                                                                                      |
+| MCP server                             | Done, three tools + one behind an opt-in                                                                                                                                                                     |
+| Error taxonomy and exit codes          | Done                                                                                                                                                                                                         |
+| Wasit's own test suite                 | Done — 70 tests, offline; type-check and tests both run in CI                                                                                                                                                |
+| Testing against third-party services   | Partial — 3 public repos tested without contacting the operator (see [evidence](docs/evidence/2026-08-15-third-party-run.md)); a run with explicit operator authorization hasn't happened yet                |
+| Upstream reports to SDK maintainers    | Filed — [stellar-mpp-sdk#66](https://github.com/stellar/stellar-mpp-sdk/issues/66), [#67](https://github.com/stellar/stellar-mpp-sdk/issues/67), [#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) |
+| Published to npm                       | Yes — `@wasit-dev/core`, `@wasit-dev/cli`, `@wasit-dev/server`                                                                                                                                               |
+| Mainnet                                | Out of scope — see [Design Notes](#design-notes)                                                                                                                                                             |
 
 Thirteen checks are implemented and reachable from both front ends. Every one is
 traced to a written spec clause in [docs/CHECKS.md](docs/CHECKS.md); a check that
@@ -264,7 +266,7 @@ destructive are a separate category, disclosed rather than gated.
 
 **[Scope boundary](docs/design/scope-boundary.md)** — Wasit tests running service
 behaviour. It does not audit contract source or bytecode, and passing it is not a
-security clearance. Knowing what a passing result does *not* mean is part of the
+security clearance. Knowing what a passing result does _not_ mean is part of the
 deliverable.
 
 **Verify against compiled source, never against types.** Every API used here was
