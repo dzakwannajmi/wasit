@@ -461,7 +461,7 @@ export function getAboutMarkdown(): string {
 
 # Wasit
 
-Wasit is an independent protocol-compliance checker for two agentic-payment
+Wasit is an independent protocol-compliance tester for two agentic-payment
 protocols on Stellar: **x402** and **MPP**. It runs the real payment flow
 against a live service and verifies the settlement itself — by reading
 Stellar RPC and the token contract's own transfer event — rather than

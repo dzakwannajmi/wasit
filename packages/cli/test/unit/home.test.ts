@@ -54,7 +54,7 @@ describe("Home", () => {
     assert.ok(frame !== undefined && frame.length > 0, "expected a non-empty frame");
     assert.ok(frame?.includes("Welcome to Wasit"), "expected the welcome line to render");
     assert.ok(
-      frame?.includes("x402 / MPP conformance tester"),
+      frame?.includes("x402 / MPP compliance tester"),
       "expected the tagline to render",
     );
     assert.ok(frame?.includes("Tips"), "expected the tips column to render");

@@ -85,7 +85,7 @@ of each check.
 
 ## The Problem
 
-x402 and MPP have an official SDK. They have no independent conformance tester.
+x402 and MPP have an official SDK. They have no independent protocol-compliance tester.
 
 `stellar-anchor-tests` fills that role for the anchor ecosystem: an anchor
 operator points it at their deployment and gets an answer about whether their
@@ -102,7 +102,7 @@ from one page will not find the header emitted by a server written from the
 other. `X402-02` deliberately accepts either, because refusing one would mean
 failing services that followed official documentation — but a service cannot
 know which convention its callers expect. This is a documentation defect
-upstream, and it is exactly the kind of thing a conformance tester exists to
+upstream, and it is exactly the kind of thing a protocol-compliance tester exists to
 surface.
 
 **A whole error taxonomy is unreachable.** In MPP channel mode, every rejection

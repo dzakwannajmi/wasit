@@ -10,7 +10,7 @@ together for anyone reviewing scope, including the Instawards SOW.
 ## Problem statement
 
 x402 and MPP (Machine Payments Protocol) on Stellar each have an official SDK.
-Neither has an independent conformance tester. `stellar-anchor-tests` fills
+Neither has an independent protocol-compliance tester. `stellar-anchor-tests` fills
 this role for the anchor ecosystem — an anchor operator can point it at their
 deployment and get an answer about whether their service actually implements
 SEP-24/31. Nothing equivalent exists for the agentic-payments stack, so "we

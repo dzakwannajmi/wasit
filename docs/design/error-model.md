@@ -1,6 +1,6 @@
 # The Error Model
 
-A conformance tester makes claims about someone else's service. The most
+A protocol-compliance tester makes claims about someone else's service. The most
 damaging thing it can do is make a claim it has no basis for.
 
 "Your service returned the wrong status code" and "we could not reach your

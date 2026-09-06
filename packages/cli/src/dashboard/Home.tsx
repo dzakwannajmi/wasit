@@ -88,7 +88,7 @@ export function Home({ onSelectAction, onBrowseCatalogue, onOpenWallet }: HomePr
         paddingY={1}
       >
         <Text bold>Welcome to Wasit</Text>
-        <Text dimColor>x402 / MPP conformance tester · Stellar Testnet</Text>
+        <Text dimColor>x402 / MPP compliance tester · Stellar Testnet</Text>
 
         <Box marginTop={1} flexDirection="row" gap={4}>
           <Box flexDirection="column">
