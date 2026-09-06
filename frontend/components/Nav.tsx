@@ -43,7 +43,7 @@ export function Nav() {
             <Link href="/#comparison">Why Wasit</Link>
             <Link href="/#how-it-works">How it works</Link>
             <Link href="/#faq">FAQ</Link>
-            <Link href="/docs/get-started/quick-start">Quick start</Link>
+            <Link href="/docs/start/try-it">Quick start</Link>
           </nav>
         </div>
 
@@ -58,7 +58,7 @@ export function Nav() {
           >
             <GitHubIcon />
           </a>
-          <Link href="/docs" className="navlinks-docs">
+          <Link href="/docs/overview/wasit" className="navlinks-docs">
             Docs
           </Link>
         </div>

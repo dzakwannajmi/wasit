@@ -106,6 +106,56 @@
    now wrap instead, and the component's own overflow-x-auto container
    remains only as a fallback for content that genuinely cannot wrap. */
 
+/* Images in docs content. The base rule keeps any future figure — a
+   screenshot, a diagram — inside the reading column instead of
+   overflowing it, since typeset does not constrain img at all. */
+.typeset-docs img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* The wordmark at the top of Overview -> Wasit reads as a masthead, so
+   it is centred and capped well short of the 68ch column: the asset is
+   5480px wide at roughly 4.3:1, and at full column width it would tower
+   over the h1 directly beneath it. Sized in rem rather than a
+   percentage so it stays the same physical size as the column reflows.
+
+   Keyed on the file rather than a class because the image comes from
+   markdown, which carries no class — rename the asset and this rule
+   stops applying, which is the failure mode everyone notices at once. */
+.typeset-docs img[src$="W-White.png"] {
+  width: min(24rem, 85%);
+  margin: 0.6em auto 1.8em;
+}
+
+/* Callouts. Written in the source as a plain blockquote opening with a
+   bolded word — `> **Note** — ...` — so they stay readable as markdown
+   on GitHub and need no remark plugin here. typeset styles a blockquote
+   as a thin rule and nothing else, which reads as a pull quote rather
+   than an aside, so /docs gives it a surface, a full border and an
+   accent edge: enough to break the reading flow without shouting.
+
+   Unlayered for the same cascade reason the table rules used to be —
+   typeset's own blockquote rule lives in `@layer components`, and this
+   has to beat it whatever order the two stylesheets end up in. */
+.typeset-docs blockquote {
+  border: 1px solid var(--border);
+  border-inline-start: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.9em 1.2em;
+  margin: 1.3em 0;
+  font-size: 0.94em;
+}
+/* The bolded lead-in ("Note", "Warning") carries the accent so the kind
+   of callout is legible before the sentence is read. */
+.typeset-docs blockquote strong:first-child {
+  color: var(--accent);
+}
+.typeset-docs blockquote > :first-child { margin-block-start: 0; }
+.typeset-docs blockquote > :last-child { margin-block-end: 0; }
+
 /* Inline code inside a table cell (e.g. a "Type" column) reads as a
    small pill rather than typeset's default :not(pre) > code look, which
    is nearly invisible against the page background now that the table
@@ -145,25 +195,25 @@
   font-size: 0.875em;
 }
 
-/* /docs landing page (components/docs-home.tsx) — hero + grouped card
-   links, not an article. Scoped with a docs-home- prefix; headings and
+/* The documentation card index (components/docs-cards.tsx), rendered at
+   the bottom of Overview -> Wasit. Scoped with a docs-cards- prefix; headings and
    paragraphs inside it still pick up .typeset's normal type scale for
    free since that's a descendant selector, not a direct-child one. Left
    unlayered for the same cascade-order reason as the table rules above. */
-.docs-home-lead {
+.docs-cards-lead {
   color: var(--muted);
   font-size: 1.05em;
   line-height: 1.6;
   max-width: 56ch;
 }
-.docs-home-cta {
+.docs-cards-cta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75em;
   margin-top: 1.5em;
 }
-.docs-home-cta-primary,
-.docs-home-cta-secondary {
+.docs-cards-cta-primary,
+.docs-cards-cta-secondary {
   display: inline-flex;
   align-items: center;
   font-size: 0.875em;
@@ -172,31 +222,31 @@
   border-radius: var(--radius);
   text-decoration: none;
 }
-.docs-home-cta-primary {
+.docs-cards-cta-primary {
   background: var(--fg);
   color: var(--bg);
   border: 1px solid var(--fg);
 }
-.docs-home-cta-primary:hover {
+.docs-cards-cta-primary:hover {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
 }
-.docs-home-cta-secondary {
+.docs-cards-cta-secondary {
   border: 1px solid var(--border-strong);
   color: var(--fg);
 }
-.docs-home-cta-secondary:hover {
+.docs-cards-cta-secondary:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
-.docs-home-grid {
+.docs-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.85em;
   margin-top: 1.1em;
 }
-.docs-home-card {
+.docs-cards-card {
   display: flex;
   align-items: flex-start;
   gap: 0.85em;
@@ -207,38 +257,38 @@
   text-decoration: none;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.docs-home-card:hover {
+.docs-cards-card:hover {
   border-color: var(--accent);
   background: color-mix(in oklab, var(--surface) 82%, var(--accent) 10%);
 }
-.docs-home-card-icon {
+.docs-cards-card-icon {
   flex: none;
   width: 1.15em;
   height: 1.15em;
   margin-top: 0.15em;
   color: var(--muted);
 }
-.docs-home-card:hover .docs-home-card-icon {
+.docs-cards-card:hover .docs-cards-card-icon {
   color: var(--accent);
 }
-.docs-home-card-body {
+.docs-cards-card-body {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
   flex: 1;
   min-width: 0;
 }
-.docs-home-card-title {
+.docs-cards-card-title {
   font-size: 0.95em;
   font-weight: 600;
   color: var(--fg);
 }
-.docs-home-card-desc {
+.docs-cards-card-desc {
   font-size: 0.825em;
   line-height: 1.5;
   color: var(--muted);
 }
-.docs-home-card-arrow {
+.docs-cards-card-arrow {
   flex: none;
   width: 1em;
   height: 1em;
@@ -248,14 +298,14 @@
   transform: translate(-2px, 2px);
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
-.docs-home-card:hover .docs-home-card-arrow {
+.docs-cards-card:hover .docs-cards-card-arrow {
   opacity: 1;
   color: var(--accent);
   transform: translate(0, 0);
 }
 
 /* Bottom-of-article prev/next pager (components/docs-pager.tsx) — two
-   cards side by side, mirroring .docs-home-card's look (surface bg,
+   cards side by side, mirroring .docs-cards-card's look (surface bg,
    1px border, accent on hover) so the pager reads as part of the same
    card language rather than a new one. Grid instead of flex: with only
    one card present (first/last page in the whole nav) `justify-self`

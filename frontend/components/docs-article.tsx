@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react"
+import type { ComponentPropsWithoutRef, ReactNode } from "react"
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeSlug from "rehype-slug"
@@ -63,6 +63,10 @@ function MarkdownCell(props: ComponentPropsWithoutRef<"td">) {
  * markdown with no place in DOCS_NAV can still use this shell and just
  * skip the pager.
  *
+ * `children` render after the markdown and before the pager, for the one
+ * thing markdown cannot express: the card index on Overview -> Wasit,
+ * which is a grid of links with icons rather than prose.
+ *
  * When the page is republished from a repo file, that file's own
  * relative links are rewritten through docLinkHref: `../CHECKS.md` is
  * correct on GitHub and a 404 here, because the browser resolves it
@@ -71,7 +75,15 @@ function MarkdownCell(props: ComponentPropsWithoutRef<"td">) {
  * which is also chained after ours so its protocol sanitising is never
  * lost.
  */
-export function DocsArticle({ markdown, slug }: { markdown: string; slug?: string[] }) {
+export function DocsArticle({
+  markdown,
+  slug,
+  children,
+}: {
+  markdown: string
+  slug?: string[]
+  children?: ReactNode
+}) {
   const sourceFile = slug ? docSourceFile(slug) : undefined
 
   return (
@@ -97,6 +109,7 @@ export function DocsArticle({ markdown, slug }: { markdown: string; slug?: strin
         >
           {markdown}
         </ReactMarkdown>
+        {children}
         {slug && <DocsPager slug={slug} />}
       </article>
       <DocsToc contentSelector="#docs-content" className="sticky top-20 hidden w-56 shrink-0 xl:block" />

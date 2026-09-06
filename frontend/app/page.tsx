@@ -101,7 +101,7 @@ export default function Home() {
                 response looks right.
               </p>
               <div className="hero-cta-row">
-                <Link href="/docs/get-started/quick-start" className="cta-primary">
+                <Link href="/docs/start/try-it" className="cta-primary">
                   Get started
                 </Link>
                 <a
@@ -115,7 +115,7 @@ export default function Home() {
               </div>
               <div className="hero-trust">
                 Open source · Testnet only · No signup required ·{" "}
-                <Link href="/why">Why we built this</Link>
+                <Link href="/docs/overview/why">Why we built this</Link>
               </div>
             </div>
 
@@ -188,7 +188,7 @@ export default function Home() {
               Steps 5 and 6 are the point of the tool: Wasit calls Stellar RPC
               directly and checks the transfer event itself, instead of
               trusting your service&apos;s receipt about what happened on chain.{" "}
-              <Link href="/docs/get-started/how-it-works">
+              <Link href="/docs/overview/how-it-works">
                 Full flow in the docs →
               </Link>
             </p>
@@ -266,7 +266,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <Link href="/docs/get-started/quick-start" className="cta-primary cta-card-button">
+              <Link href="/docs/start/try-it" className="cta-primary cta-card-button">
                 Start testing <span aria-hidden="true">→</span>
               </Link>
 

@@ -101,7 +101,14 @@ minimum with them.
 Use a dedicated testnet account with only as much balance as the run needs. Do
 not reuse a key that has any other purpose.
 
-## Reporting a vulnerability in Wasit
+## Reporting and disclosure
+
+Three different things can be wrong, and each is told to somebody different:
+a defect in Wasit itself comes to us, a defect Wasit finds in your service
+goes to its operator, and a defect in an upstream SDK goes to its
+maintainers. Report privately in all three cases.
+
+### Reporting a vulnerability in Wasit
 
 Report privately first. Do not open a public issue for a security problem.
 
@@ -124,7 +131,7 @@ Things that are not: the fact that some checks spend money, or that the tool
 will run against a target you were not authorised to test. Both are documented
 above and are properties of the tool working as designed.
 
-## Findings about services Wasit tests
+### Findings about services Wasit tests
 
 When Wasit finds a conformance defect in somebody else's service:
 
@@ -142,7 +149,7 @@ target at a specific moment. It is not a security assessment. See
 [design/scope-boundary.md](docs/design/scope-boundary.md) for what a passing result
 does and does not mean.
 
-## Findings in upstream SDKs
+### Findings in upstream SDKs
 
 Defects found in the official SDKs during development are documented in
 [findings/upstream-sdk.md](docs/findings/upstream-sdk.md) and reported to their

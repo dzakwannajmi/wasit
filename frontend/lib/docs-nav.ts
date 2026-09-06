@@ -1,6 +1,7 @@
 import {
   Info,
   Rocket,
+  Download,
   SquareTerminal,
   Cable,
   Package,
@@ -27,10 +28,12 @@ import {
  * mismatch is a stale sidebar label, not a broken page (assertDocsInSync
  * only checks *counts*).
  *
- * "Get Started" is the one exception: its three pages are hand-authored
- * or pulled from a single named section of a file (see lib/content.ts's
- * resolveDocMarkdown and getHowItWorksMarkdown), not a whole file split
- * by "##", so it's exempt from assertDocsInSync's count check.
+ * "Overview", "Getting Started" and "Install" are the exceptions: their
+ * pages are hand-authored (lib/docs-pages.ts) or pulled from a single
+ * named section of README.md (see lib/content.ts's resolveDocMarkdown
+ * and getHowItWorksMarkdown), not a whole file split by "##", so they
+ * are exempt from assertDocsInSync's count check. Nothing mechanical
+ * keeps them true — see the note at the top of lib/docs-pages.ts.
  */
 
 export type DocNavPage = { title: string; slug: string[] }
@@ -53,19 +56,33 @@ export type DocNavEntry = DocNavGroup | DocNavLink
 
 export const DOCS_NAV: DocNavEntry[] = [
   {
-    kind: "link",
-    title: "What Is Wasit",
+    kind: "group",
+    title: "Overview",
     icon: Info,
-    page: { title: "What Is Wasit", slug: ["about", "overview"] },
+    pages: [
+      { title: "Wasit", slug: ["overview", "wasit"] },
+      { title: "Why Wasit Exists", slug: ["overview", "why"] },
+      { title: "How It Works", slug: ["overview", "how-it-works"] },
+    ],
   },
   {
     kind: "group",
-    title: "Get Started",
+    title: "Getting Started",
     icon: Rocket,
     pages: [
-      { title: "Install", slug: ["get-started", "install"] },
-      { title: "Quick Start", slug: ["get-started", "quick-start"] },
-      { title: "How It Works", slug: ["get-started", "how-it-works"] },
+      { title: "Requirements", slug: ["start", "requirements"] },
+      { title: "Try it in one command", slug: ["start", "try-it"] },
+      { title: "Quick setup", slug: ["start", "quick-setup"] },
+    ],
+  },
+  {
+    kind: "group",
+    title: "Install",
+    icon: Download,
+    pages: [
+      { title: "Packages", slug: ["install", "packages"] },
+      { title: "From source", slug: ["install", "from-source"] },
+      { title: "Verify the install", slug: ["install", "verify"] },
     ],
   },
   {
@@ -146,9 +163,7 @@ export const DOCS_NAV: DocNavEntry[] = [
       { title: "Checks that spend money", slug: ["security", "spend-money"] },
       { title: "Destructive checks", slug: ["security", "destructive-checks"] },
       { title: "Key handling", slug: ["security", "key-handling"] },
-      { title: "Reporting a vulnerability in Wasit", slug: ["security", "vulnerability-reporting"] },
-      { title: "Findings about services Wasit tests", slug: ["security", "service-findings"] },
-      { title: "Findings in upstream SDKs", slug: ["security", "sdk-findings"] },
+      { title: "Reporting and disclosure", slug: ["security", "disclosure"] },
       { title: "Supported versions", slug: ["security", "supported-versions"] },
     ],
   },

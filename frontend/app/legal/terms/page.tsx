@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 /**
  * Standalone legal page: the same .article-wrap prose column as
- * app/why/page.tsx, now paired with a sticky Line Sidebar-style table
+ * app/legal/privacy/page.tsx, paired with a sticky Line Sidebar-style table
  * of contents (components/docs-toc.tsx). Content is written directly
  * here (not pulled from a repo doc) since it's specific to the hosted
  * site rather than the project's own documentation.

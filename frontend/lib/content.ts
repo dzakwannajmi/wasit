@@ -1,6 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DOCS_NAV, type DocNavGroup } from "./docs-nav";
+import {
+  FROM_SOURCE_MD,
+  PACKAGES_MD,
+  QUICK_SETUP_MD,
+  REQUIREMENTS_MD,
+  TRY_IT_MD,
+  VERIFY_MD,
+} from "./docs-pages";
 
 /**
  * Reads a markdown file from the repo root (one level up from this Next.js
@@ -149,75 +157,6 @@ export function extractSection(markdown: string, heading: string): string | null
 
   return lines.slice(startIndex, endIndex).join("\n").trim() + "\n";
 }
-
-/**
- * The one page on the docs site that isn't sourced from a repo markdown
- * file — package links. Written as markdown so it renders through the
- * same pipeline (and picks up heading ids from rehype-slug) as
- * everything else.
- */
-/**
- * "Quick Start" is hand-authored rather than pulled from a repo file: it's
- * the same two snippets already shown on the homepage (the CLI one-liner,
- * the Claude Code MCP registration), just given a full docs page with a
- * bit more context and links onward to the CLI/MCP guides.
- */
-export const QUICK_START_MD = `# Quick Start
-
-Two ways to run Wasit, depending on whether a person or an agent is driving.
-
-## From a terminal
-
-\`\`\`bash
-# run once, no install
-npx @wasit-dev/cli test --target https://your-service.example.com
-
-# or install globally
-npm install -g @wasit-dev/cli
-wasit test --target https://your-service.example.com
-
-# list every check without running one
-wasit checks
-\`\`\`
-
-\`test\` runs the x402 checks, \`mpp-charge\` and \`mpp-channel\` the MPP ones,
-and \`checks\` lists the whole catalogue without contacting anything. Add
-\`--json\` to any of them for machine-readable output — advisory lines go to
-stderr so stdout stays parseable in CI. See the CLI Guide for every subcommand
-and flag.
-
-## From Claude Code (MCP)
-
-\`\`\`bash
-claude mcp add --transport stdio wasit \\
-  --env MPP_STELLAR_NETWORK=stellar:testnet \\
-  --env STELLAR_PRIVATE_KEY=S... \\
-  -- npx -y @wasit-dev/server
-\`\`\`
-
-This registers the MCP server so an agent can call Wasit's tools directly —
-see the MCP Guide for what each tool checks, and Configuration for where
-\`STELLAR_PRIVATE_KEY\` and the other environment values come from.
-`;
-
-export const INSTALL_MD = `# Install
-
-Wasit ships as three npm packages — install only the ones you need.
-
-| Package | What it is |
-| --- | --- |
-| [\`@wasit-dev/cli\`](https://www.npmjs.com/package/@wasit-dev/cli) | The \`wasit\` terminal command |
-| [\`@wasit-dev/server\`](https://www.npmjs.com/package/@wasit-dev/server) | The MCP server, for Claude Code / Claude Desktop |
-| [\`@wasit-dev/core\`](https://www.npmjs.com/package/@wasit-dev/core) | The check-suite library, if you're building on top of Wasit directly |
-
-\`\`\`bash
-# run once, no install
-npx @wasit-dev/cli test --target https://your-service.example.com
-
-# or install globally
-npm install -g @wasit-dev/cli
-\`\`\`
-`;
 
 /**
  * Repo-relative markdown links (`../CHECKS.md`, `configuration.md#x`) are
@@ -436,15 +375,15 @@ function getHowItWorksMarkdown(): string {
 }
 
 /**
- * "Why Wasit Exists" — the standalone article page at /why (see
- * app/why/page.tsx). Reuses README.md's own "## The Problem" section
+ * "Why Wasit Exists" — the Overview group's second page
+ * (/docs/overview/why). Reuses README.md's own "## The Problem" section
  * verbatim, the same way getHowItWorksMarkdown() reuses "## How It
  * Works", so this page can't drift from the README's real explanation.
  *
- * The page supplies its own <h1> ("Why Wasit Exists"), so the section's
- * own "## The Problem" heading line is dropped rather than promoted —
- * unlike getHowItWorksMarkdown(), nothing here becomes a whole page
- * under its own extracted title. The body has no nested headings, so no
+ * The section's own "## The Problem" heading line is dropped rather than
+ * promoted — unlike getHowItWorksMarkdown(), nothing here becomes a whole
+ * page under its own extracted title. The caller supplies the "Why Wasit
+ * Exists" h1 instead (see resolveDocMarkdown). The body has no nested headings, so no
  * promoteHeadings() shift is needed. The two doc links inside it are
  * repo-relative (resolve on GitHub, not on this site), so they're
  * rewritten to real GitHub blob URLs; everything else — including the
@@ -456,7 +395,7 @@ export function getWhyItExistsMarkdown(): string {
   const section = extractSection(readme, "The Problem");
   if (!section) {
     throw new Error(
-      'site: README.md has no "## The Problem" section anymore — update app/why/page.tsx / lib/content.ts.'
+      'site: README.md has no "## The Problem" section anymore — update the Overview group in lib/docs-nav.ts / lib/content.ts.'
     );
   }
 
@@ -483,8 +422,8 @@ export function getWhyItExistsMarkdown(): string {
 }
 
 /**
- * "What Is Wasit" — the docs sidebar's own orientation page (see the
- * "about" link entry in lib/docs-nav.ts), for someone who opened /docs
+ * "Wasit" — the docs sidebar's own orientation page (see the
+ * Overview group in lib/docs-nav.ts), for someone who opened /docs
  * without having read the README first. Reuses README.md's own opening
  * tagline (hand-copied here, since it sits before any "##" heading and
  * so can't be pulled with extractSection) plus its real "## Status"
@@ -493,10 +432,11 @@ export function getWhyItExistsMarkdown(): string {
  * README itself doesn't also say.
  *
  * The tagline paragraph is intentionally NOT hand-expanded beyond what
- * the README already claims — this page orients and links onward
- * (Quick Start, Why Wasit Exists, the Check Catalogue) rather than
- * re-explaining any of those in full, so there is exactly one place
- * each of those explanations lives.
+ * the README already claims — this page orients rather than
+ * re-explaining, so there is exactly one place each explanation lives.
+ * Where it used to end with a short "where to go next" list, the route
+ * now renders components/docs-cards.tsx underneath instead: the same
+ * job, done for every section rather than three hand-picked ones.
  */
 export function getAboutMarkdown(): string {
   const readme = readRepoDoc("README.md");
@@ -517,7 +457,11 @@ export function getAboutMarkdown(): string {
     .replace(/\n+---\s*$/, "")
     .trim();
 
-  return `Wasit is an independent conformance tester for two agentic-payment
+  return `![Wasit](/W-White.png)
+
+# Wasit
+
+Wasit is an independent conformance tester for two agentic-payment
 protocols on Stellar: **x402** and **MPP**. It runs the real payment flow
 against a live service and verifies the settlement itself — by reading
 Stellar RPC and the token contract's own transfer event — rather than
@@ -534,7 +478,7 @@ that a service actually implements it — nothing plays the role
 \`stellar-anchor-tests\` plays for the anchor ecosystem. "We support x402" is
 currently a claim nobody can check from the outside.
 
-[Why Wasit Exists](/why) has the full story, including three concrete
+[Why Wasit Exists](/docs/overview/why) has the full story, including three concrete
 divergences between documentation and shipped SDK behavior that turned up
 while building this tool.
 
@@ -554,14 +498,6 @@ only one implementation of each check, so a CLI run and an agent's run can
 never disagree about the same target.
 
 ${status}
-
-## Where to go next
-
-- **[Quick Start](/docs/get-started/quick-start)** — run your first check
-- **[Why Wasit Exists](/why)** — the full motivation, including what was
-  found wrong upstream
-- **[Check Catalogue](/docs/checks/overview)** — every check's pass criteria
-  and spec reference
 `;
 }
 
@@ -570,14 +506,36 @@ export function resolveDocMarkdown(slug: string[]): { title: string; markdown: s
 
   const [groupKey, pageSlug] = slug;
 
-  if (groupKey === "about") {
-    if (pageSlug === "overview") return { title: "What Is Wasit", markdown: getAboutMarkdown() };
+  // The three hand-authored groups. Their bodies are static markdown in
+  // lib/docs-pages.ts, except the two that reuse a named README section
+  // so they cannot drift from the README's own wording.
+  if (groupKey === "overview") {
+    if (pageSlug === "wasit") return { title: "Wasit", markdown: getAboutMarkdown() };
+    if (pageSlug === "why") {
+      // getWhyItExistsMarkdown() returns the body without a heading,
+      // since it was written for a standalone page that supplied its own.
+      return {
+        title: "Why Wasit Exists",
+        markdown: `# Why Wasit Exists\n\n${getWhyItExistsMarkdown()}`,
+      };
+    }
+    if (pageSlug === "how-it-works") {
+      return { title: "How It Works", markdown: getHowItWorksMarkdown() };
+    }
     return null;
   }
-  if (groupKey === "get-started") {
-    if (pageSlug === "install") return { title: "Install", markdown: INSTALL_MD };
-    if (pageSlug === "quick-start") return { title: "Quick Start", markdown: QUICK_START_MD };
-    if (pageSlug === "how-it-works") return { title: "How It Works", markdown: getHowItWorksMarkdown() };
+  if (groupKey === "start") {
+    if (pageSlug === "requirements") return { title: "Requirements", markdown: REQUIREMENTS_MD };
+    if (pageSlug === "try-it") {
+      return { title: "Try it in one command", markdown: TRY_IT_MD };
+    }
+    if (pageSlug === "quick-setup") return { title: "Quick setup", markdown: QUICK_SETUP_MD };
+    return null;
+  }
+  if (groupKey === "install") {
+    if (pageSlug === "packages") return { title: "Packages", markdown: PACKAGES_MD };
+    if (pageSlug === "from-source") return { title: "From source", markdown: FROM_SOURCE_MD };
+    if (pageSlug === "verify") return { title: "Verify the install", markdown: VERIFY_MD };
     return null;
   }
   const sourceFile = GROUP_SOURCE_FILES[groupKey];
