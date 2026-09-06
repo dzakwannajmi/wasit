@@ -2,6 +2,34 @@
 
 All notable changes to Wasit are recorded here. Versions follow [Semantic Versioning](https://semver.org/): patch releases are fixes, minor releases add checks or features without breaking existing usage, major releases break something.
 
+## Unreleased
+
+Planned for 0.4.0. Recorded here rather than in an issue because two of the
+three change what a check *proves*, and anyone reading this file to decide
+whether to upgrade needs to see that before the version lands.
+
+**Will change results — `X402-06` gains on-chain verification.** The check
+currently passes on any 2xx, which means it establishes that the target accepted
+the payment, not that the payment landed. `MPP-01` already reads the token
+contract's CAP-46 transfer event; the same verification belongs here. A service
+that answers 200 without settling passes today and will fail after this. If a
+run goes red on upgrade, the check got stronger — the service did not change.
+Found by running against `stellar/x402-stellar`'s reference implementation; see
+`docs/evidence/2026-09-06-reference-implementation-run.md`.
+
+**Will change results — `X402-07` will corrupt only the signature.** Today the
+corruption drops the base64 padding, so the decoded envelope grows by two bytes
+and fails XDR decoding before signature verification is reached. A target that
+parsed the envelope and skipped verification entirely passes. Corrupting a
+signature byte while preserving a decodable envelope makes the rejection mean
+what `docs/CHECKS.md` says it means. Same evidence document.
+
+**`wasit wallet status --role <role>` will exit 2 on an unreadable key.** It
+exits 0 today while `--role mpp-channel` exits 2 for the same class of
+configuration error, so `wasit wallet status --role x402 && deploy` proceeds on
+a key that could not be read. `status` with no `--role` keeps exiting 0: there,
+one unreadable key is a row in a table, not a failed question.
+
 ## [0.3.0] — 2026-09-05
 
 All three packages. Adds an interactive dashboard and testnet wallet tooling to
