@@ -6,7 +6,14 @@ import { CopyButton } from "@/components/CopyButton";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { CliDemo } from "@/components/CliDemo";
 
-const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url>";
+// The one command on the page with a copy button, so it has to be the
+// safe one. --read-only is not optional here: without it the payment
+// checks X402-06/07 run as soon as a STELLAR_PRIVATE_KEY is in scope,
+// and the CLI loads .env from whatever directory it was run in — so a
+// reader who has followed the configuration docs would settle a real
+// testnet payment from what the homepage sells as a first look. Matches
+// README.md's own install snippet for the same reason.
+const INSTALL_CMD = "npx @wasit-dev/cli test --target <your-service-url> --read-only";
 const GITHUB_URL = "https://github.com/wasit-dev/wasit";
 
 // Pixel grid for the closing CTA headline's hover reveal (see

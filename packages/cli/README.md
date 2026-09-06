@@ -10,14 +10,20 @@ Protocol-compliance testing for **x402** and **MPP** on Stellar, from your termi
 
 ```bash
 # run once, no install
-npx @wasit-dev/cli test --target <your-service-url>
+npx @wasit-dev/cli test --target <your-service-url> --read-only
 
 # or install globally
 npm install -g @wasit-dev/cli
-wasit test --target <your-service-url>
+wasit test --target <your-service-url> --read-only
 ```
 
 Requires Node.js `>=24`.
+
+Both lines carry `--read-only` deliberately: without it the payment checks
+`X402-06`/`07` run as soon as a `STELLAR_PRIVATE_KEY` is available, and the CLI
+reads `.env` from the directory you run it in — so on a machine already set up
+for a later suite, the first command in this README would settle a real testnet
+payment.
 
 ## Quick start
 
