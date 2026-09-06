@@ -10,7 +10,9 @@ import "./docs.css"
  * The site-wide Nav sits above the whole sidebar-07 shell rather than
  * inside SidebarInset — it's what gives a /docs page the same top bar
  * (and its "Docs" button, which is how you get back to /docs from a
- * sub-page) as the rest of the site. The shadcn sidebar itself renders
+ * sub-page) as the rest of the site. It is given the "docs" brand
+ * variant here: the sidebar carries no logo of its own by design, so
+ * this bar is the only place a /docs page can identify itself. The shadcn sidebar itself renders
  * `position: fixed` at the DOM level (see [data-slot="sidebar-container"]
  * in components/ui/sidebar.tsx) regardless of where it sits in the
  * tree, so stacking Nav above it needs the matching CSS offset in
@@ -21,7 +23,7 @@ import "./docs.css"
 export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <Nav />
+      <Nav variant="docs" />
       <SidebarProvider>
         <DocsSidebar />
         <SidebarInset>

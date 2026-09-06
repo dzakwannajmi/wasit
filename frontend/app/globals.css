@@ -29,6 +29,14 @@
      step of the "How it works" flow, and inline links in prose. */
   --accent: #7c3aed;
 
+  /* Height of the sticky top bar. Four separate rules across two
+     stylesheets are derived from it — .navbar itself, .landing-scroll's
+     viewport maths, section scroll-margin, and the /docs sidebar's fixed
+     offset in app/docs/docs.css. They were four hardcoded 64px values
+     that had to be edited together and gave no sign when they were not;
+     changing the bar's height now means changing this line only. */
+  --nav-h: 72px;
+
   /* Typeset reads these theme tokens directly (see app/typeset.css) —
      map them onto our own palette instead of letting it fall back to
      the color-mix() approximations. */
@@ -96,7 +104,7 @@ a:hover { color: var(--accent); }
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  height: 64px;
+  height: var(--nav-h);
   max-width: 1360px;
   margin: 0 auto;
   padding: 0;
@@ -107,7 +115,18 @@ a:hover { color: var(--accent); }
    nav links. */
 .navbar-left { display: flex; align-items: center; gap: 48px; min-width: 0; }
 .brand { flex: none; display: flex; align-items: center; }
-.brand-logo { display: block; height: 26px; width: auto; }
+/* Height is pinned and width left to follow, never both: the two brand
+   assets do not share an aspect ratio — W-White.png is 4972x1284
+   (3.87) and docs.png 5980x1484 (4.03), the difference being the DOCS
+   badge stacked above the wordmark. Giving width a fixed value
+   would stretch one or both horizontally rather than scale them.
+
+   At 44px they render 170px and 177px wide respectively — 61% of the
+   72px bar, which still leaves 14px clear above and below. The height also matters for the /docs lockup specifically:
+   its DOCS badge is a small fraction of the asset, and that badge is
+   the only thing distinguishing the two marks, so every pixel of
+   overall height makes it more legible. */
+.brand-logo { display: block; height: 44px; width: auto; }
 .navlinks {
   display: flex;
   align-items: center;
@@ -269,13 +288,13 @@ a:hover { color: var(--accent); }
    (hero, the four <section>s, Footer) lives inside this div instead of
    the normal document/body scroll, so scroll-snap-type can apply here
    without also snapping /docs or /why, which never render this class.
-   height is exactly the viewport minus Nav's 64px, so Nav (left in
+   height is exactly the viewport minus Nav's height, so Nav (left in
    normal flow above this div, still position: sticky from its own
    rule) never overlaps it — no scroll-margin-top compensation needed
    for anchor links inside it either, see the reset below. */
 .landing-scroll {
-  height: calc(100vh - 64px);
-  height: calc(100dvh - 64px);
+  height: calc(100vh - var(--nav-h));
+  height: calc(100dvh - var(--nav-h));
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
@@ -305,7 +324,7 @@ a:hover { color: var(--accent); }
    intro and every other section is only ever revealed by scrolling,
    never visible at the same time as the hero on first paint.
    min-height: 100% resolves against .landing-scroll's own explicit
-   height (calc(100vh - 64px)), not the viewport directly — this rule
+   height (calc(100vh - var(--nav-h))), not the viewport directly — this rule
    alone would do nothing without that ancestor. */
 .hero {
   position: relative;
@@ -439,9 +458,13 @@ a:hover { color: var(--accent); }
 
 /* Sections */
 /* scroll-margin-top keeps an anchor-linked section's own heading clear
-   of the sticky bar header (64px tall, see .navbar in Nav.tsx) instead
-   of landing right underneath it. */
-section { padding: 48px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 84px; }
+   of the sticky bar header (see --nav-h) instead of landing right
+   underneath it, plus 20px so it does not sit flush against it. */
+section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: calc(var(--nav-h) + 20px);
+}
 section:last-of-type { border-bottom: none; }
 h2 {
   font-size: 24px;
@@ -456,8 +479,9 @@ h2 {
 .hero-trust a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
 .hero-trust a:hover { color: var(--accent); }
 
-/* /why — standalone typeset article page (shadcn's typeset article
- * layout: no docs sidebar/TOC, just a centered reading column). */
+/* Standalone typeset article column (shadcn's typeset article layout:
+ * no docs sidebar, just a centered reading column). Used by the two
+ * legal pages; the padding here is plain spacing, unrelated to --nav-h. */
 .article-wrap {
   max-width: 700px;
   padding-top: 64px;

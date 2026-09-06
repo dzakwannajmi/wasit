@@ -30,14 +30,42 @@ function GitHubIcon() {
  * at the docs page rather than an on-page section — the landing page
  * no longer has its own Quick Start block, since it just duplicated
  * that docs page.
+ *
+ * `variant` picks the brand lockup. /docs pages get the wordmark with
+ * the DOCS badge (app/docs/layout.tsx passes it), so a reader landing
+ * mid-documentation can tell at a glance which surface they are on —
+ * the sidebar deliberately carries no brand of its own, so this bar is
+ * the only place that can say it. Everywhere else gets the plain
+ * wordmark. Passed as a prop rather than read from usePathname() to
+ * keep Nav a server component; the layout already knows the answer.
  */
-export function Nav() {
+const BRAND = {
+  site: { src: "/W-White.png", width: 387, height: 100 },
+  // These numbers are not a display size — .brand-logo pins the height
+  // and leaves width auto, so they only carry the intrinsic aspect
+  // ratio. They must be re-derived whenever an asset is re-exported:
+  // 4972x1284 and 5980x1484 respectively. Get them wrong and the
+  // browser scales the mark to the ratio declared here, not the one in
+  // the file.
+  docs: { src: "/docs.png", width: 403, height: 100 },
+} as const
+
+export function Nav({ variant = "site" }: { variant?: keyof typeof BRAND } = {}) {
+  const brand = BRAND[variant]
+
   return (
     <header className="site-header">
       <div className="navbar">
         <div className="navbar-left">
           <Link href="/" className="brand" aria-label="Wasit">
-            <Image src="/W-White.png" alt="Wasit" width={427} height={100} className="brand-logo" priority />
+            <Image
+              src={brand.src}
+              alt={variant === "docs" ? "Wasit Docs" : "Wasit"}
+              width={brand.width}
+              height={brand.height}
+              className="brand-logo"
+              priority
+            />
           </Link>
           <nav className="navlinks">
             <Link href="/#comparison">Why Wasit</Link>

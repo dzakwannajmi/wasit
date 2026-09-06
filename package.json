@@ -6,7 +6,8 @@
   ],
   "scripts": {
     "build": "npm run build -w packages/core && npm run build -w packages/cli && npm run build -w packages/server",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "verify:clean-install": "node scripts/verify-clean-install.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

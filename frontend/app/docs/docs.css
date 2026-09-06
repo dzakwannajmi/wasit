@@ -537,7 +537,7 @@
 }
 
 /* Nav offset — the site-wide Nav (components/Nav.tsx, rendered in
-   app/docs/layout.tsx above <SidebarProvider>) is 64px tall and lives
+   app/docs/layout.tsx above <SidebarProvider>) is --nav-h tall and lives
    in normal document flow, so SidebarInset's own content already
    starts below it for free. The desktop sidebar itself doesn't: shadcn
    renders it `fixed inset-y-0` (viewport-relative, ignores document
@@ -553,8 +553,8 @@
    instead, which is supposed to cover Nav too. */
 @media (min-width: 768px) {
   [data-slot="sidebar-container"] {
-    top: 64px;
-    height: calc(100svh - 64px);
+    top: var(--nav-h);
+    height: calc(100svh - var(--nav-h));
   }
 }
 

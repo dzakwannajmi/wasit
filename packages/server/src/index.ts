@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SERVER_VERSION } from "./version.js";
 import {
   checkStatus,
   runMppChannelSuite,
@@ -130,7 +131,7 @@ function missingKey(variable: string): {
   };
 }
 
-const server = new McpServer({ name: "wasit", version: "0.1.0" });
+const server = new McpServer({ name: "wasit", version: SERVER_VERSION });
 
 const catalogue = locateChecksCatalogue();
 if (catalogue) {

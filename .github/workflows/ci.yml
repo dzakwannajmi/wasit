@@ -69,6 +69,21 @@ jobs:
       - name: Test @wasit-dev/cli
         run: npm run test -w packages/cli
 
+      # Everything above this line runs against the working tree, where
+      # npm has deduplicated one dependency graph across all three
+      # workspaces. That is not the tree an installer gets, so a green
+      # checkout can still ship a broken tarball — 0.1.1 documented
+      # `wasit checks` and `--json` that the published package did not
+      # contain, and nothing here would have caught it.
+      #
+      # This packs the three packages, installs them into an empty
+      # project, and drives the result as a user would: the CLI's own
+      # binary and the MCP server over stdio. It needs no keys, no
+      # target and no testnet — listing checks and tools must never
+      # require credentials, which is itself part of what this asserts.
+      - name: Verify a clean install of the packed tarballs
+        run: npm run verify:clean-install
+
   frontend:
     name: Build frontend (Next.js)
     runs-on: ubuntu-latest

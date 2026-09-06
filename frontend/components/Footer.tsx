@@ -35,7 +35,7 @@ export function Footer() {
           <Image
             src="/W-White.png"
             alt="Wasit"
-            width={427}
+            width={387}
             height={100}
             className="footer-wordmark-img"
           />
@@ -65,7 +65,7 @@ export function Footer() {
       </div>
 
       <div className="wrap footer-bottom">
-        <span className="fine">© {year} Wasit.</span>
+        <span className="fine">© {year} Wasit. All rights reserved.</span>
         <span className="fine">Open Source · Powered by Stellar</span>
       </div>
     </footer>

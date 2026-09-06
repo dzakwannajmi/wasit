@@ -69,6 +69,21 @@ the next write.
 account already exists" response is treated as success, correctly, but every
 caller reported it as "Funded: 10,000 XLM." regardless.
 
+**Added — releases are verified from a clean install.** `npm run
+verify:clean-install` packs the three packages, installs the tarballs into an
+empty project, and drives the result as a user would — the CLI's own binary and
+the MCP server over stdio, with no keys and no target. Everything else in CI
+runs against the working tree, where npm has deduplicated one dependency graph
+across all three workspaces; that is not the tree an installer gets, which is
+how `0.1.1` shipped without the `checks` subcommand its own docs described. Now
+part of CI. See [#2](https://github.com/wasit-dev/Wasit/issues/2).
+
+**Fixed — the MCP server reported the wrong version.** It announced `0.1.0` in
+the initialize handshake through two releases, because the string was
+hardcoded. It now reads the package's own manifest at runtime, the same way
+`wasit --version` does, so a client cannot report a bug against a version that
+was never published.
+
 **Fixed — quitting the dashboard restores the terminal.** `q` called
 `process.exit` directly, skipping Ink's unmount and leaving the cursor hidden.
 Ctrl+C still exits 130 immediately, by design.

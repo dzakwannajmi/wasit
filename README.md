@@ -195,6 +195,21 @@ npm run build
 cp .env.example .env
 ```
 
+Before publishing, verify the packages as a user receives them rather than as
+the repo builds them:
+
+```bash
+npm run verify:clean-install
+```
+
+A checkout deduplicates one dependency graph across all three workspaces; a
+clean install resolves each package's own declared ranges and can nest a second
+copy of something the checkout collapsed into one. So a green checkout can
+still ship a broken tarball — `0.1.1` documented `wasit checks` and `--json`
+that the published package did not contain. This packs the three packages,
+installs them into an empty project, and drives the result the way a user
+would: the CLI's own binary and the MCP server over stdio. It runs in CI too.
+
 ---
 
 ## Trying It
