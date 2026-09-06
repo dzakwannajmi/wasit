@@ -164,6 +164,7 @@ export const DOCS_NAV: DocNavEntry[] = [
       { title: "Destructive checks", slug: ["security", "destructive-checks"] },
       { title: "Key handling", slug: ["security", "key-handling"] },
       { title: "Reporting and disclosure", slug: ["security", "disclosure"] },
+      { title: "Known advisories in a clean install", slug: ["security", "known-advisories"] },
       { title: "Supported versions", slug: ["security", "supported-versions"] },
     ],
   },

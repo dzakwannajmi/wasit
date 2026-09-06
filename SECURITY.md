@@ -161,6 +161,26 @@ packaging and developer-experience defects rather than exploitable
 vulnerabilities; anything exploitable would go to the maintainers privately and
 would not appear in that file until it was resolved.
 
+## Known advisories in a clean install
+
+`npm audit` on a fresh install of the published packages currently reports
+seven high-severity findings. None originate in Wasit's own code or declared
+dependencies. All seven trace to a single nested copy of
+`@stellar/stellar-sdk@15.1.0`, which npm materialises because
+`@stellar/mpp@0.7.1` peers on `^15.1.0` while this project declares `^16.1.0`.
+That copy brings `axios@1.15.0` and `toml@3.0.0`; the version Wasit itself
+declares resolves `axios@1.18.0`, which no current advisory matches.
+
+There is no downstream fix — the only lever is a peer range we do not control.
+It is reported upstream as
+[stellar-mpp-sdk#70](https://github.com/stellar/stellar-mpp-sdk/issues/70) and
+written up in [findings/upstream-sdk.md](docs/findings/upstream-sdk.md).
+`npm run verify:clean-install` measures it on every CI run, so the number above
+is checked rather than remembered.
+
+This is stated here rather than left to be discovered: a tool that checks other
+people's conformance should be legible about its own supply chain.
+
 ## Supported versions
 
 Wasit is pre-1.0 and published on npm as `@wasit-dev/core`, `@wasit-dev/cli`

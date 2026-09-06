@@ -257,6 +257,35 @@ affected, so this is the current state of the line rather than one unlucky
 release. A downstream maintainer cannot resolve it, because the only lever is a
 peer range they do not control.
 
+### Which copy is actually vulnerable
+
+Measured against `@wasit-dev/cli@0.3.0`, the advisories are attributable
+entirely to the nested copy. The declared SDK is clean:
+
+```
+@wasit-dev/core > @stellar/mpp@0.7.1 > @stellar/stellar-sdk@15.1.0 > axios@1.15.0
+                                                                   > toml@3.0.0
+@wasit-dev/core > @stellar/stellar-sdk@16.3.0                      > axios@1.18.0
+@wasit-dev/core > @x402/stellar@2.25.0 > @stellar/stellar-sdk@16.3.0 > axios@1.18.0
+```
+
+`axios@1.15.0` matches 28 published advisories and `toml@3.0.0` two more; the
+counts then propagate up through `@stellar/mpp` to every `@wasit-dev/*` package,
+for seven high-severity findings in total. Every one of those advisories has an
+exclusive upper bound below `1.18.0`, so `axios@1.18.0` — the copy the 16.x SDK
+resolves — matches none of them, and 16.x pulls no `toml` at all.
+
+That makes the peer ranges the sole cause rather than a contributing factor.
+Widening them does not merely tidy the tree; it removes all seven findings.
+
+### How this is now tracked
+
+`npm run verify:clean-install` in the Wasit repo packs the published tarballs,
+installs them into an empty project, and prints the resolved `@stellar/*` tree,
+`npm audit` for that tree, and the dependency path behind every flagged package.
+It runs in CI on every push. It reports rather than fails: the condition is not
+one a downstream release should be blocked on.
+
 ### Compatibility note
 
 This is offered as evidence that the ranges understate what works, not as a
