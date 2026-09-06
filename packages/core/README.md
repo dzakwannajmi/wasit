@@ -80,6 +80,49 @@ Every check function returns `Promise<CheckResult[]>` and never rejects for a ta
 
 The full check catalogue — every check's exact pass criteria and spec reference — is in [`docs/CHECKS.md`](https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md).
 
+### Catalogue and structured output
+
+| Export | What it is |
+|---|---|
+| `CHECK_CATALOGUE` | `readonly CheckCatalogueEntry[]` — every check the suite can run: `id`, `name`, `protocol`, `specRef`, a one-line `summary`, and the optional flags `negative`, `destructive`, `costsFunds`. This is what `wasit checks` prints. |
+| `PROTOCOL_IDS` | `readonly ProtocolId[]` — `"x402"`, `"mpp-charge"`, `"mpp-channel"` |
+| `toStructuredRun(results)` | → `StructuredRun` — the machine-readable reshape of a run: `outcome`, per-status counts, and a `results` array of `StructuredCheckResult`. The CLI's `--json` and the MCP server's `structuredContent` are both this function's output verbatim, so the three surfaces cannot describe the same run differently. |
+
+`outcome` is a name — `"conformant"`, `"non-conformant"`, `"no-verdict"` — not an exit code. `no-verdict` must never be read as `conformant`.
+
+The catalogue is a short-form companion to [`docs/CHECKS.md`](https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md), which stays the source of truth for pass criteria and spec citations.
+
+### Errors
+
+| Export | What it is |
+|---|---|
+| `ConfigurationError` | Something was wrong before any request went out — a malformed key, an invalid URL, an out-of-range argument |
+| `TargetUnreachableError` | The request itself failed or timed out; no verdict about the target can be drawn from it |
+| `MalformedResponseError` | The target answered, but not in a shape the check could read |
+| `classifyCheckError(error)` | → `ClassifiedError` — maps an unknown throw to the `errorKind` (`"unreachable"`, `"configuration"`, `"harness"`) that appears in structured output |
+| `assertHttpUrl(target)`, `fetchTarget(...)` | The URL guard and bounded fetch the checks themselves use |
+
+### Testnet wallet helpers
+
+A convenience layer for setting up the keys the check functions read. It is not part of the check surface, and it is exported by name rather than with `export *` so `wallet.ts` stays free to change without that being a breaking change to this package.
+
+| Export | Signature |
+|---|---|
+| `publicKeyFromSecret(secretKey, source?)` | → `string`. `source` names the offending variable in the error message |
+| `getTestnetWalletStatus(publicKey)` | → `Promise<WalletStatus>` — `{ publicKey, exists, balances }`; `exists` is false for an account never created on-chain |
+| `generateTestnetWallet()` | → `GeneratedWallet` — a fresh keypair, unfunded |
+| `generateCommitmentKey()` | → `GeneratedCommitmentKey` — a raw ed25519 seed for `COMMITMENT_SECRET_HEX`, which has no on-chain account and is not an `S...` key |
+| `fundWithFriendbot(publicKey, attempts?)` | → `Promise<FriendbotOutcome>` — `"funded"` or `"already-funded"`. Two different claims: an account that already exists is a success, but no transfer happened |
+| `createUsdcTrustline(secretKey, source?)` | → `Promise<void>` — opens the Circle testnet USDC trustline. A trustline is not a balance |
+| `sendUsdcFromDistributor(distributorSecretKey, destinationPublicKey, amount)` | → `Promise<void>` — `amount` is a positive decimal string, at most 7 places |
+| `testnetUsdcAsset()` / `TESTNET_USDC_ISSUER` | The Circle testnet USDC `Asset` and its issuer address |
+| `describeTransactionError(error)` | → `string` — Horizon result codes formatted for a human |
+
+**These throw; the check functions do not.** Every function above raises `ConfigurationError` or `TargetUnreachableError` rather than leaking a Stellar SDK error, with Horizon's result codes (`op_underfunded`, `op_no_trust`) folded into the message — so a caller renders `error.message` and never inspects an SDK error type. Horizon and Friendbot requests are bounded by a 15s timeout. A rejected secret key is never echoed back in the message.
+
+There is deliberately no network parameter anywhere in this layer. Friendbot, the printed USDC issuer, and the whole idea of a disposable generated key only make sense on testnet.
+
+
 ## Design
 
 - **`FAIL`, `ERROR`, and `SKIP` are different claims.** `FAIL` means the target answered and didn't conform. `ERROR` means no verdict was produced at all (unreachable, misconfigured, harness failure). `SKIP` is neither. Conflating "your service is broken" with "we never reached your service" would make a tool worse than no tool.

@@ -118,7 +118,7 @@ Testnet-only helpers for the keys the subcommands above read from `.env`. There 
 
 ### The interactive dashboard
 
-Running `wasit` with no arguments in a terminal opens a menu: the same three check runners, a catalogue browser, and a wallet screen, driven by arrow keys. Piped or in CI it prints help instead, so nothing that scripts Wasit today changes behaviour. See [`docs/guides/cli.md`](https://github.com/wasit-dev/wasit/blob/main/docs/guides/cli.md).
+Running `wasit` with no arguments in a terminal opens a menu: the same three check runners, a catalogue browser, and a wallet screen, driven by arrow keys. A run shows a live elapsed timer and per-check progress, and `s` saves the finished run to `wasit-<protocol>-<timestamp>.json` — the same shape `--json` prints. Piped or in CI it prints help instead, so nothing that scripts Wasit today changes behaviour. See [`docs/guides/cli.md`](https://github.com/wasit-dev/wasit/blob/main/docs/guides/cli.md).
 
 ## Reading output
 
