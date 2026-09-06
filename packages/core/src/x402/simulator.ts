@@ -452,8 +452,14 @@ async function checkInvalidSignatureRejected(
 ): Promise<CheckResult> {
   const { httpClient, paymentPayload } = await preparePayment(options);
 
-  // Corrupt the signed transaction after signing, so the payload is
-  // well-formed everywhere except the signature it carries.
+  // Corrupt the signed transaction after signing. This overwrites the tail of
+  // the base64 envelope, which also drops its padding — so the decoded envelope
+  // gains two bytes and stops parsing as XDR. Against the reference facilitator
+  // in stellar/x402-stellar the rejection therefore happens at decoding, not at
+  // signature verification, which is weaker than this check should be: a target
+  // that parsed the envelope and skipped verification entirely would still pass.
+  // Corrupting only the signature bytes, preserving a decodable envelope, is a
+  // 0.4.0 item. See docs/CHECKS.md's X402-07 row.
   const corrupted = {
     ...paymentPayload,
     payload: {
