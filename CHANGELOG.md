@@ -5,10 +5,10 @@ All notable changes to Wasit are recorded here. Versions follow [Semantic Versio
 ## [0.3.0] — 2026-09-05
 
 All three packages. Adds an interactive dashboard and testnet wallet tooling to
-the CLI, and a wallet layer to core. `@wasit-dev/server` has no code change in
-this release; it is versioned along with the others so all three always resolve
-the same `@wasit-dev/core`, rather than the MCP server quietly running a version
-behind the CLI.
+the CLI, a wallet layer to core, and a runtime version lookup in the MCP server.
+All three are versioned together so they always resolve the same
+`@wasit-dev/core`, rather than the MCP server quietly running a version behind
+the CLI.
 
 | Package | Version |
 |---|---|
