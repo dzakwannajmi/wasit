@@ -179,7 +179,7 @@ written up in [findings/upstream-sdk.md](docs/findings/upstream-sdk.md).
 is checked rather than remembered.
 
 This is stated here rather than left to be discovered: a tool that checks other
-people's conformance should be legible about its own supply chain.
+people's compliance should be legible about its own supply chain.
 
 ## Supported versions
 

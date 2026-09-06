@@ -1,7 +1,7 @@
 # Core Guide
 
 `@wasit-dev/core` is the check suite behind the `wasit` CLI and the MCP
-server — the actual x402/MPP conformance logic, not a thin wrapper around
+server — the actual x402/MPP compliance logic, not a thin wrapper around
 something else. The CLI and the MCP server are themselves thin adapters over
 these same functions, so a CLI run and an agent's run against the same target
 can never disagree — there is only one implementation of each check.

@@ -1,7 +1,7 @@
 # MCP Guide
 
 The MCP server exposes the same check suites as the CLI over the Model Context
-Protocol, so an agent can run a conformance check and read the result as
+Protocol, so an agent can run a compliance check and read the result as
 structured data.
 
 Transport is stdio. As of `@wasit-dev/server@0.1.0` the package is published on
