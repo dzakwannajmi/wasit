@@ -25,13 +25,14 @@ was modeled on.
 | Public GitHub repo | https://github.com/wasit-dev/wasit |
 | Published CHECKS.md | https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md |
 | npm package | https://www.npmjs.com/package/@wasit-dev/cli |
+| Published package behaves as documented | https://github.com/wasit-dev/wasit/blob/main/docs/evidence/2026-09-06-npm-package-parity-run.md — `@wasit-dev/cli@0.3.0` installed from the registry and a build of `main` produce identical outcomes, counts and per-check statuses across all thirteen checks. Not a SOW row; it closes the gap that produced the `0.1.1` defect, where the published CLI lacked a subcommand its published docs described |
 | Terminal recording / GIF | _pending — Job 03_ |
 
 ### Deliverable 2 — MPP Charge and Channel Flow Simulator
 
 | Evidence (per SOW) | Proof |
 |---|---|
-| Terminal output, incl. negative conformance results | https://github.com/wasit-dev/wasit/blob/main/docs/evidence/2026-09-05-full-settlement-run.md (self-hosted fixtures, real testnet settlement, incl. X402-07's negative/rejected-signature result) — **link is dead until the commit adding that file is pushed to `main`; verify it resolves before submitting** |
+| Terminal output, incl. negative conformance results | https://github.com/wasit-dev/wasit/blob/main/docs/evidence/2026-09-05-full-settlement-run.md (self-hosted fixtures, real testnet settlement, incl. X402-07's negative/rejected-signature result). Re-run from the published packages on 2026-09-06 with identical results: `docs/evidence/2026-09-06-npm-package-parity-run.md` |
 | Written findings document (aggregate, ≥3 real projects) | _pending — Job 02_ |
 | ≥1 third-party service tested with explicit authorization | _pending — Job 02. Note the SOW's fallback covers "the remainder self-hosted reference services" — the remainder **after** a third-party run, not a replacement for it. The 2026-09-05 self-hosted run demonstrates that fallback works, and does not satisfy this row. If Job 02 does not convert, say so plainly in the completion summary rather than presenting the self-hosted run as meeting this line._ |
 
@@ -57,6 +58,7 @@ was modeled on.
 |---|---|
 | Upstream SDK defect report #1 | https://github.com/stellar/stellar-mpp-sdk/issues/66 |
 | Upstream SDK defect report #2 | https://github.com/stellar/stellar-mpp-sdk/issues/67 |
+| Upstream SDK defect report #3 | https://github.com/stellar/stellar-mpp-sdk/issues/70 — stale peer ranges; a clean consumer install resolves two Stellar SDKs, and every advisory `npm audit` reports traces to the nested older copy |
 | Upstream finding independently confirmed by a downstream project | RouteDock PR #241 (github.com/winsznx/routedock/pull/241) — **not** the D2 third-party-authorization item: RouteDock was tested without contacting its operator (see `docs/evidence/2026-08-15-third-party-run.md`) |
 
 ## Result
