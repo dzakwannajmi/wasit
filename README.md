@@ -31,6 +31,7 @@ right place and still take money without settling it.
 ## Table of Contents
 
 - [How It Works](#how-it-works)
+- [What a Passing Result Means](#what-a-passing-result-means)
 - [The Problem](#the-problem)
 - [Status](#status)
 - [Install](#install)
@@ -80,6 +81,27 @@ own transfer event, not just the transaction it was asked to make.
 The CLI and the MCP server are thin adapters over the same suite functions. They
 cannot disagree about the same target, because there is only one implementation
 of each check.
+
+---
+
+## What a Passing Result Means
+
+A passing run means one thing: at the moment of the run, against the target
+given, the service implemented the checked clauses of the x402/MPP specs
+correctly, and the settlements it claimed were confirmed on-chain — against the
+spec and SDK versions the report names.
+
+It is not a security assessment, not an audit, and not a statement about the
+safety of the contracts a service settles through, its key management, its
+infrastructure, or its business logic. No source is read and no bytecode is
+analysed. That is a different artifact under test, and it belongs to dedicated
+tooling — Scout, the Certora Sunbeam Prover, Komet, OpenZeppelin's Soroban
+detectors — which Wasit is built to run alongside rather than replace.
+
+Only the target URL given was tested. Only clauses with a catalogue entry were
+checked; every entry traces to a written clause, and clauses without one are
+simply not covered yet. A service can also regress after passing. The full
+boundary is in [docs/design/scope-boundary.md](docs/design/scope-boundary.md).
 
 ---
 
