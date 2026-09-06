@@ -1,0 +1,19 @@
+# Brand assets kept locally for future use but not shipped: nothing in
+# app/, components/ or lib/ references them, so committing them only
+# adds weight to every clone and every deploy.
+#
+# Listed one by one on purpose rather than as a wildcard — public/ also
+# holds the three assets the site actually renders, and a blanket rule
+# here would silently drop one of them from a deploy and break the logo
+# in production with no build error.
+#
+# In use, must stay tracked: W-White.png, W-White1.png, docs.png
+
+Colorful.png
+Stellar-White.png
+Stellar-White.svg
+Wasit-Docs.png
+Wolf.png
+docs.svg
+logo - light.png
+logo - light.svg
