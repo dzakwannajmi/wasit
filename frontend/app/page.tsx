@@ -97,9 +97,9 @@ export default function Home() {
         <div className="hero">
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <div className="label hero-kicker">x402 / MPP conformance testing</div>
+              <div className="label hero-kicker">x402 / MPP compliance testing</div>
               <h1 className="hero-heading">
-                Independent conformance testing for <b>x402</b> and{" "}
+                Independent protocol-compliance testing for <b>x402</b> and{" "}
                 <b>MPP</b> on Stellar.
               </h1>
               <p className="tagline">

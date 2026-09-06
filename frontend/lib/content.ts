@@ -417,7 +417,7 @@ export function getWhyItExistsMarkdown(): string {
 
 **Shipping a service.** Run Wasit against your own x402 or MPP endpoint before a customer finds the gap you missed.
 
-**Building on top of one.** Wire Wasit's MCP tools into an agent so it checks a target's real conformance before trusting it.
+**Building on top of one.** Wire Wasit's MCP tools into an agent so it checks a target's real compliance before trusting it.
 `;
 }
 
@@ -461,7 +461,7 @@ export function getAboutMarkdown(): string {
 
 # Wasit
 
-Wasit is an independent conformance tester for two agentic-payment
+Wasit is an independent protocol-compliance checker for two agentic-payment
 protocols on Stellar: **x402** and **MPP**. It runs the real payment flow
 against a live service and verifies the settlement itself — by reading
 Stellar RPC and the token contract's own transfer event — rather than
