@@ -26,6 +26,7 @@ was modeled on.
 | Published CHECKS.md | https://github.com/wasit-dev/wasit/blob/main/docs/CHECKS.md |
 | npm package | https://www.npmjs.com/package/@wasit-dev/cli |
 | Published package behaves as documented | https://github.com/wasit-dev/wasit/blob/main/docs/evidence/2026-09-06-npm-package-parity-run.md — `@wasit-dev/cli@0.3.0` installed from the registry and a build of `main` produce identical outcomes, counts and per-check statuses across all thirteen checks. Not a SOW row; it closes the gap that produced the `0.1.1` defect, where the published CLI lacked a subcommand its published docs described |
+| Validated against the reference implementation | https://github.com/wasit-dev/Wasit/blob/main/docs/evidence/2026-09-06-reference-implementation-run.md — 7/7 against `stellar/x402-stellar`'s own `simple-paywall` example at `45d735a`, run from the published package. The first x402 implementation Wasit has been judged by rather than one this project wrote, which is why it also surfaced two weaknesses in Wasit itself; both are in the document. Not a SOW row, and **not** the D2 authorization item — their open-source example on our machine, no operator contacted |
 | Terminal recording / GIF | _pending — Job 03_ |
 
 ### Deliverable 2 — MPP Charge and Channel Flow Simulator
@@ -62,8 +63,20 @@ was modeled on.
 | Upstream finding independently confirmed by a downstream project | RouteDock PR #241 (github.com/winsznx/routedock/pull/241) — **not** the D2 third-party-authorization item: RouteDock was tested without contacting its operator (see `docs/evidence/2026-08-15-third-party-run.md`) |
 
 ## Result
-Not started — waiting on Jobs 2 and 3. Partial progress 2026-09-05: the D2
-terminal-output evidence item now has a real link (full payment-settlement
-run against self-hosted fixtures, see `docs/evidence/2026-09-05-full-settlement-run.md`).
-The third-party-authorization item is unaffected by this and still depends on
-Job 2.
+Not started — waiting on Jobs 2 and 3.
+
+Partial progress 2026-09-05: the D2 terminal-output evidence item got a real
+link (full payment-settlement run against self-hosted fixtures, see
+`docs/evidence/2026-09-05-full-settlement-run.md`).
+
+Partial progress 2026-09-06: D1 gained two rows. The published packages were
+verified to behave identically to source across all thirteen checks
+(`2026-09-06-npm-package-parity-run.md`), and Wasit was run against
+`stellar/x402-stellar`'s reference implementation for the first time
+(`2026-09-06-reference-implementation-run.md`). Neither is a SOW row; together
+they answer the question a reviewer asks before reading any check result at
+all — does the thing actually work when someone else installs it, and does it
+agree with an implementation it did not write.
+
+The third-party-authorization item is unaffected by any of this and still
+depends on Job 2. Every remaining `_pending_` row depends on Job 3.
